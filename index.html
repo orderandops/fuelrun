@@ -244,7 +244,7 @@ function dRc(i){S.races.splice(i,1);render();save()}
 function rWk(){let w=gw();if(!w)return;document.getElementById('wkL').textContent=`Week ${w.week} \u00b7 ${w.phase==='base'?'Base':'Marathon'}`;
 let pM=w.days.reduce((s,d)=>(d.acts||[]).reduce((ss,a)=>ss+(a.miles||0),s),0);
 let aM=w.days.reduce((s,d)=>s+(d.a?d.a.mi:0),0);
-let hm=w.days.reduce((s,d)=>(d.acts||[]).reduce((ss,a)=>ss+(a.type==='hiit'?a.mins||0:0),ss),0);
+let hm=w.days.reduce((s,d)=>(d.acts||[]).reduce((ss,a)=>ss+(a.type==='hiit'?a.mins||0:0),s),0);
 document.getElementById('wkS').innerHTML=`<div class="st" style="padding:8px"><div class="st-v" style="font-size:16px">${pM}</div><div class="st-l">plan</div></div><div class="st" style="padding:8px"><div class="st-v" style="font-size:16px;color:var(--acc)">${Math.round(aM*10)/10}</div><div class="st-l">actual</div></div><div class="st" style="padding:8px"><div class="st-v" style="font-size:16px;color:var(--purp)">${hm}</div><div class="st-l">HIIT</div></div><div class="st" style="padding:8px"><div class="st-v" style="font-size:16px">${w.days.filter(d=>!d.acts||d.acts.length===0).length}</div><div class="st-l">rest</div></div>`;
 let h='';w.days.forEach((d,i)=>{let acts=d.acts||[];let isRest=acts.length===0;
 let dtF=new Date(d.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
