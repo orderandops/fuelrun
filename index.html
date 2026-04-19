@@ -2,351 +2,1351 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#085041">
-<title>FUEL.RUN</title>
-<link rel="manifest" href="/manifest.json">
+<title>fuel.run</title>
+<link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#f5f5f0;--cd:#fff;--bdr:#ddddd5;--tx:#1c1b18;--tx2:#888780;--tx3:#b5b3ac;--acc:#1D9E75;--accL:#E1F5EE;--accD:#0F6E56;--hero:#085041;--coral:#D85A30;--coralL:#FAECE7;--blue:#378ADD;--blueL:#E6F1FB;--purp:#7F77DD;--purpL:#EEEDFE;--amber:#EF9F27;--amberL:#FAEEDA;--pink:#D4537E;--pinkL:#FBEAF0;--f:Sora,sans-serif;--r:10px}
-html,body{font-family:var(--f);color:var(--tx);background:var(--bg);-webkit-tap-highlight-color:transparent;overflow-x:hidden;min-height:100dvh}
-.app{max-width:430px;margin:0 auto;min-height:100dvh;padding-bottom:64px}
-.hdr{padding:max(env(safe-area-inset-top),12px) 16px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:.5px solid var(--bdr);background:var(--cd);position:sticky;top:0;z-index:50}
-.logo{font-weight:700;font-size:18px;color:var(--hero)}.logo span{color:var(--coral)}
-.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--cd);border-top:.5px solid var(--bdr);display:flex;z-index:90;padding:6px 0 max(6px,env(safe-area-inset-bottom))}
-.nav-i{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 0;border:none;background:none;font-family:var(--f);font-size:10px;cursor:pointer;font-weight:500}
+:root{
+--bg:#f5f5f0;--cd:#fff;--bdr:#ddddd5;
+--tx:#1c1b18;--tx2:#888780;--tx3:#b5b3ac;
+--acc:#1D9E75;--accL:#E1F5EE;--accD:#0F6E56;
+--hero:#085041;--coral:#D85A30;--coralL:#FAECE7;
+--blue:#378ADD;--blueL:#E6F1FB;
+--purp:#7F77DD;--purpL:#EEEDFE;
+--amber:#EF9F27;--amberL:#FAEEDA;
+--pink:#D4537E;--pinkL:#FBEAF0;
+--f:Sora,sans-serif;--r:10px
+}
+html,body{font-family:var(--f);color:var(--tx);background:var(--bg);-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+.app{max-width:430px;margin:0 auto;min-height:100vh;padding-bottom:62px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+
+/* Header */
+.hdr{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:.5px solid var(--bdr);background:var(--cd)}
+.logo{font-weight:700;font-size:20px;color:var(--hero)}.logo span{color:var(--coral)}
+.hdr-dt{font-size:13px;color:var(--tx2)}
+
+/* Nav */
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--cd);border-top:.5px solid var(--bdr);display:flex;z-index:90;padding:4px 0 max(4px,env(safe-area-inset-bottom))}
+.nav-i{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;border:none;background:none;font-family:var(--f);font-size:10px;cursor:pointer;font-weight:500;color:var(--tx3)}
+.nav-i.on{font-weight:600}
 .nav-i svg{width:22px;height:22px}
-.pg{display:none;padding:12px 16px}.pg.on{display:block}
-.cd{background:var(--cd);border:.5px solid var(--bdr);border-radius:12px;padding:14px;margin-bottom:8px}
-.cd-t{font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px}
-.hero{background:var(--hero);border-radius:14px;padding:16px;margin-bottom:10px;color:#fff}
-.trk-r{display:flex;align-items:center;gap:6px;margin-bottom:6px}
-.trk-l{font-size:12px;font-weight:500;color:var(--tx2);min-width:52px}
-.trk-b{flex:1;height:7px;background:#eee;border-radius:4px}.trk-f{height:100%;border-radius:4px;transition:width .4s}
-.trk-v{font-size:12px;font-weight:600;min-width:58px;text-align:right}
-.st{flex:1;background:var(--bg);border-radius:8px;padding:10px;text-align:center}
-.st-v{font-size:20px;font-weight:700}.st-l{font-size:10px;color:var(--tx2);font-weight:500}
-.td{padding:10px 12px;border:.5px solid var(--bdr);border-radius:10px;margin-bottom:5px;background:var(--cd)}
-.td.rest{opacity:.5;background:var(--bg)}.td.dov{border-color:var(--acc);background:var(--accL)}
-.td-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-.td-day{font-weight:600;font-size:13px}
-.td-btns{display:flex;gap:4px;align-items:center}
-.td-ed{border:none;background:none;font-size:15px;cursor:pointer;color:var(--tx3);padding:2px 4px}
-.td-sv{padding:5px 14px;border:none;background:var(--acc);color:#fff;border-radius:6px;font-size:11px;font-family:var(--f);cursor:pointer;font-weight:600}
-.act-pills{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
-.act-pill{font-size:12px;font-weight:600;padding:4px 10px;border-radius:8px}
-.pill-run{background:#E1F5EE;color:#0F6E56}.pill-long{background:#FAECE7;color:#D85A30}.pill-hiit{background:#EEEDFE;color:#534AB7}.pill-hike{background:#FAEEDA;color:#854F0B}.pill-bike{background:#E6F1FB;color:#378ADD}.pill-kayak{background:#E1F5EE;color:#085041}.pill-swim{background:#EEEDFE;color:#534AB7}.pill-walk{background:#F1EFE8;color:#5F5E5A}.pill-yoga{background:#FBEAF0;color:#993556}.pill-other{background:#F1EFE8;color:#5F5E5A}.pill-rest{background:#f5f5f0;color:#888780}
-.td-log{margin-top:6px}
-.lr{display:flex;gap:5px;align-items:center;margin-bottom:5px}
-.lr label{font-size:12px;color:var(--tx2);font-weight:500}
-.lr input{width:52px;padding:8px 4px;border:.5px solid var(--bdr);border-radius:6px;font-family:var(--f);font-size:14px;text-align:center;outline:none;background:var(--cd);-webkit-appearance:none}
-.lr input:focus{border-color:var(--acc)}.lr input.w{width:62px}
-.td-a{font-size:11px;margin-top:4px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-.td-a .ok{color:var(--accD);font-weight:700;font-size:14px}.pace{font-weight:600;color:var(--blue)}
-.wn{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.wn button{border:none;background:none;font-size:18px;cursor:pointer;color:var(--tx2);padding:6px 10px}.wn-l{font-weight:600;font-size:13px}
-.wi{display:flex;gap:6px;align-items:center;margin-top:6px}
-.wi input{flex:1;padding:10px;border:.5px solid var(--bdr);border-radius:8px;font-family:var(--f);font-size:14px;background:var(--cd);outline:none;-webkit-appearance:none}
-.wi button{padding:10px 16px;border:none;background:var(--acc);color:#fff;border-radius:8px;font-family:var(--f);font-size:12px;font-weight:600;cursor:pointer}
-.mh{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:.5px solid var(--bdr)}
-.mn{font-weight:500;font-size:14px}.mc{font-size:13px;color:var(--tx2)}
-.mi{display:flex;align-items:center;padding:6px 0;font-size:12px;border-bottom:.5px solid rgba(0,0,0,.03);gap:6px}
-.mi-n{flex:1}.mi-m{font-size:10px;color:var(--tx2)}.mi-c{color:var(--tx2);font-size:11px;min-width:32px;text-align:right}
-.mi-d{border:none;background:none;color:var(--coral);cursor:pointer;font-size:14px;padding:2px}
-.ab{width:100%;padding:10px;border:1.5px dashed var(--bdr);border-radius:8px;background:none;font-family:var(--f);font-size:12px;color:var(--accD);cursor:pointer;margin-top:6px;font-weight:600}
-.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:210;align-items:center;justify-content:center}.ov.open{display:flex}
-.ov-c{background:var(--cd);border-radius:14px;padding:20px;width:92%;max-width:360px;max-height:85vh;overflow-y:auto}
-.ov-c h3{font-size:16px;margin-bottom:14px}.ov-c label{font-size:12px;color:var(--tx2);display:block;margin-bottom:3px}
-.ov-c input,.ov-c select{width:100%;padding:10px;border:.5px solid var(--bdr);border-radius:8px;font-family:var(--f);font-size:13px;margin-bottom:10px;outline:none;background:var(--cd);-webkit-appearance:none}
-.ov-b{display:flex;gap:6px;margin-top:6px}.ov-b button{flex:1;padding:12px;border-radius:8px;font-family:var(--f);font-size:13px;font-weight:600;cursor:pointer}
-.ov-cn{border:.5px solid var(--bdr);background:none;color:var(--tx)}.ov-ok{border:none;background:var(--acc);color:#fff}
-.act-block{border:.5px solid var(--bdr);border-radius:10px;padding:12px;margin-bottom:8px}
-.act-block-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.act-block-label{font-size:13px;font-weight:600}
-.act-block-del{border:none;background:none;color:var(--coral);font-size:16px;cursor:pointer}
-.add-act-btn{width:100%;padding:10px;border:1.5px dashed var(--bdr);border-radius:8px;background:none;font-family:var(--f);font-size:12px;color:var(--accD);font-weight:600;cursor:pointer;margin-bottom:10px}
-.sm{display:none;position:fixed;inset:0;background:var(--bg);z-index:200;flex-direction:column}.sm.open{display:flex}
-.sm-top{padding:max(env(safe-area-inset-top),10px) 14px 10px;border-bottom:.5px solid var(--bdr);display:flex;gap:6px;align-items:center;background:var(--cd)}
-.sm-top input{flex:1;padding:10px;border:.5px solid var(--bdr);border-radius:8px;font-family:var(--f);font-size:14px;background:var(--cd);outline:none}
-.sm-x{border:none;background:none;font-size:13px;color:var(--tx2);cursor:pointer;padding:8px;font-family:var(--f);font-weight:500}
-.sm-r{flex:1;overflow-y:auto;padding:6px 14px;-webkit-overflow-scrolling:touch}
-.sr-i{padding:12px 0;border-bottom:.5px solid var(--bdr);cursor:pointer}.sr-i:active{background:var(--accL)}
-.sr-n{font-size:14px;font-weight:500}.sr-dd{font-size:11px;color:var(--tx2);margin-top:2px}
-.scn{padding:10px 14px;border:none;background:var(--acc);color:#fff;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--f)}
-.qa{padding:10px 14px;border-bottom:.5px solid var(--bdr)}.qa-t{font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:6px}
-.qa-r{display:flex;gap:5px;flex-wrap:wrap}
-.qc{padding:6px 12px;border:.5px solid var(--bdr);border-radius:14px;background:var(--cd);font-size:12px;cursor:pointer;font-family:var(--f)}.qc:active{background:var(--accL);border-color:var(--acc)}
-.me{padding:10px 14px;border-bottom:.5px solid var(--bdr)}
-.me-r{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;align-items:center}
-.me-r input{flex:1;padding:8px;border:.5px solid var(--bdr);border-radius:6px;font-family:var(--f);font-size:12px;background:var(--cd);outline:none;min-width:0;-webkit-appearance:none}
-.me-s{padding:8px 14px;border:none;background:var(--acc);color:#fff;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--f)}
-.sv-p{background:var(--bg);border-radius:8px;padding:10px;margin-bottom:10px}
-.sv-pr{display:flex;justify-content:space-between;font-size:12px;padding:2px 0}.sv-pr span{font-weight:600}
-.sv-s{display:flex;gap:6px;margin-bottom:8px}
-.sv-s input{flex:1;padding:10px;border:.5px solid var(--bdr);border-radius:8px;font-size:13px;outline:none;font-family:var(--f);-webkit-appearance:none}
-.sv-s select{width:80px;padding:10px;border:.5px solid var(--bdr);border-radius:8px;font-size:13px;outline:none;background:var(--cd);font-family:var(--f)}
-.rc{display:flex;justify-content:space-between;align-items:center;padding:10px;border:.5px solid var(--bdr);border-radius:8px;margin-bottom:5px;background:var(--cd)}
-.rc-n{font-weight:600;font-size:13px}.rc-i{font-size:11px;color:var(--tx2)}
-.wk-row{display:flex;gap:3px;margin-bottom:8px}
-.wk-day{flex:1;text-align:center;padding:8px 2px;border-radius:8px;background:var(--bg)}
-.wk-day.today{background:var(--accL);border:.5px solid var(--acc)}
-.wk-day-n{font-size:10px;color:var(--tx2);font-weight:500}
-.wk-day-c{font-size:13px;font-weight:600;margin-top:2px}
-.cv{display:none;position:fixed;inset:0;background:#000;z-index:300;flex-direction:column}.cv.open{display:flex}
-.cv-top{padding:max(env(safe-area-inset-top),12px) 14px 8px;display:flex;justify-content:space-between;align-items:center}
-.cv-x{border:none;background:rgba(255,255,255,.2);color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;font-family:var(--f)}
-#qr-reader{width:100%;flex:1}
-#qr-reader video{width:100%!important;border-radius:0!important}
-.search-loading{text-align:center;padding:20px;color:var(--tx2);font-size:13px}
+
+/* Pages */
+.pg{display:none;padding:12px 14px}.pg.on{display:block}
+
+/* Cards */
+.cd{background:var(--cd);border:.5px solid var(--bdr);border-radius:var(--r);padding:12px;margin-bottom:8px}
+.cd-t{font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+
+/* Hero */
+.hero{background:var(--hero);border-radius:12px;padding:14px 16px;margin-bottom:8px;color:#fff;display:flex;justify-content:space-between;align-items:center}
+.hero-left .hero-label{font-size:11px;opacity:.7;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.hero-left .hero-num{font-size:26px;font-weight:700;line-height:1.1}
+.hero-right{text-align:right;font-size:13px;opacity:.85;line-height:1.5}
+
+/* Tracker bars */
+.trk{margin-bottom:6px}
+.trk-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.trk-label span:first-child{font-weight:600}
+.trk-label span:last-child{color:var(--tx2)}
+.trk-bar{height:6px;background:#eee;border-radius:3px;overflow:hidden}
+.trk-fill{height:100%;border-radius:3px;transition:width .3s}
+
+/* Pills */
+.pill{display:inline-flex;align-items:center;gap:3px;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:500;white-space:nowrap}
+
+/* Buttons */
+.btn{border:none;border-radius:6px;padding:7px 16px;font-family:var(--f);font-size:13px;font-weight:600;cursor:pointer}
+.btn-g{background:var(--acc);color:#fff}
+.btn-o{background:transparent;border:1px solid var(--bdr);color:var(--tx)}
+
+/* Inputs */
+.inp{border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;font-family:var(--f);font-size:15px;width:100%;background:var(--cd)}
+.inp-sm{width:52px;text-align:center;padding:6px 4px;font-size:14px}
+
+/* Modal overlay */
+.modal-bg{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:100;justify-content:center;align-items:flex-end}
+.modal-bg.on{display:flex}
+.modal{background:var(--cd);border-radius:16px 16px 0 0;width:100%;max-width:430px;max-height:85vh;overflow-y:auto;padding:16px;animation:slideUp .2s}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.modal-top h3{font-size:17px;font-weight:600}
+.modal-x{background:none;border:none;font-size:20px;cursor:pointer;color:var(--tx2);padding:4px}
+
+/* Training card */
+.t-card{background:var(--cd);border:.5px solid var(--bdr);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;cursor:grab;touch-action:pan-y}
+.t-card.dragging{opacity:.5}
+.t-top{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.t-day{font-size:15px;font-weight:600;min-width:80px}
+.t-day small{font-weight:400;color:var(--tx2);font-size:13px}
+.t-actions{display:flex;align-items:center;gap:8px}
+.t-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.t-log{margin-top:10px;border-top:.5px solid var(--bdr);padding-top:10px}
+.t-log-row{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.t-log-row .pill{font-size:11px;padding:2px 8px}
+.t-done{margin-top:8px;border-top:.5px solid var(--bdr);padding-top:8px}
+.t-done-row{display:flex;align-items:center;gap:6px;font-size:13px;padding:3px 0}
+
+/* Nutrition */
+.meal-sec{margin-bottom:8px}
+.meal-hdr{font-size:13px;font-weight:600;color:var(--tx2);padding:6px 0;border-bottom:.5px solid var(--bdr);display:flex;justify-content:space-between;align-items:center}
+.meal-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:.5px solid #f0f0ec;font-size:13px}
+.meal-item-info{flex:1}
+.meal-item-macros{font-size:11px;color:var(--tx2)}
+.meal-item-cal{font-weight:600;font-size:14px;min-width:40px;text-align:right}
+.meal-item-del{background:none;border:none;color:var(--coral);cursor:pointer;font-size:14px;padding:2px 4px;margin-left:4px}
+
+/* Search */
+.search-wrap{position:relative;margin-bottom:8px}
+.search-wrap input{padding-right:36px}
+.search-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:var(--acc);border:none;border-radius:4px;color:#fff;width:28px;height:28px;cursor:pointer;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.chip{background:var(--accL);color:var(--accD);border:none;border-radius:12px;padding:5px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--f)}
+
+/* Cal row */
+.cal-row{display:flex;gap:2px;margin-bottom:8px;overflow-x:auto}
+.cal-day{flex:1;min-width:44px;text-align:center;padding:6px 2px;border-radius:6px;font-size:10px}
+.cal-day.today{background:var(--accL);font-weight:600}
+.cal-day .cal-n{font-size:12px;font-weight:600;margin-bottom:1px}
+.cal-day .cal-v{font-size:13px;font-weight:700}
+
+/* Weight */
+.wt-input{display:flex;align-items:center;gap:8px}
+
+/* Week nav */
+.wk-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.wk-nav button{background:none;border:none;cursor:pointer;font-size:18px;color:var(--acc);padding:4px 8px}
+.wk-nav .wk-label{font-size:14px;font-weight:600}
+
+/* Weekly stats */
+.wk-stats{display:flex;gap:6px;margin-bottom:8px}
+.wk-stat{flex:1;background:var(--cd);border:.5px solid var(--bdr);border-radius:var(--r);padding:8px;text-align:center}
+.wk-stat .wk-sv{font-size:20px;font-weight:700}
+.wk-stat .wk-sl{font-size:10px;color:var(--tx2);text-transform:uppercase;letter-spacing:.3px}
+
+/* Race goals */
+.race-card{background:var(--cd);border:.5px solid var(--bdr);border-radius:var(--r);padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.race-info .race-name{font-size:15px;font-weight:600}
+.race-info .race-det{font-size:12px;color:var(--tx2)}
+.race-actions{display:flex;gap:6px}
+.race-actions button{background:none;border:none;cursor:pointer;font-size:14px;color:var(--tx2)}
+
+/* Barcode */
+#barcode-reader{width:100%;max-width:300px;margin:0 auto}
+#barcode-reader video{border-radius:8px}
+
+/* Charts */
+canvas{display:block;width:100%;border-radius:var(--r)}
 </style>
 </head>
 <body>
 <div class="app">
-<div class="hdr"><div class="logo">FUEL<span>.RUN</span></div><div style="font-size:13px;color:var(--tx2)" id="hD"></div></div>
+<header class="hdr">
+<div class="logo">fuel<span>.run</span></div>
+<div class="hdr-dt" id="hdrDate"></div>
+</header>
 
-<div class="pg on" id="pg-dash">
-<div class="hero"><div style="display:flex;justify-content:space-between;align-items:flex-end"><div><div style="font-size:10px;font-weight:500;opacity:.7;letter-spacing:1px;text-transform:uppercase">Race day countdown</div><div style="display:flex;align-items:baseline;gap:5px;margin-top:4px" id="cntd"></div></div><div style="text-align:right"><div style="font-size:24px;font-weight:700" id="dgT"></div><div style="font-size:13px;opacity:.7" id="dgD"></div></div></div></div>
-<div class="cd"><div style="display:flex;align-items:center;gap:10px"><div style="width:40px;height:40px;border-radius:50%;background:var(--accL);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div style="flex:1" id="tPlan"></div></div></div>
-<div class="cd"><div class="cd-t">This week</div><div style="display:flex;gap:6px;margin-bottom:10px" id="wkNums"></div><div id="wkTrk"></div></div>
-<div class="cd"><div class="cd-t">Nutrition</div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><div style="font-size:24px;font-weight:700;color:var(--blue)" id="nEat">0</div><div style="font-size:14px;color:var(--tx2)" id="nTgt"></div></div><div style="height:7px;background:#eee;border-radius:4px;margin-bottom:10px"><div style="height:100%;border-radius:4px;transition:width .3s" id="nBar"></div></div><div id="nTrk"></div></div>
-<div class="cd"><div class="cd-t">Weight</div><div style="display:flex;gap:6px"><div class="st"><div class="st-v" style="color:var(--blue)" id="cW">128.5</div><div class="st-l">now</div></div><div class="st"><div class="st-v" style="color:var(--acc)">125.0</div><div class="st-l">goal</div></div><div class="st"><div class="st-v" style="color:var(--coral)" id="wD">3.5</div><div class="st-l">to go</div></div></div><div class="wi"><input type="number" step="0.1" placeholder="Log weight" id="wIn" inputmode="decimal"><button onclick="logWt()">Log</button></div></div>
+<!-- HOME PAGE -->
+<div class="pg on" id="pgHome">
+<div class="hero" id="heroCard"></div>
+
+<div class="cd">
+<div class="cd-t" style="display:flex;align-items:center;gap:4px">
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--tx2)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+Today's plan
+</div>
+<div id="todayPlan"></div>
 </div>
 
-<div class="pg" id="pg-train"><div class="cd"><div class="cd-t">Race goals</div><div id="rL"></div><button class="ab" onclick="oRc()">+ Add race</button></div><div class="wn"><button onclick="chWk(-1)">&lsaquo;</button><div class="wn-l" id="wkL"></div><button onclick="chWk(1)">&rsaquo;</button></div><div style="display:flex;gap:5px;margin-bottom:10px" id="wkS"></div><div style="font-size:10px;color:var(--tx3);text-align:center;margin-bottom:6px">Drag to rearrange</div><div id="wkD"></div></div>
-
-<div class="pg" id="pg-eat">
-<div class="cd"><div class="cd-t">This week's calories</div><div class="wk-row" id="wkCals"></div><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--tx2)" id="wkCalStats"></div></div>
-<div class="cd"><div class="cd-t" id="eDayLabel">Daily targets</div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><div style="font-size:24px;font-weight:700;color:var(--blue)" id="eEat">0</div><div style="font-size:14px;color:var(--tx2)" id="eTgt"></div></div><div style="height:7px;background:#eee;border-radius:4px;margin-bottom:10px"><div style="height:100%;border-radius:4px;transition:width .3s" id="eBar"></div></div><div id="eTrk"></div></div>
-<div id="mSec"></div>
+<div class="cd">
+<div class="cd-t">This week</div>
+<div id="weekSummary"></div>
 </div>
 
-<div class="pg" id="pg-prog"><div class="cd"><div class="cd-t">Weight trend</div><div style="display:flex;gap:6px;margin-bottom:8px"><div class="st"><div class="st-v" style="color:var(--blue)" id="pW">128.5</div><div class="st-l">now</div></div><div class="st"><div class="st-v" style="color:var(--acc)">125.0</div><div class="st-l">goal</div></div><div class="st"><div class="st-v" style="color:var(--coral)" id="pDL"></div><div class="st-l">days left</div></div></div><canvas id="wCh" style="width:100%;height:150px"></canvas></div><div class="cd"><div class="cd-t">Weekly mileage</div><div style="display:flex;gap:12px;margin-bottom:6px"><div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--tx2)"><div style="width:10px;height:10px;background:var(--acc);border-radius:2px;opacity:.3"></div>Planned</div><div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--tx2)"><div style="width:10px;height:4px;background:var(--coral);border-radius:2px"></div>Actual</div></div><canvas id="mCh" style="width:100%;height:170px"></canvas></div><div class="cd"><div class="cd-t">This week</div><div id="tL"></div></div></div>
-
-<div class="nav"><button class="nav-i" style="color:var(--hero);font-weight:600" onclick="goTab('dash')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--acc)" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button><button class="nav-i" style="color:var(--tx3)" onclick="goTab('train')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Training</button><button class="nav-i" style="color:var(--tx3)" onclick="goTab('eat')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--purp)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/></svg>Nutrition</button><button class="nav-i" style="color:var(--tx3)" onclick="goTab('prog')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Progress</button></div>
+<div class="cd">
+<div class="cd-t">Nutrition</div>
+<div id="homeNutr"></div>
 </div>
 
-<!-- Food Search Modal -->
-<div class="sm" id="sM"><div class="sm-top"><input type="text" placeholder="Search foods..." id="fS" oninput="srF()" autocomplete="off"><button class="scn" onclick="oCam()">Scan</button><button class="sm-x" onclick="cS()">Cancel</button></div><div class="qa"><div class="qa-t">Quick add</div><div class="qa-r"><div class="qc" onclick="qTap('Banana',105,1.3,27,.4)">Banana</div><div class="qc" onclick="qTap('Egg',78,6,.6,5)">Egg</div><div class="qc" onclick="qTap('Chicken 100g',165,31,0,3.6)">Chicken</div><div class="qc" onclick="qTap('Rice cup',206,4.3,45,.4)">Rice</div><div class="qc" onclick="qTap('Oatmeal',154,5.4,27,2.5)">Oatmeal</div><div class="qc" onclick="qTap('Greek yogurt',100,17,6,.7)">Yogurt</div><div class="qc" onclick="qTap('Apple',95,.5,25,.3)">Apple</div><div class="qc" onclick="qTap('Protein shake',120,25,3,1.5)">Shake</div><div class="qc" onclick="qTap('Sweet potato',103,2.1,24,.1)">Sweet potato</div><div class="qc" onclick="qTap('PB 2tbsp',188,8,6,16)">Peanut butter</div></div></div><div class="me"><div class="qa-t">Manual entry</div><div class="me-r"><input placeholder="Name" id="mN"><input placeholder="Cal" id="mCl" type="number" inputmode="numeric" style="max-width:48px"><input placeholder="P" id="mP" type="number" inputmode="numeric" style="max-width:34px"><input placeholder="C" id="mC" type="number" inputmode="numeric" style="max-width:34px"><input placeholder="F" id="mF" type="number" inputmode="numeric" style="max-width:34px"><button class="me-s" onclick="mAdd()">+</button></div></div><div class="sm-r" id="sR"></div></div>
+<div class="cd">
+<div class="cd-t">Weight</div>
+<div id="homeWeight"></div>
+</div>
+</div>
 
-<!-- Food Confirm Modal -->
-<div class="ov" id="cfOv"><div class="ov-c"><h3 id="cfNm"></h3><div class="sv-p" id="cfPrev"></div><label>Amount</label><div class="sv-s"><input type="number" value="1" step="0.5" min="0.25" id="cfAmt" inputmode="decimal"><select id="cfUnit"><option value="serving">servings</option><option value="g">grams</option><option value="oz">oz</option></select></div><div class="sv-p" id="cfCalc"></div><div class="ov-b"><button class="ov-cn" onclick="cCf()">Cancel</button><button class="ov-ok" onclick="okCf()">Add to log</button></div></div></div>
+<!-- TRAINING PAGE -->
+<div class="pg" id="pgTrain">
+<div class="cd" id="raceGoalsCard">
+<div class="cd-t" style="display:flex;justify-content:space-between;align-items:center">
+Race goals
+<button class="btn btn-g" style="font-size:11px;padding:5px 12px" onclick="openRaceModal()">+ Add</button>
+</div>
+<div id="raceList"></div>
+</div>
 
-<!-- Edit Workout Modal (multi-activity) -->
-<div class="ov" id="edOv"><div class="ov-c"><h3 id="edTitle">Edit workout</h3><div id="edActs"></div><button class="add-act-btn" onclick="addEdAct()">+ Add another activity</button><div class="ov-b"><button class="ov-cn" onclick="cEd()">Cancel</button><button class="ov-ok" onclick="sEd()">Save</button></div></div></div>
+<div class="wk-nav">
+<button onclick="changeWeek(-1)">‹</button>
+<span class="wk-label" id="wkLabel"></span>
+<button onclick="changeWeek(1)">›</button>
+</div>
 
-<!-- Race Modal -->
-<div class="ov" id="rcOv"><div class="ov-c"><h3 id="rcTi">Add race</h3><label>Name</label><input id="rcNm" placeholder="e.g. City Half Marathon"><label>Date</label><input id="rcDt" type="date"><label>Distance</label><select id="rcDs"><option value="5K">5K</option><option value="10K">10K</option><option value="Half">Half marathon</option><option value="Full" selected>Marathon</option><option value="Other">Other</option></select><label>Goal time (h:mm:ss)</label><input id="rcGl" placeholder="3:45:00"><label>Notes</label><input id="rcNo"><div class="ov-b"><button class="ov-cn" onclick="cRc()">Cancel</button><button class="ov-ok" onclick="sRc()">Save</button></div></div></div>
+<div class="wk-stats" id="wkStats"></div>
+<div id="trainCards"></div>
+</div>
 
-<!-- Barcode Scanner -->
-<div class="cv" id="camV"><div class="cv-top"><div style="color:#fff;font-size:14px;font-weight:600">Scan barcode</div><button class="cv-x" onclick="xCam()">Close</button></div><div id="qr-reader"></div></div>
+<!-- NUTRITION PAGE -->
+<div class="pg" id="pgNutr">
+<div class="cd">
+<div class="cd-t">Weekly calorie targets</div>
+<div class="cal-row" id="calRow"></div>
+<div id="calAvg" style="font-size:12px;color:var(--tx2);text-align:center"></div>
+</div>
+
+<div class="cd">
+<div class="cd-t" id="nutrDayLabel">Daily targets</div>
+<div id="nutrTargets"></div>
+</div>
+
+<div class="cd" id="foodCard">
+<div class="cd-t" style="display:flex;justify-content:space-between;align-items:center">
+Log food
+<button class="btn btn-o" style="font-size:11px;padding:5px 10px" onclick="openBarcode()">📷 Scan</button>
+</div>
+<div class="search-wrap">
+<input class="inp" type="text" id="foodSearch" placeholder="Search foods..." inputmode="search">
+<button class="search-btn" onclick="searchFood()">⌕</button>
+</div>
+<div class="chips" id="quickChips"></div>
+<div id="searchResults"></div>
+<div style="margin-top:6px">
+<button class="btn btn-o" style="width:100%;font-size:12px" onclick="openManualEntry()">+ Manual entry</button>
+</div>
+</div>
+
+<div id="mealSections"></div>
+</div>
+
+<!-- PROGRESS PAGE -->
+<div class="pg" id="pgProg">
+<div class="cd">
+<div class="cd-t">Weight trend</div>
+<canvas id="wtChart" height="180"></canvas>
+</div>
+<div class="cd">
+<div class="cd-t">Weekly mileage</div>
+<canvas id="miChart" height="180"></canvas>
+</div>
+<div class="cd">
+<div class="cd-t">This week log</div>
+<div id="progLog"></div>
+</div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+<button class="nav-i on" onclick="goPage('Home')" id="navHome">
+<svg viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+Home
+</button>
+<button class="nav-i" onclick="goPage('Train')" id="navTrain">
+<svg viewBox="0 0 24 24" fill="none" stroke="#D85A30" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+Training
+</button>
+<button class="nav-i" onclick="goPage('Nutr')" id="navNutr">
+<svg viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="1.8"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+Nutrition
+</button>
+<button class="nav-i" onclick="goPage('Prog')" id="navProg">
+<svg viewBox="0 0 24 24" fill="none" stroke="#378ADD" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+Progress
+</button>
+</nav>
+</div>
+
+<!-- MODALS -->
+<div class="modal-bg" id="editModal">
+<div class="modal">
+<div class="modal-top">
+<h3 id="editModalTitle">Edit workout</h3>
+<button class="modal-x" onclick="closeModal('editModal')">✕</button>
+</div>
+<div id="editModalBody"></div>
+</div>
+</div>
+
+<div class="modal-bg" id="raceModal">
+<div class="modal">
+<div class="modal-top">
+<h3 id="raceModalTitle">Add race</h3>
+<button class="modal-x" onclick="closeModal('raceModal')">✕</button>
+</div>
+<div id="raceModalBody"></div>
+</div>
+</div>
+
+<div class="modal-bg" id="foodModal">
+<div class="modal">
+<div class="modal-top">
+<h3>Confirm food</h3>
+<button class="modal-x" onclick="closeModal('foodModal')">✕</button>
+</div>
+<div id="foodModalBody"></div>
+</div>
+</div>
+
+<div class="modal-bg" id="manualModal">
+<div class="modal">
+<div class="modal-top">
+<h3>Manual entry</h3>
+<button class="modal-x" onclick="closeModal('manualModal')">✕</button>
+</div>
+<div id="manualModalBody">
+<div style="display:flex;flex-direction:column;gap:8px">
+<input class="inp" id="manName" placeholder="Food name">
+<div style="display:flex;gap:6px">
+<input class="inp" id="manCal" placeholder="Cal" type="number" inputmode="numeric">
+<input class="inp" id="manP" placeholder="Protein" type="number" inputmode="decimal">
+<input class="inp" id="manC" placeholder="Carbs" type="number" inputmode="decimal">
+<input class="inp" id="manF" placeholder="Fat" type="number" inputmode="decimal">
+</div>
+<select class="inp" id="manMeal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snacks</option></select>
+<button class="btn btn-g" style="width:100%" onclick="logManual()">Log</button>
+</div>
+</div>
+</div>
+</div>
+
+<div class="modal-bg" id="barcodeModal">
+<div class="modal">
+<div class="modal-top">
+<h3>Scan barcode</h3>
+<button class="modal-x" onclick="closeBarcodeModal()">✕</button>
+</div>
+<div id="barcode-reader"></div>
+<p style="text-align:center;font-size:11px;color:var(--tx2);margin-top:8px">Point camera at barcode</p>
+</div>
+</div>
+
+<div class="modal-bg" id="goalWeightModal">
+<div class="modal" style="padding:20px">
+<div class="modal-top">
+<h3>Edit goal weight</h3>
+<button class="modal-x" onclick="closeModal('goalWeightModal')">✕</button>
+</div>
+<div style="display:flex;gap:8px;align-items:center">
+<input class="inp" type="number" id="goalWtInput" step="0.5" inputmode="decimal" style="width:100px">
+<span style="font-size:12px;color:var(--tx2)">lbs</span>
+<button class="btn btn-g" onclick="saveGoalWeight()">Save</button>
+</div>
+</div>
+</div>
 
 <script>
-// === IndexedDB ===
-const DB_NAME='fuelrun';let idb=null;
-function openDB(){return new Promise((res,rej)=>{let r=indexedDB.open(DB_NAME,1);r.onupgradeneeded=e=>{e.target.result.createObjectStore('kv')};r.onsuccess=e=>{idb=e.target.result;res(idb)};r.onerror=e=>rej(e)})}
-function dbGet(k){return new Promise((res,rej)=>{let t=idb.transaction('kv','readonly').objectStore('kv').get(k);t.onsuccess=()=>res(t.result);t.onerror=e=>rej(e)})}
-function dbSet(k,v){return new Promise((res,rej)=>{let t=idb.transaction('kv','readwrite').objectStore('kv').put(v,k);t.onsuccess=()=>res();t.onerror=e=>rej(e)})}
-async function save(){if(!idb)return;try{await dbSet('meals',JSON.stringify({date:todayDate(),meals:S.meals}));await dbSet('wts',JSON.stringify(S.wts));await dbSet('races',JSON.stringify(S.races));let a={},e={};S.plan.forEach(w=>w.days.forEach(d=>{if(d.a)a[d.date]=d.a;e[d.date]={acts:d.acts}}));await dbSet('actuals',JSON.stringify(a));await dbSet('edits',JSON.stringify(e))}catch(ex){console.error(ex)}}
-async function load(){if(!idb)return;try{let m=await dbGet('meals');if(m){let d=JSON.parse(m);if(d.date===todayDate())S.meals=d.meals;else S.meals={breakfast:[],lunch:[],dinner:[],snacks:[]}}let w=await dbGet('wts');if(w)S.wts=JSON.parse(w);let r=await dbGet('races');if(r)S.races=JSON.parse(r);let a=await dbGet('actuals');if(a){let ac=JSON.parse(a);S.plan.forEach(wk=>wk.days.forEach(d=>{if(ac[d.date])d.a=ac[d.date]}))}let e=await dbGet('edits');if(e){let ed=JSON.parse(e);S.plan.forEach(wk=>wk.days.forEach(d=>{if(ed[d.date]&&ed[d.date].acts)d.acts=ed[d.date].acts}))}}catch(ex){console.error(ex)}}
+// ===== CONFIG =====
+const USER={wt:128.5,goalWt:125,ht:170.18,age:40,sex:'F',marathonDate:'2026-11-13',marathonGoal:'3:45:00'};
+const WEEK1_START=new Date(2026,3,13); // Apr 13 2026
+const DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const ACTIVITY_TYPES=['Easy run','Long run','Tempo','Intervals','HIIT','Hike','Bike','Mtn bike','Kayak','Swim','Walk','Yoga','Other'];
+const ACT_COLORS={'Easy run':'var(--acc)','Long run':'var(--coral)','Tempo':'var(--acc)','Intervals':'var(--acc)','HIIT':'var(--purp)','Hike':'var(--amber)','Bike':'var(--blue)','Mtn bike':'var(--blue)','Kayak':'var(--accD)','Swim':'var(--blue)','Walk':'var(--acc)','Yoga':'var(--pink)','Other':'var(--tx2)'};
+const ACT_BGS={'Easy run':'var(--accL)','Long run':'var(--coralL)','Tempo':'var(--accL)','Intervals':'var(--accL)','HIIT':'var(--purpL)','Hike':'var(--amberL)','Bike':'var(--blueL)','Mtn bike':'var(--blueL)','Kayak':'var(--accL)','Swim':'var(--blueL)','Walk':'var(--accL)','Yoga':'var(--pinkL)','Other':'#eee'};
+const MILE_ACTS=['Easy run','Long run','Tempo','Intervals','Hike','Bike','Mtn bike','Walk'];
+const TIME_ONLY=['HIIT','Kayak','Swim','Yoga','Other'];
+const QUICK_CHIPS=['Banana','Egg','Chicken','Rice','Oatmeal','Greek yogurt','Apple','Protein shake','Sweet potato','Peanut butter'];
 
-// === Config ===
-const GW=125,MSS=new Date(2026,6,1),WT=128.5,BMR=Math.round(10*(WT/2.205)+6.25*170.18-5*40-161);
-const ACT_TYPES=[{v:'run',l:'Easy run',css:'pill-run',hasMi:true},{v:'long',l:'Long run',css:'pill-long',hasMi:true},{v:'tempo',l:'Tempo',css:'pill-long',hasMi:true},{v:'intervals',l:'Intervals',css:'pill-long',hasMi:true},{v:'hiit',l:'HIIT',css:'pill-hiit',hasMi:false},{v:'hike',l:'Hike',css:'pill-hike',hasMi:true},{v:'bike',l:'Bike',css:'pill-bike',hasMi:true},{v:'mtbike',l:'Mtn bike',css:'pill-bike',hasMi:true},{v:'kayak',l:'Kayak',css:'pill-kayak',hasMi:false},{v:'swim',l:'Swim',css:'pill-swim',hasMi:false},{v:'walk',l:'Walk',css:'pill-walk',hasMi:true},{v:'yoga',l:'Yoga',css:'pill-yoga',hasMi:false},{v:'other',l:'Other',css:'pill-other',hasMi:false}];
-function actMeta(v){return ACT_TYPES.find(a=>a.v===v)||ACT_TYPES[ACT_TYPES.length-1]}
-function todayDate(){return new Date().toISOString().slice(0,10)}
-let S={tab:'dash',wO:0,meals:{breakfast:[],lunch:[],dinner:[],snacks:[]},wts:[{d:todayDate(),v:128.5}],sM:'breakfast',cfItem:null,cfBase:null,edI:null,rcE:null,races:[{id:1,name:'Marathon',date:'2026-11-13',dist:'Full',goal:'3:45:00',notes:''}],plan:[],edActs:[]};
+// ===== STATE =====
+let plan=[];
+let curWeek=0;
+let meals={Breakfast:[],Lunch:[],Dinner:[],Snacks:[]};
+let weightHist=[];
+let raceGoals=[];
+let currentMealSlot='Breakfast';
+let pendingFood=null;
+let barcodeScanner=null;
 
-// === Helpers ===
-function ds(d){return d.toISOString().slice(0,10)}function db2(a,b){return Math.round((b-a)/864e5)}
-function calcTgtForDay(day){let acts=day.acts||[];let mi=0,hm=0,hasEndurance=false;
-acts.forEach(a=>{mi+=a.miles||0;if(a.type==='hiit')hm+=a.mins||0;if(['hike','bike','mtbike','kayak','swim'].includes(a.type))hasEndurance=true;if(['long','tempo'].includes(a.type))hasEndurance=true});
-let af=1.35;if(mi>=8)af=1.6;else if(mi>=4)af=1.5;else if(mi>0)af=1.45;if(hm>0)af+=.05;if(hasEndurance)af=Math.max(af,1.5);
-let cals=Math.round(BMR*af)-100,pro=Math.round(WT),prC=pro*4,cbP=hasEndurance?.50:.45,cbC=Math.round(cals*cbP),carb=Math.round(cbC/4),fatC=cals-prC-cbC,fat=Math.max(Math.round(fatC/9),30);cals=prC+carb*4+fat*9;return{cals,pro,carb,fat}}
-function getTgt(){let w=curWk(),td=todayDate(),today=w?w.days.find(d=>d.date===td):null;if(!today)return{cals:1700,pro:129,carb:190,fat:45};return calcTgtForDay(today)}
-function mt(a,k){return a.reduce((s,i)=>s+(i[k]||0),0)}function at(k){return Object.values(S.meals).reduce((s,a)=>s+mt(a,k),0)}
-function calcPace(mi,h,m,s){if(!mi||mi<=0)return null;let t=(h||0)*3600+(m||0)*60+(s||0);if(t<=0)return null;let sp=t/mi,pm=Math.floor(sp/60),ps=Math.round(sp%60);return`${pm}:${ps.toString().padStart(2,'0')}/mi`}
-function fmtTm(h,m,s){let p=[];if(h>0)p.push(h+'h');p.push((m||0).toString().padStart(2,'0')+'m');p.push((s||0).toString().padStart(2,'0')+'s');return p.join(' ')}
-function trkH(l,c,mx,col){let p=mx>0?Math.min(100,Math.round(c/mx*100)):0;return`<div class="trk-r"><div class="trk-l">${l}</div><div class="trk-b"><div class="trk-f" style="width:${p}%;background:${col}"></div></div><div class="trk-v" style="color:${col}">${Math.round(c)} / ${mx}</div></div>`}
+// ===== INDEXEDDB =====
+let db;
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open('fuelrun',3);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('kv'))d.createObjectStore('kv')};r.onsuccess=e=>{db=e.target.result;res()};r.onerror=e=>rej(e)})}
+function dbGet(k){return new Promise(r=>{const t=db.transaction('kv','readonly').objectStore('kv').get(k);t.onsuccess=()=>r(t.result);t.onerror=()=>r(undefined)})}
+function dbSet(k,v){return new Promise(r=>{const t=db.transaction('kv','readwrite').objectStore('kv').put(v,k);t.onsuccess=()=>r();t.onerror=()=>r()})}
 
-// === Build Plan ===
-function buildPlan(){let plan=[];
-function mkDay(date,dow,acts){return{date,dow,acts,a:null}}
-let w0s=new Date(2026,3,13),w0=[];let d0=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-for(let i=0;i<7;i++){let d=new Date(w0s);d.setDate(d.getDate()+i);let acts=[];
-if(i===1)acts=[{type:'run',desc:'Easy 3 mi',miles:3,mins:0}];
-else if(i===2)acts=[{type:'run',desc:'Easy 3 mi',miles:3,mins:0},{type:'hiit',desc:'15 min',miles:0,mins:15}];
-else if(i===4)acts=[{type:'run',desc:'Easy 3 mi',miles:3,mins:0},{type:'hiit',desc:'10 min',miles:0,mins:10}];
-else if(i===5)acts=[{type:'run',desc:'Easy 3 mi',miles:3,mins:0}];
-else if(i===6)acts=[{type:'run',desc:'Easy 3 mi',miles:3,mins:0}];
-w0.push(mkDay(ds(d),d0[i],acts))}
-plan.push({week:1,phase:'base',tMi:15,days:w0});
-let cur=new Date(2026,3,20),end=new Date(2026,10,14),wMi=14,wN=1;
-while(cur<end){wN++;let w=[],isM=cur>=MSS,phase=isM?'marathon':'base',dates=[];
-for(let i=0;i<7;i++){let d=new Date(cur);d.setDate(d.getDate()+i);dates.push(ds(d))}
-let lMi,eMi;if(!isM){if(wN%4===0)wMi=Math.max(wMi-3,10);else wMi=Math.min(wMi+2,30);lMi=Math.round(wMi*.35);eMi=Math.round((wMi-lMi)/3)}else{let mW=db2(MSS,cur)/7;if(mW<14){wMi=Math.min(30+mW*2.5,55);if(Math.floor(mW)%4===3)wMi*=.75}else wMi=Math.max(55-(mW-14)*8,20);wMi=Math.round(wMi);lMi=Math.min(Math.round(wMi*.35),22);eMi=Math.round((wMi-lMi)/3)}
-let hp=[10,15,20],hi=wN%3,dow=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-for(let i=0;i<7;i++){let acts=[];
-if(i===1)acts=[{type:'run',desc:`Easy ${eMi} mi`,miles:eMi,mins:0}];
-else if(i===2)acts=[{type:'run',desc:`Easy ${eMi} mi`,miles:eMi,mins:0},{type:'hiit',desc:`${hp[hi]} min`,miles:0,mins:hp[hi]}];
-else if(i===4){if(isM)acts=[{type:'tempo',desc:`Tempo ${eMi+1} mi`,miles:eMi+1,mins:0},{type:'hiit',desc:`${hp[(hi+1)%3]} min`,miles:0,mins:hp[(hi+1)%3]}];else acts=[{type:'run',desc:`Easy ${eMi} mi`,miles:eMi,mins:0},{type:'hiit',desc:`${hp[(hi+1)%3]} min`,miles:0,mins:hp[(hi+1)%3]}]}
-else if(i===5){let sm=Math.round(lMi*.6);acts=[{type:'run',desc:`Mod ${sm} mi`,miles:sm,mins:0},{type:'hiit',desc:`${hp[(hi+2)%3]} min`,miles:0,mins:hp[(hi+2)%3]}]}
-else if(i===6)acts=[{type:'long',desc:`Long ${lMi} mi`,miles:lMi,mins:0}];
-w.push(mkDay(dates[i],dow[i],acts))}
-plan.push({week:wN,phase,tMi:wMi,days:w});cur.setDate(cur.getDate()+7)}S.plan=plan}
-function cwi(){let t=todayDate();for(let i=0;i<S.plan.length;i++){let w=S.plan[i];if(t>=w.days[0].date&&t<=w.days[w.days.length-1].date)return i}return 0}
-function gw(){let i=cwi()+S.wO;return S.plan[Math.max(0,Math.min(i,S.plan.length-1))]}function curWk(){return S.plan[cwi()]}
+async function loadData(){
+const m=await dbGet('meals_'+todayStr());
+if(m)meals=m; else meals={Breakfast:[],Lunch:[],Dinner:[],Snacks:[]};
+const w=await dbGet('weightHist');if(w)weightHist=w;
+const rg=await dbGet('raceGoals');if(rg)raceGoals=rg;
+const gw=await dbGet('goalWeight');if(gw)USER.goalWt=gw;
+const pe=await dbGet('planEdits');
+if(pe){pe.forEach(e=>{const wk=plan.find(w=>w.week===e.week);if(wk){const d=wk.days.find(d=>d.dateStr===e.dateStr);if(d){d.activities=e.activities}}});}
+const pa=await dbGet('planActuals');
+if(pa){pa.forEach(a=>{const wk=plan.find(w=>w.week===a.week);if(wk){const d=wk.days.find(d=>d.dateStr===a.dateStr);if(d)d.actuals=a.actuals}});}
+}
+async function saveMeals(){await dbSet('meals_'+todayStr(),meals)}
+async function saveWeightHist(){await dbSet('weightHist',weightHist)}
+async function saveRaces(){await dbSet('raceGoals',raceGoals)}
+async function savePlanEdits(){
+const edits=[];plan.forEach(wk=>wk.days.forEach(d=>{if(d.edited)edits.push({week:wk.week,dateStr:d.dateStr,activities:d.activities})}));
+await dbSet('planEdits',edits);
+}
+async function savePlanActuals(){
+const acts=[];plan.forEach(wk=>wk.days.forEach(d=>{if(d.actuals)acts.push({week:wk.week,dateStr:d.dateStr,actuals:d.actuals})}));
+await dbSet('planActuals',acts);
+}
 
-// === Tabs ===
-function goTab(t){S.tab=t;document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));document.getElementById('pg-'+t).classList.add('on');let ts2=['dash','train','eat','prog'],cols=['var(--hero)','var(--coral)','var(--purp)','var(--blue)'];document.querySelectorAll('.nav-i').forEach((b,i)=>{b.style.color=ts2[i]===t?cols[i]:'var(--tx3)';b.style.fontWeight=ts2[i]===t?'600':'400'});render()}
+// ===== DATE UTILS =====
+function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function fmtDate(d){return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}
+function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r}
+function daysBetween(a,b){return Math.ceil((b-a)/(1000*60*60*24))}
+function dateStr(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function parseDate(s){const p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2])}
 
-// === Render ===
+// ===== TRAINING PLAN =====
+function buildPlan(){
+plan=[];
+const baseEnd=new Date(2026,5,30); // Jun 30
+const raceDay=new Date(2026,10,13); // Nov 13
+const totalWeeks=Math.ceil(daysBetween(WEEK1_START,raceDay)/7);
+// Base phase weeks
+const baseWeeks=Math.ceil(daysBetween(WEEK1_START,baseEnd)/7);
+
+for(let w=0;w<totalWeeks;w++){
+const wkStart=addDays(WEEK1_START,w*7);
+const isBase=w<baseWeeks;
+const isDeload=(w+1)%4===0;
+const taperStart=totalWeeks-3;
+const isTaper=w>=taperStart;
+const raceWeek=w===totalWeeks-1;
+
+// Progressive mileage
+let weekMi;
+if(isBase){
+weekMi=12+Math.floor(w*1.5);
+if(isDeload)weekMi=Math.round(weekMi*0.7);
+}else{
+const mw=w-baseWeeks;
+weekMi=25+Math.floor(mw*1.8);
+if(isTaper){
+const tw=w-taperStart;
+weekMi=Math.round((25+Math.floor((taperStart-baseWeeks)*1.8))*(tw===0?.75:tw===1?.5:.3));
+}
+if(isDeload&&!isTaper)weekMi=Math.round(weekMi*0.7);
+}
+weekMi=Math.min(weekMi,50);
+
+// Distribute miles across 5 days (Mon=rest, Thu=rest)
+// Tue=easy, Wed=tempo/intervals, Fri=easy, Sat=moderate, Sun=long
+const longPct=isBase?.3:.35;
+const longMi=Math.round(weekMi*longPct*10)/10;
+const remaining=weekMi-longMi;
+const easyMi=Math.round(remaining/4*10)/10;
+
+const hiitMins=[10,15,20];
+const days=[];
+for(let d=0;d<7;d++){
+const dt=addDays(wkStart,d);
+const ds=dateStr(dt);
+const dow=DOW[d];
+let activities=[];
+
+if(d===0||d===3){
+// Rest days (Mon, Thu)
+}else if(d===6){
+// Sunday = long run
+activities.push({type:'Long run',detail:`${longMi} mi`,miles:longMi,time:0});
+if(w%3===2)activities.push({type:'HIIT',detail:`${hiitMins[w%3]} min`,miles:0,time:hiitMins[w%3]});
+}else if(d===2){
+// Wednesday = tempo or intervals
+const type=w%2===0?'Tempo':'Intervals';
+const mi=Math.round(easyMi*1.2*10)/10;
+activities.push({type,detail:`${mi} mi`,miles:mi,time:0});
+activities.push({type:'HIIT',detail:`${hiitMins[(w+1)%3]} min`,miles:0,time:hiitMins[(w+1)%3]});
+}else{
+// Tue, Fri, Sat = easy runs
+const mi=d===5?Math.round(easyMi*1.3*10)/10:easyMi;
+activities.push({type:'Easy run',detail:`${mi} mi`,miles:mi,time:0});
+if(d===1&&w%3===0)activities.push({type:'HIIT',detail:`${hiitMins[(w+2)%3]} min`,miles:0,time:hiitMins[(w+2)%3]});
+}
+
+if(raceWeek&&d===6){
+activities=[{type:'Long run',detail:'Marathon! 26.2 mi',miles:26.2,time:0}];
+}
+
+days.push({dow,date:dt,dateStr:ds,activities,actuals:null,edited:false});
+}
+
+plan.push({week:w+1,start:wkStart,days,totalMi:weekMi,isBase,isDeload,isTaper,raceWeek});
+}
+}
+
+// ===== NUTRITION CALC (Mifflin-St Jeor) =====
+function calcBMR(){
+const wtKg=USER.wt*0.453592;
+return 10*wtKg+6.25*USER.ht-5*USER.age-161;
+}
+
+function getActivityMultiplier(activities){
+if(!activities||activities.length===0)return 1.35; // rest
+let mult=1.35;
+let hasHIIT=false;
+activities.forEach(a=>{
+if(a.type==='HIIT')hasHIIT=true;
+else if(['Easy run','Walk'].includes(a.type)){
+if(a.miles&&a.miles<4)mult=Math.max(mult,1.45);
+else if(a.miles&&a.miles<8)mult=Math.max(mult,1.50);
+else if(a.miles&&a.miles>=8)mult=Math.max(mult,1.60);
+else mult=Math.max(mult,1.45);
+}else if(['Long run','Tempo','Intervals'].includes(a.type)){
+if(a.miles&&a.miles>=8)mult=Math.max(mult,1.60);
+else mult=Math.max(mult,1.50);
+}else if(['Hike','Bike','Mtn bike','Kayak','Swim'].includes(a.type)){
+mult=Math.max(mult,1.50);
+}
+});
+if(hasHIIT)mult+=0.05;
+return mult;
+}
+
+function calcDayTargets(activities){
+const bmr=calcBMR();
+const mult=getActivityMultiplier(activities);
+const tdee=Math.round(bmr*mult);
+const cals=tdee-100; // gentle deficit
+const proteinG=Math.round(USER.wt); // bodyweight in grams
+const proteinCal=proteinG*4;
+const isHard=activities&&activities.some(a=>['Long run','Tempo','Intervals'].includes(a.type)||(a.miles&&a.miles>=6));
+const carbPct=isHard?0.50:0.45;
+const carbCal=Math.round((cals-proteinCal)*carbPct/(1-0));
+const carbG=Math.round(carbCal/4);
+const fatCal=cals-proteinCal-carbCal;
+const fatG=Math.max(30,Math.round(fatCal/9));
+const adjCals=proteinCal+carbG*4+fatG*9;
+return{cals:adjCals,protein:proteinG,carbs:carbG,fat:fatG};
+}
+
+// ===== RENDER FUNCTIONS =====
 function render(){
-document.getElementById('hD').textContent=new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}).toUpperCase();
-let pr=S.races[0],rd=pr?new Date(pr.date+'T12:00:00'):new Date(2026,10,13);
-let totalDays=db2(new Date(),rd),weeks=Math.floor(totalDays/7),days=totalDays%7;
-document.getElementById('cntd').innerHTML=`<span style="font-size:38px;font-weight:700;line-height:1">${weeks}</span><span style="font-size:16px;font-weight:500;opacity:.7;margin-right:4px">wk</span><span style="font-size:38px;font-weight:700;line-height:1">${days}</span><span style="font-size:16px;font-weight:500;opacity:.7">d</span>`;
-if(pr){document.getElementById('dgT').textContent=pr.goal||'--';document.getElementById('dgD').textContent=new Date(pr.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+pr.dist.toLowerCase()}
-let w=curWk(),td=todayDate(),tDay=w?w.days.find(d=>d.date===td):null;
-if(tDay){let done=tDay.a;let acts=tDay.acts||[];
-if(done){let pts=[];if(done.mi>0){pts.push(`${done.mi} mi`);if(done.pace)pts.push(`<span class="pace">${done.pace}</span>`)}if(done.tm)pts.push(`(${done.tm})`);if(done.hm>0)pts.push(`${done.hm}m HIIT`);
-document.getElementById('tPlan').innerHTML=`<div style="font-weight:600;font-size:15px;color:var(--accD)">Completed!</div><div style="font-size:12px;color:var(--tx2)">${pts.join(' \u00b7 ')}</div>`}
-else if(acts.length===0){document.getElementById('tPlan').innerHTML=`<div style="font-weight:600;font-size:15px">Rest day</div><div style="font-size:12px;color:var(--tx2)">Recover and recharge</div>`}
-else{let pills=acts.map(a=>{let m=actMeta(a.type);return`<span class="act-pill ${m.css}">${m.l}: ${a.desc}</span>`}).join(' ');
-document.getElementById('tPlan').innerHTML=`<div style="display:flex;gap:4px;flex-wrap:wrap">${pills}</div><div style="font-size:12px;color:var(--tx2);margin-top:3px">Get after it!</div>`}}
-let wkMi=w?w.days.reduce((s,d)=>{let acts=d.acts||[];return s+acts.reduce((ss,a)=>ss+(a.miles||0),0)},0):0;
-let wkHm=w?w.days.reduce((s,d)=>{let acts=d.acts||[];return s+acts.reduce((ss,a)=>ss+(a.type==='hiit'?a.mins||0:0),0)},0):0;
-let wkAct=w?w.days.reduce((s,d)=>s+(d.a?d.a.mi:0),0):0;
-let wkAH=w?w.days.reduce((s,d)=>s+(d.a?d.a.hm:0),0):0;
-document.getElementById('wkNums').innerHTML=`<div class="st"><div class="st-v" style="color:var(--acc)">${wkMi}</div><div class="st-l">mi plan</div></div><div class="st"><div class="st-v" style="color:var(--purp)">${wkHm}</div><div class="st-l">HIIT min</div></div><div class="st"><div class="st-v" style="color:var(--blue)">${Math.round(wkAct*10)/10}</div><div class="st-l">mi done</div></div>`;
-document.getElementById('wkTrk').innerHTML=trkH('Miles',wkAct,wkMi,'#1D9E75')+trkH('HIIT',wkAH,wkHm,'#7F77DD');
-let tgt=getTgt(),ec=at('cal'),pct=Math.min(100,Math.round(ec/tgt.cals*100));
-document.getElementById('nEat').textContent=Math.round(ec);document.getElementById('nTgt').textContent=`/ ${tgt.cals} cal`;document.getElementById('nBar').style.cssText=`width:${pct}%;background:${ec>tgt.cals?'var(--coral)':'var(--acc)'}`;
-document.getElementById('nTrk').innerHTML=trkH('Protein',at('p'),tgt.pro,'#1D9E75')+trkH('Carbs',at('c'),tgt.carb,'#EF9F27')+trkH('Fat',at('f'),tgt.fat,'#D4537E');
-document.getElementById('eDayLabel').textContent=`Daily targets \u2014 ${new Date().toLocaleDateString('en-US',{weekday:'long'})}`;
-document.getElementById('eEat').textContent=Math.round(ec);document.getElementById('eTgt').textContent=`/ ${tgt.cals} cal`;document.getElementById('eBar').style.cssText=`width:${pct}%;background:${ec>tgt.cals?'var(--coral)':'var(--acc)'}`;document.getElementById('eTrk').innerHTML=document.getElementById('nTrk').innerHTML;
-if(w){let wch='',totalCal=0;w.days.forEach(d=>{let t=calcTgtForDay(d);totalCal+=t.cals;let isToday=d.date===td;wch+=`<div class="wk-day${isToday?' today':''}"><div class="wk-day-n"${isToday?' style="color:#0F6E56;font-weight:600"':''}>${d.dow.slice(0,3)}</div><div class="wk-day-c" style="color:${isToday?'#0F6E56':'var(--tx)'}">${Math.round(t.cals).toLocaleString()}</div></div>`});document.getElementById('wkCals').innerHTML=wch;document.getElementById('wkCalStats').innerHTML=`<div>Avg: <span style="font-weight:600;color:var(--tx)">${Math.round(totalCal/7).toLocaleString()}</span>/day</div><div>Total: <span style="font-weight:600;color:var(--tx)">${Math.round(totalCal).toLocaleString()}</span></div>`}
-let cw2=S.wts[S.wts.length-1].v;document.getElementById('cW').textContent=cw2.toFixed(1);document.getElementById('wD').textContent=(cw2-GW).toFixed(1);
-rWk();rMeals();rProg();rRaces()}
+renderHeader();renderHome();renderTraining();renderNutrition();renderProgress();
+}
 
-// === Races ===
-function rRaces(){let h='';S.races.forEach((r,i)=>{let dt=new Date(r.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});h+=`<div class="rc"><div><div class="rc-n">${r.name}</div><div class="rc-i">${r.dist} \u00b7 ${dt} \u00b7 ${r.goal||'--'}</div></div><div style="display:flex;gap:6px"><button style="border:none;background:none;font-size:12px;cursor:pointer;color:var(--blue);font-family:var(--f)" onclick="eRc(${i})">edit</button><button style="border:none;background:none;color:var(--coral);font-size:14px;cursor:pointer" onclick="dRc(${i})">&#10005;</button></div></div>`});document.getElementById('rL').innerHTML=h}
-function oRc(){S.rcE=null;document.getElementById('rcTi').textContent='Add race';['rcNm','rcDt','rcGl','rcNo'].forEach(id=>document.getElementById(id).value='');document.getElementById('rcOv').classList.add('open')}
-function eRc(i){S.rcE=i;let r=S.races[i];document.getElementById('rcTi').textContent='Edit race';document.getElementById('rcNm').value=r.name;document.getElementById('rcDt').value=r.date;document.getElementById('rcDs').value=r.dist;document.getElementById('rcGl').value=r.goal;document.getElementById('rcNo').value=r.notes||'';document.getElementById('rcOv').classList.add('open')}
-function cRc(){document.getElementById('rcOv').classList.remove('open')}
-function sRc(){let r={id:Date.now(),name:document.getElementById('rcNm').value||'Race',date:document.getElementById('rcDt').value,dist:document.getElementById('rcDs').value,goal:document.getElementById('rcGl').value,notes:document.getElementById('rcNo').value};if(S.rcE!==null)S.races[S.rcE]=r;else S.races.push(r);cRc();render();save()}
-function dRc(i){S.races.splice(i,1);render();save()}
+function renderHeader(){
+document.getElementById('hdrDate').textContent=new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+}
 
-// === Training Week ===
-function rWk(){let w=gw();if(!w)return;document.getElementById('wkL').textContent=`Week ${w.week} \u00b7 ${w.phase==='base'?'Base':'Marathon'}`;
-let pM=w.days.reduce((s,d)=>(d.acts||[]).reduce((ss,a)=>ss+(a.miles||0),s),0);
-let aM=w.days.reduce((s,d)=>s+(d.a?d.a.mi:0),0);
-let hm=w.days.reduce((s,d)=>(d.acts||[]).reduce((ss,a)=>ss+(a.type==='hiit'?a.mins||0:0),s),0);
-document.getElementById('wkS').innerHTML=`<div class="st" style="padding:8px"><div class="st-v" style="font-size:16px">${pM}</div><div class="st-l">plan</div></div><div class="st" style="padding:8px"><div class="st-v" style="font-size:16px;color:var(--acc)">${Math.round(aM*10)/10}</div><div class="st-l">actual</div></div><div class="st" style="padding:8px"><div class="st-v" style="font-size:16px;color:var(--purp)">${hm}</div><div class="st-l">HIIT</div></div><div class="st" style="padding:8px"><div class="st-v" style="font-size:16px">${w.days.filter(d=>!d.acts||d.acts.length===0).length}</div><div class="st-l">rest</div></div>`;
-let h='';w.days.forEach((d,i)=>{let acts=d.acts||[];let isRest=acts.length===0;
-let dtF=new Date(d.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
-h+=`<div class="td${isRest?' rest':''}" draggable="true" ondragstart="dgs(event,${i})" ondragover="event.preventDefault()" ondragenter="dge(event,${i})" ondragleave="dgl(event)" ondrop="dgd(event,${i})" ondragend="dgx(event)">`;
-h+=`<div class="td-top"><div class="td-day">${d.dow} ${dtF}</div><div class="td-btns"><button class="td-ed" onclick="oEd(${i})">&#9998;</button>`;
-if(!isRest&&!d.a)h+=`<button class="td-sv" onclick="lA(${i})">Save</button>`;
-h+=`</div></div>`;
-if(isRest){h+=`<div class="act-pills"><span class="act-pill pill-rest">Rest day</span></div>`}
-else{h+=`<div class="act-pills">`;acts.forEach(a=>{let m=actMeta(a.type);h+=`<span class="act-pill ${m.css}">${m.l}: ${a.desc}</span>`});h+=`</div>`}
-if(!isRest){if(d.a){let pts=[];if(d.a.mi>0){pts.push(`${d.a.mi} mi`);if(d.a.pace)pts.push(`<span class="pace">${d.a.pace}</span>`)}if(d.a.tm)pts.push(`(${d.a.tm})`);if(d.a.hm>0)pts.push(`${d.a.hm}m HIIT`);
-h+=`<div class="td-a"><span class="ok">&#10003;</span>${pts.join(' ')}<button style="border:none;background:none;color:var(--tx3);font-size:10px;cursor:pointer;text-decoration:underline;font-family:var(--f)" onclick="clA(${i})">edit</button></div>`}
-else{let hasMi=acts.some(a=>actMeta(a.type).hasMi);let hasHiit=acts.some(a=>a.type==='hiit');let hasTimeOnly=acts.some(a=>!actMeta(a.type).hasMi&&a.type!=='hiit');
-h+=`<div class="td-log">`;
-if(hasMi)h+=`<div class="lr"><label>Miles</label><input class="w" type="number" step="0.01" id="lM${i}" placeholder="0.00" inputmode="decimal"><label>h</label><input type="number" min="0" max="23" id="lH${i}" placeholder="0" inputmode="numeric"><label>m</label><input type="number" min="0" max="59" id="lMn${i}" placeholder="00" inputmode="numeric"><label>s</label><input type="number" min="0" max="59" id="lS${i}" placeholder="00" inputmode="numeric"></div>`;
-else if(hasTimeOnly)h+=`<div class="lr"><label>Time</label><label>h</label><input type="number" min="0" id="lH${i}" placeholder="0" inputmode="numeric"><label>m</label><input type="number" min="0" max="59" id="lMn${i}" placeholder="00" inputmode="numeric"><label>s</label><input type="number" min="0" max="59" id="lS${i}" placeholder="00" inputmode="numeric"></div>`;
-if(hasHiit)h+=`<div class="lr"><label>HIIT</label><input type="number" id="lHt${i}" placeholder="0" inputmode="numeric"><label>min</label></div>`;
-h+=`</div>`}}h+=`</div>`});document.getElementById('wkD').innerHTML=h}
+function renderHome(){
+// Hero countdown
+const raceDate=parseDate(USER.marathonDate);
+const today=new Date();today.setHours(0,0,0,0);
+const diff=daysBetween(today,raceDate);
+const wks=Math.floor(diff/7);
+const ds=diff%7;
+document.getElementById('heroCard').innerHTML=`
+<div class="hero-left">
+<div class="hero-label">Race countdown</div>
+<div class="hero-num">${wks} wk ${ds} d</div>
+</div>
+<div class="hero-right">
+<div style="font-weight:600">${USER.marathonGoal}</div>
+<div style="font-size:12px;opacity:.7">${raceDate.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+</div>`;
 
-function lA(i){let d=gw().days[i],acts=d.acts||[];let hasMi=acts.some(a=>actMeta(a.type).hasMi);
-let mi=hasMi?(parseFloat(document.getElementById('lM'+i)?.value)||0):0;
-let h=parseInt(document.getElementById('lH'+i)?.value)||0,m=parseInt(document.getElementById('lMn'+i)?.value)||0,s=parseInt(document.getElementById('lS'+i)?.value)||0;
-let hm=parseFloat(document.getElementById('lHt'+i)?.value)||0;
-d.a={mi,hm,pace:hasMi?calcPace(mi,h,m,s):null,tm:(h||m||s)?fmtTm(h,m,s):''};render();save()}
-function clA(i){gw().days[i].a=null;render();save()}
+// Today's plan
+const todayD=findToday();
+if(todayD){
+const pills=todayD.activities.map(a=>`<span class="pill" style="background:${ACT_BGS[a.type]||'#eee'};color:${ACT_COLORS[a.type]||'var(--tx)'}">${a.type}: ${a.detail}</span>`).join('');
+const done=todayD.actuals;
+document.getElementById('todayPlan').innerHTML=done?
+`<div style="display:flex;align-items:center;gap:6px;color:var(--acc)"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--acc)" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l2.5 2.5L16 9"/></svg><span style="font-size:14px;font-weight:600">Completed!</span></div>`:
+`<div style="display:flex;flex-wrap:wrap;gap:4px">${pills||'<span style="color:var(--tx3);font-size:13px">Rest day</span>'}</div>`;
+}else{
+document.getElementById('todayPlan').innerHTML='<span style="color:var(--tx3);font-size:13px">Rest day</span>';
+}
 
-// === Edit Modal (multi-activity) ===
-function oEd(i){S.edI=i;let d=gw().days[i];let acts=d.acts&&d.acts.length?JSON.parse(JSON.stringify(d.acts)):[{type:'run',desc:'',miles:0,mins:0}];S.edActs=acts;
-document.getElementById('edTitle').textContent=`Edit \u2014 ${d.dow} ${new Date(d.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}`;
-renderEdActs();document.getElementById('edOv').classList.add('open')}
-function renderEdActs(){let h='';S.edActs.forEach((a,i)=>{let m=actMeta(a.type);let opts=ACT_TYPES.map(t=>`<option value="${t.v}"${t.v===a.type?' selected':''}>${t.l}</option>`).join('');
-h+=`<div class="act-block"><div class="act-block-head"><div class="act-block-label" style="color:${getActColor(a.type)}">Activity ${i+1}</div>${S.edActs.length>1?`<button class="act-block-del" onclick="delEdAct(${i})">&#10005;</button>`:''}</div><label>Type</label><select onchange="S.edActs[${i}].type=this.value;renderEdActs()">${opts}</select><label>Details</label><input value="${a.desc||''}" oninput="S.edActs[${i}].desc=this.value" placeholder="e.g. Easy 3 mi"><label>Planned miles (0 for time-only)</label><input type="number" value="${a.miles||0}" oninput="S.edActs[${i}].miles=parseFloat(this.value)||0" inputmode="decimal"><label>Planned time (minutes)</label><input type="number" value="${a.mins||0}" oninput="S.edActs[${i}].mins=parseFloat(this.value)||0" inputmode="numeric"></div>`;});
-document.getElementById('edActs').innerHTML=h}
-function getActColor(t){let colors={run:'#0F6E56',long:'#D85A30',tempo:'#D85A30',hiit:'#534AB7',hike:'#854F0B',bike:'#378ADD',mtbike:'#378ADD',kayak:'#085041',swim:'#534AB7',walk:'#5F5E5A',yoga:'#993556'};return colors[t]||'#888780'}
-function addEdAct(){S.edActs.push({type:'hiit',desc:'',miles:0,mins:0});renderEdActs()}
-function delEdAct(i){S.edActs.splice(i,1);renderEdActs()}
-function cEd(){document.getElementById('edOv').classList.remove('open')}
-function sEd(){let d=gw().days[S.edI];d.acts=S.edActs.filter(a=>a.type);d.a=null;cEd();render();save()}
+// This week summary
+const wk=getCurrentWeek();
+if(wk){
+const planMi=wk.totalMi;
+const hiitMin=wk.days.reduce((s,d)=>s+d.activities.filter(a=>a.type==='HIIT').reduce((t,a)=>t+(a.time||0),0),0);
+const actMi=wk.days.reduce((s,d)=>s+(d.actuals?d.actuals.reduce((t,a)=>t+(a.miles||0),0):0),0);
+const miPct=planMi>0?Math.min(100,Math.round(actMi/planMi*100)):0;
+document.getElementById('weekSummary').innerHTML=`
+<div class="trk"><div class="trk-label"><span style="color:var(--acc)">Miles</span><span>${actMi} / ${planMi} mi</span></div><div class="trk-bar"><div class="trk-fill" style="width:${miPct}%;background:var(--acc)"></div></div></div>
+<div class="trk"><div class="trk-label"><span style="color:var(--purp)">HIIT</span><span>${hiitMin} min planned</span></div><div class="trk-bar"><div class="trk-fill" style="width:${hiitMin>0?40:0}%;background:var(--purp)"></div></div></div>`;
+}
 
-// === Drag ===
-let dgF=null;function dgs(e,i){dgF=i;e.target.closest('.td').style.opacity='.35'}function dge(e,i){e.preventDefault();e.currentTarget.classList.add('dov')}function dgl(e){e.currentTarget.classList.remove('dov')}
-function dgd(e,i){e.preventDefault();e.currentTarget.classList.remove('dov');if(dgF===null||dgF===i)return;let w=gw(),days=w.days,dates=days.map(d=>d.date),dows=days.map(d=>d.dow);let[moved]=days.splice(dgF,1);days.splice(i,0,moved);days.forEach((d,idx)=>{d.date=dates[idx];d.dow=dows[idx]});dgF=null;render();save()}
-function dgx(e){let el=e.target.closest('.td');if(el)el.style.opacity='1';dgF=null}
-function chWk(d){let ni=cwi()+S.wO+d;if(ni<0||ni>=S.plan.length)return;S.wO+=d;render()}
+// Nutrition summary
+const todayActs=todayD?todayD.activities:[];
+const tgt=calcDayTargets(todayActs);
+const eaten=mealTotal();
+const remCal=tgt.cals-eaten.cals;
+const calPct=tgt.cals>0?Math.min(100,Math.round(eaten.cals/tgt.cals*100)):0;
+const pPct=tgt.protein>0?Math.min(100,Math.round(eaten.protein/tgt.protein*100)):0;
+const cPct=tgt.carbs>0?Math.min(100,Math.round(eaten.carbs/tgt.carbs*100)):0;
+const fPct=tgt.fat>0?Math.min(100,Math.round(eaten.fat/tgt.fat*100)):0;
+document.getElementById('homeNutr').innerHTML=`
+<div class="trk"><div class="trk-label"><span>Calories</span><span>${eaten.cals} / ${tgt.cals} (${Math.max(0,remCal)} left)</span></div><div class="trk-bar"><div class="trk-fill" style="width:${calPct}%;background:var(--acc)"></div></div></div>
+<div style="display:flex;gap:6px;margin-top:4px">
+<div class="trk" style="flex:1"><div class="trk-label"><span style="color:var(--purp);font-size:11px">Protein</span><span style="font-size:11px">${eaten.protein}/${tgt.protein}g</span></div><div class="trk-bar"><div class="trk-fill" style="width:${pPct}%;background:var(--purp)"></div></div></div>
+<div class="trk" style="flex:1"><div class="trk-label"><span style="color:var(--amber);font-size:11px">Carbs</span><span style="font-size:11px">${eaten.carbs}/${tgt.carbs}g</span></div><div class="trk-bar"><div class="trk-fill" style="width:${cPct}%;background:var(--amber)"></div></div></div>
+<div class="trk" style="flex:1"><div class="trk-label"><span style="color:var(--pink);font-size:11px">Fat</span><span style="font-size:11px">${eaten.fat}/${tgt.fat}g</span></div><div class="trk-bar"><div class="trk-fill" style="width:${fPct}%;background:var(--pink)"></div></div></div>
+</div>`;
 
-// === Meals ===
-function rMeals(){let ms=['breakfast','lunch','dinner','snacks'],lb=['Breakfast','Lunch','Dinner','Snacks'],h='';ms.forEach((m,mi)=>{let items=S.meals[m],cal=mt(items,'cal');h+=`<div class="cd"><div class="mh"><div class="mn">${lb[mi]}</div><div class="mc">${Math.round(cal)} cal</div></div><div>`;items.forEach((it,ii)=>{let det=it.sd?` (${it.sd})`:'';h+=`<div class="mi"><div class="mi-n">${it.name}${det}</div><div class="mi-m">${Math.round(it.p)}p ${Math.round(it.c)}c ${Math.round(it.f)}f</div><div class="mi-c">${Math.round(it.cal)}</div><button class="mi-d" onclick="rmF('${m}',${ii})">&#10005;</button></div>`});h+=`<button class="ab" onclick="oS('${m}')">+ Add food</button></div></div>`});document.getElementById('mSec').innerHTML=h}
-function oS(m){S.sM=m;document.getElementById('sM').classList.add('open');document.getElementById('fS').value='';document.getElementById('sR').innerHTML='';setTimeout(()=>document.getElementById('fS').focus(),150)}
-function cS(){document.getElementById('sM').classList.remove('open')}
-function qTap(n,cal,p,c,f){S.cfItem={name:n,cal,p,c,f,per:'serving'};S.cfBase={cal,p,c,f};document.getElementById('cfNm').textContent=n;document.getElementById('cfPrev').innerHTML=`<div class="sv-pr"><span>Per serving</span></div><div class="sv-pr">Calories <span>${cal}</span></div><div class="sv-pr">Protein <span>${p}g</span></div><div class="sv-pr">Carbs <span>${c}g</span></div><div class="sv-pr">Fat <span>${f}g</span></div>`;document.getElementById('cfAmt').value='1';document.getElementById('cfUnit').value='serving';updCf();document.getElementById('cfOv').classList.add('open')}
-function selF(it){S.cfItem=it;S.cfBase={cal:it.cal,p:it.p,c:it.c,f:it.f};document.getElementById('cfNm').textContent=it.name;document.getElementById('cfPrev').innerHTML=`<div class="sv-pr"><span>Per 100g</span></div><div class="sv-pr">Calories <span>${it.cal}</span></div><div class="sv-pr">Protein <span>${it.p}g</span></div><div class="sv-pr">Carbs <span>${it.c}g</span></div><div class="sv-pr">Fat <span>${it.f}g</span></div>`;document.getElementById('cfAmt').value='100';document.getElementById('cfUnit').value='g';updCf();document.getElementById('cfOv').classList.add('open')}
-function updCf(){let b=S.cfBase,amt=parseFloat(document.getElementById('cfAmt').value)||0,u=document.getElementById('cfUnit').value;let mult=S.cfItem.per==='serving'?(u==='serving'?amt:u==='g'?amt/100:amt*28.35/100):(u==='g'?amt/100:u==='oz'?amt*28.35/100:amt);let cal=Math.round(b.cal*mult),p=Math.round(b.p*mult*10)/10,c=Math.round(b.c*mult*10)/10,f=Math.round(b.f*mult*10)/10;document.getElementById('cfCalc').innerHTML=`<div class="sv-pr" style="font-weight:600"><span>You're logging</span></div><div class="sv-pr">Calories <span style="color:var(--blue)">${cal}</span></div><div class="sv-pr">Protein <span style="color:var(--accD)">${p}g</span></div><div class="sv-pr">Carbs <span style="color:#854F0B">${c}g</span></div><div class="sv-pr">Fat <span style="color:var(--pink)">${f}g</span></div>`}
-document.addEventListener('input',e=>{if(e.target.id==='cfAmt')updCf()});document.addEventListener('change',e=>{if(e.target.id==='cfUnit')updCf()});
-function cCf(){document.getElementById('cfOv').classList.remove('open')}
-function okCf(){let b=S.cfBase,amt=parseFloat(document.getElementById('cfAmt').value)||1,u=document.getElementById('cfUnit').value;let mult=S.cfItem.per==='serving'?(u==='serving'?amt:u==='g'?amt/100:amt*28.35/100):(u==='g'?amt/100:u==='oz'?amt*28.35/100:amt);S.meals[S.sM].push({name:S.cfItem.name,cal:b.cal*mult,p:b.p*mult,c:b.c*mult,f:b.f*mult,sd:`${amt}${u}`});cCf();cS();render();save()}
-function mAdd(){let n=document.getElementById('mN').value;if(!n)return;let cal=parseFloat(document.getElementById('mCl').value)||0,p=parseFloat(document.getElementById('mP').value)||0,c=parseFloat(document.getElementById('mC').value)||0,f=parseFloat(document.getElementById('mF').value)||0;S.cfItem={name:n,cal,p,c,f,per:'serving'};S.cfBase={cal,p,c,f};document.getElementById('cfNm').textContent=n;document.getElementById('cfPrev').innerHTML=`<div class="sv-pr"><span>Per serving</span></div><div class="sv-pr">Calories <span>${cal}</span></div><div class="sv-pr">Protein <span>${p}g</span></div><div class="sv-pr">Carbs <span>${c}g</span></div><div class="sv-pr">Fat <span>${f}g</span></div>`;document.getElementById('cfAmt').value='1';document.getElementById('cfUnit').value='serving';updCf();document.getElementById('cfOv').classList.add('open');['mN','mCl','mP','mC','mF'].forEach(id=>document.getElementById(id).value='')}
-function rmF(m,i){S.meals[m].splice(i,1);render();save()}
+// Weight
+const curWt=weightHist.length>0?weightHist[weightHist.length-1].wt:USER.wt;
+const toGo=Math.round((curWt-USER.goalWt)*10)/10;
+document.getElementById('homeWeight').innerHTML=`
+<div style="display:flex;gap:12px;align-items:center;margin-bottom:8px">
+<div style="flex:1;text-align:center"><div style="font-size:11px;color:var(--tx2)">Current</div><div style="font-size:22px;font-weight:700">${curWt}</div></div>
+<div style="flex:1;text-align:center;cursor:pointer" onclick="openGoalWeightModal()"><div style="font-size:11px;color:var(--tx2)">Goal ✎</div><div style="font-size:22px;font-weight:700">${USER.goalWt}</div></div>
+<div style="flex:1;text-align:center"><div style="font-size:11px;color:var(--tx2)">To go</div><div style="font-size:22px;font-weight:700;color:${toGo>0?'var(--coral)':'var(--acc)'}">${toGo>0?toGo:0}</div></div>
+</div>
+<div style="display:flex;gap:6px;align-items:center">
+<input class="inp inp-sm" type="number" id="wtLogInput" step="0.1" inputmode="decimal" placeholder="${curWt}" style="width:80px">
+<span style="font-size:13px;color:var(--tx2)">lbs</span>
+<button class="btn btn-g" onclick="logWeight()">Log</button>
+</div>`;
+}
 
-// === Food Search (with retry) ===
-let srTO=null;
-function srF(){clearTimeout(srTO);let q=document.getElementById('fS').value.trim();if(q.length<2){document.getElementById('sR').innerHTML='';return}
-document.getElementById('sR').innerHTML='<div class="search-loading">Searching...</div>';
-srTO=setTimeout(()=>{doSearch(q,0)},300)}
-function doSearch(q,attempt){
-fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&json=1&page_size=15&fields=product_name,nutriments,brands,serving_size&tagtype_0=countries&tag_contains_0=contains&tag_0=united-states`)
-.then(r=>{if(!r.ok)throw new Error('Network');return r.json()})
-.then(data=>{let h='';if(data.products)data.products.forEach(p=>{if(!p.product_name)return;let n=p.nutriments||{},cal=Math.round(n['energy-kcal_100g']||0),pr=Math.round((n.proteins_100g||0)*10)/10,ca=Math.round((n.carbohydrates_100g||0)*10)/10,fa=Math.round((n.fat_100g||0)*10)/10,br=p.brands||'',nm=p.product_name+(br?' \u00b7 '+br:''),sv=p.serving_size||'';
-let safe=JSON.stringify({name:nm.replace(/"/g,''),cal,p:pr,c:ca,f:fa,per:'100g'}).replace(/"/g,'&quot;');
-h+=`<div class="sr-i" onclick='selF(JSON.parse(this.dataset.it))' data-it="${safe}"><div class="sr-n">${nm}</div><div class="sr-dd">${cal} cal \u00b7 ${pr}p ${ca}c ${fa}f /100g${sv?' \u00b7 '+sv:''}</div></div>`});
-if(!h)h='<div style="padding:24px;text-align:center;color:var(--tx2);font-size:13px">No results found. Try a different search or use manual entry.</div>';
-document.getElementById('sR').innerHTML=h})
-.catch(()=>{if(attempt<2){setTimeout(()=>doSearch(q,attempt+1),1000)}else{document.getElementById('sR').innerHTML='<div style="padding:24px;text-align:center;color:var(--tx2);font-size:13px">Search unavailable. Check your connection or use manual entry.</div>'}})}
+function mealTotal(){
+let cals=0,protein=0,carbs=0,fat=0;
+Object.values(meals).forEach(items=>items.forEach(i=>{cals+=i.cal||0;protein+=i.p||0;carbs+=i.c||0;fat+=i.f||0}));
+return{cals:Math.round(cals),protein:Math.round(protein),carbs:Math.round(carbs),fat:Math.round(fat)};
+}
 
-// === Barcode Scanner (html5-qrcode) ===
-let qrScanner=null;
-function oCam(){
-document.getElementById('camV').classList.add('open');
-setTimeout(()=>{
-qrScanner=new Html5Qrcode("qr-reader");
-qrScanner.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:150},formatsToSupport:[Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8,Html5QrcodeSupportedFormats.UPC_A,Html5QrcodeSupportedFormats.UPC_E]},
-(code)=>{qrScanner.stop().then(()=>{xCam();lkBC(code)}).catch(()=>{xCam();lkBC(code)})},
-(err)=>{}
-).catch(err=>{xCam();alert('Could not access camera: '+err)})
-},300)}
-function xCam(){document.getElementById('camV').classList.remove('open');if(qrScanner){try{qrScanner.stop().catch(()=>{})}catch(e){}qrScanner=null}document.getElementById('qr-reader').innerHTML=''}
-function lkBC(c){if(!c)return;
-fetch(`https://world.openfoodfacts.org/api/v2/product/${c}.json?fields=product_name,nutriments,brands,serving_size`)
-.then(r=>r.json()).then(d=>{if(d.product&&d.product.product_name){let p=d.product,n=p.nutriments||{};
-selF({name:p.product_name+(p.brands?' \u00b7 '+p.brands:''),cal:Math.round(n['energy-kcal_100g']||0),p:Math.round((n.proteins_100g||0)*10)/10,c:Math.round((n.carbohydrates_100g||0)*10)/10,f:Math.round((n.fat_100g||0)*10)/10,per:'100g'})}else{alert('Product not found. Try searching by name.')}}).catch(()=>{alert('Lookup failed. Check your connection.')})}
+function findToday(){
+const ts=todayStr();
+for(const wk of plan){for(const d of wk.days){if(d.dateStr===ts)return d}}
+return null;
+}
+function getCurrentWeek(){
+const ts=todayStr();
+for(const wk of plan){for(const d of wk.days){if(d.dateStr===ts)return wk}}
+return plan[curWeek]||plan[0];
+}
+function getWeekIndex(){
+const ts=todayStr();
+for(let i=0;i<plan.length;i++){for(const d of plan[i].days){if(d.dateStr===ts)return i}}
+return 0;
+}
 
-// === Weight ===
-function logWt(){let v=parseFloat(document.getElementById('wIn').value);if(!v||v<80||v>300)return;S.wts.push({d:todayDate(),v});document.getElementById('wIn').value='';render();save()}
+// ===== TRAINING PAGE =====
+function renderTraining(){
+const wk=plan[curWeek];
+if(!wk)return;
 
-// === Progress Charts ===
-function rProg(){let cw2=S.wts[S.wts.length-1].v;document.getElementById('pW').textContent=cw2.toFixed(1);document.getElementById('pDL').textContent=30;drawWC();drawMC();rLog()}
-function drawWC(){let c=document.getElementById('wCh');if(!c||!c.offsetWidth)return;let ctx=c.getContext('2d');let dpr=window.devicePixelRatio||2;c.width=c.offsetWidth*dpr;c.height=300;ctx.scale(dpr,dpr);let W=c.offsetWidth,H=150,pts=S.wts,vals=pts.map(p=>p.v),mn=Math.min(...vals,GW)-1,mx=Math.max(...vals)+1,L=40,R=W-12,T=14,B=H-24;ctx.strokeStyle='#ddddd5';ctx.lineWidth=.5;for(let i=0;i<=4;i++){let v=mn+(mx-mn)*(i/4),y=B-(i/4)*(B-T);ctx.beginPath();ctx.moveTo(L,y);ctx.lineTo(R,y);ctx.stroke();ctx.fillStyle='#888780';ctx.font='500 10px Sora';ctx.textAlign='right';ctx.fillText(v.toFixed(1),L-4,y+4)}if(pts.length>=2){ctx.strokeStyle='#378ADD';ctx.lineWidth=2;ctx.beginPath();pts.forEach((p,i)=>{let x=L+(i/(pts.length-1))*(R-L),y=B-((p.v-mn)/(mx-mn))*(B-T);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();pts.forEach((p,i)=>{let x=L+(i/(pts.length-1))*(R-L),y=B-((p.v-mn)/(mx-mn))*(B-T);ctx.fillStyle='#378ADD';ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill()})}let gy=B-((GW-mn)/(mx-mn))*(B-T);ctx.setLineDash([3,3]);ctx.strokeStyle='#1D9E75';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(L,gy);ctx.lineTo(R,gy);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#1D9E75';ctx.font='500 10px Sora';ctx.textAlign='left';ctx.fillText('125 goal',R-48,gy-5);ctx.fillStyle='#888780';ctx.font='500 10px Sora';ctx.textAlign='center';pts.forEach((p,i)=>{if(pts.length<=8||i===0||i===pts.length-1){let x=L+(i/(Math.max(pts.length-1,1)))*(R-L);ctx.fillText(p.d.slice(5),x,H-6)}})}
-function drawMC(){let c=document.getElementById('mCh');if(!c||!c.offsetWidth)return;let ctx=c.getContext('2d');let dpr=window.devicePixelRatio||2;c.width=c.offsetWidth*dpr;c.height=340;ctx.scale(dpr,dpr);let W=c.offsetWidth,H=170,maxWk=Math.min(cwi()+S.wO+1,S.plan.length),wks=S.plan.slice(0,maxWk);if(!wks.length)return;let L=36,R=W-12,T=14,B=H-26,mx=Math.max(...wks.map(k=>k.tMi),20);ctx.strokeStyle='#ddddd5';ctx.lineWidth=.5;for(let i=0;i<=4;i++){let v=Math.round(mx*(i/4)),y=B-(i/4)*(B-T);ctx.beginPath();ctx.moveTo(L,y);ctx.lineTo(R,y);ctx.stroke();ctx.fillStyle='#888780';ctx.font='500 10px Sora';ctx.textAlign='right';ctx.fillText(v,L-4,y+4)}let bw=Math.min(18,((R-L)/wks.length)-3);wks.forEach((wk,i)=>{let bh=(wk.tMi/mx)*(B-T),x=L+i*(bw+3),top=B-bh,r=2;ctx.globalAlpha=.3;ctx.fillStyle='#1D9E75';ctx.beginPath();ctx.moveTo(x+r,top);ctx.lineTo(x+bw-r,top);ctx.quadraticCurveTo(x+bw,top,x+bw,top+r);ctx.lineTo(x+bw,B);ctx.lineTo(x,B);ctx.lineTo(x,top+r);ctx.quadraticCurveTo(x,top,x+r,top);ctx.fill();ctx.globalAlpha=1});let act=wks.map(wk=>wk.days.reduce((s,d)=>s+(d.a?d.a.mi:0),0));if(act.some(a=>a>0)){ctx.strokeStyle='#D85A30';ctx.lineWidth=2;ctx.beginPath();let st=false;act.forEach((a,i)=>{let x=L+i*(bw+3)+bw/2,y=B-(a/mx)*(B-T);if(!st){ctx.moveTo(x,y);st=true}else ctx.lineTo(x,y)});ctx.stroke();act.forEach((a,i)=>{let x=L+i*(bw+3)+bw/2,y=B-(a/mx)*(B-T);ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#D85A30';ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill()})}ctx.fillStyle='#888780';ctx.font='500 9px Sora';ctx.textAlign='center';wks.forEach((wk,i)=>{if(wks.length<=14||i%Math.ceil(wks.length/10)===0){let x=L+i*(bw+3)+bw/2;ctx.fillText('W'+wk.week,x,H-8)}})}
-function rLog(){let w=gw();if(!w)return;let h='';w.days.forEach(d=>{if(d.a){let acts=d.acts||[];let pills=acts.map(a=>`<span class="act-pill ${actMeta(a.type).css}" style="font-size:10px;padding:2px 6px">${actMeta(a.type).l}</span>`).join('');let pts=[];if(d.a.mi>0){pts.push(`${d.a.mi} mi`);if(d.a.pace)pts.push(d.a.pace)}if(d.a.tm)pts.push(d.a.tm);if(d.a.hm>0)pts.push(`${d.a.hm}m HIIT`);
-h+=`<div style="padding:4px 0;border-bottom:.5px solid rgba(0,0,0,.03);font-size:12px;display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span style="font-weight:600;color:var(--accD)">${d.dow}</span>${pills} ${pts.join(' \u00b7 ')}</div>`}});
-if(!h)h='<div style="color:var(--tx3);font-style:italic;font-size:12px">No workouts logged yet</div>';document.getElementById('tL').innerHTML=h}
+document.getElementById('wkLabel').textContent=`Week ${wk.week} · ${fmtDate(wk.start)} – ${fmtDate(addDays(wk.start,6))}`;
 
-// === Init ===
-buildPlan();openDB().then(()=>load()).then(()=>render()).catch(()=>render());
+// Stats
+const planMi=wk.totalMi;
+const actMi=Math.round(wk.days.reduce((s,d)=>s+(d.actuals?d.actuals.reduce((t,a)=>t+(a.miles||0),0):0),0)*10)/10;
+const hiitMin=wk.days.reduce((s,d)=>s+d.activities.filter(a=>a.type==='HIIT').reduce((t,a)=>t+(a.time||0),0),0);
+const restDays=wk.days.filter(d=>d.activities.length===0).length;
+document.getElementById('wkStats').innerHTML=`
+<div class="wk-stat"><div class="wk-sv" style="color:var(--acc)">${planMi}</div><div class="wk-sl">Plan mi</div></div>
+<div class="wk-stat"><div class="wk-sv" style="color:var(--blue)">${actMi}</div><div class="wk-sl">Actual mi</div></div>
+<div class="wk-stat"><div class="wk-sv" style="color:var(--purp)">${hiitMin}</div><div class="wk-sl">HIIT min</div></div>
+<div class="wk-stat"><div class="wk-sv">${restDays}</div><div class="wk-sl">Rest</div></div>`;
+
+// Cards
+let html='';
+wk.days.forEach((d,i)=>{
+const isRest=d.activities.length===0;
+const hasDone=!!d.actuals;
+const isToday=d.dateStr===todayStr();
+
+html+=`<div class="t-card" draggable="true" data-di="${i}" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dropCard(event)" ondragend="dragEnd(event)">`;
+// Top row: day+date, edit+save
+html+=`<div class="t-top">
+<div class="t-day">${d.dow} <small>${d.date.getMonth()+1}/${d.date.getDate()}</small>${isToday?' <span style="color:var(--acc);font-size:11px">today</span>':''}</div>
+<div class="t-actions">
+<button style="background:none;border:none;cursor:pointer;font-size:16px" onclick="openEditModal(${curWeek},${i})">✎</button>
+${!hasDone&&!isRest?`<button class="btn btn-g" style="font-size:12px;padding:5px 14px" onclick="saveLog(${curWeek},${i})">Save</button>`:''}
+</div></div>`;
+
+// Activity pills
+if(!isRest){
+html+=`<div class="t-pills">`;
+d.activities.forEach(a=>{
+html+=`<span class="pill" style="background:${ACT_BGS[a.type]||'#eee'};color:${ACT_COLORS[a.type]||'var(--tx)'}">${a.type}: ${a.detail}</span>`;
+});
+html+=`</div>`;
+}else{
+html+=`<div style="font-size:13px;color:var(--tx3);margin-top:4px">Rest day</div>`;
+}
+
+// Log inputs — ALWAYS VISIBLE for incomplete workout days
+if(!hasDone&&!isRest){
+html+=`<div class="t-log">`;
+d.activities.forEach((a,ai)=>{
+const hasMiles=MILE_ACTS.includes(a.type)&&a.miles>0;
+html+=`<div class="t-log-row">
+<span class="pill" style="background:${ACT_BGS[a.type]};color:${ACT_COLORS[a.type]}">${a.type}</span>`;
+if(hasMiles){
+html+=`<input class="inp inp-sm" type="number" id="logMi-${curWeek}-${i}-${ai}" placeholder="${a.miles}" step="0.01" inputmode="decimal" style="width:56px">
+<span style="font-size:12px;color:var(--tx2)">mi</span>`;
+}
+html+=`<input class="inp inp-sm" type="number" id="logH-${curWeek}-${i}-${ai}" placeholder="0" inputmode="numeric" style="width:38px">
+<span style="font-size:12px;color:var(--tx2)">h</span>
+<input class="inp inp-sm" type="number" id="logM-${curWeek}-${i}-${ai}" placeholder="0" inputmode="numeric" style="width:42px">
+<span style="font-size:12px;color:var(--tx2)">m</span>
+<input class="inp inp-sm" type="number" id="logS-${curWeek}-${i}-${ai}" placeholder="0" inputmode="numeric" style="width:42px">
+<span style="font-size:12px;color:var(--tx2)">s</span>`;
+html+=`</div>`;
+});
+html+=`</div>`;
+}
+
+// Completed view
+if(hasDone){
+html+=`<div class="t-done">`;
+d.actuals.forEach(a=>{
+let info=[];
+if(a.miles>0)info.push(`${a.miles} mi`);
+if(a.pace)info.push(a.pace);
+if(a.timeStr)info.push(a.timeStr);
+html+=`<div class="t-done-row">
+<span class="pill" style="background:${ACT_BGS[a.type]};color:${ACT_COLORS[a.type]};padding:2px 8px">${a.type}</span>
+<span style="color:var(--tx)">${info.join(' · ')}</span>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="var(--acc)" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l2.5 2.5L16 9"/></svg>
+</div>`;
+});
+html+=`</div>`;
+}
+
+html+=`</div>`;
+});
+
+document.getElementById('trainCards').innerHTML=html;
+
+// Race goals
+renderRaceGoals();
+}
+
+function toggleLog(wi,di){
+const el=document.getElementById(`log-${wi}-${di}`);
+if(el)el.style.display=el.style.display==='none'?'block':'none';
+}
+
+function saveLog(wi,di){
+const wk=plan[wi];const d=wk.days[di];
+const actuals=[];
+d.activities.forEach((a,ai)=>{
+const hasMiles=MILE_ACTS.includes(a.type)&&a.miles>0;
+const miEl=document.getElementById(`logMi-${wi}-${di}-${ai}`);
+const hEl=document.getElementById(`logH-${wi}-${di}-${ai}`);
+const mEl=document.getElementById(`logM-${wi}-${di}-${ai}`);
+const sEl=document.getElementById(`logS-${wi}-${di}-${ai}`);
+const miles=hasMiles?parseFloat(miEl?.value||a.miles):0;
+const h=parseInt(hEl?.value||0);
+const m=parseInt(mEl?.value||0);
+const s=parseInt(sEl?.value||0);
+const totalSec=h*3600+m*60+s;
+let pace='';
+if(miles>0&&totalSec>0){
+const paceSec=totalSec/miles;
+const pm=Math.floor(paceSec/60);
+const ps=Math.round(paceSec%60);
+pace=`${pm}:${String(ps).padStart(2,'0')}/mi`;
+}
+const timeStr=totalSec>0?`${h>0?h+'h ':''}${m}m ${s}s`:'';
+actuals.push({type:a.type,miles,h,m,s,pace,timeStr});
+});
+d.actuals=actuals;
+savePlanActuals();
+render();
+}
+
+function changeWeek(dir){
+curWeek=Math.max(0,Math.min(plan.length-1,curWeek+dir));
+render();
+}
+
+// ===== DRAG & DROP =====
+let dragIdx=null;
+function dragStart(e){dragIdx=parseInt(e.currentTarget.dataset.di);e.currentTarget.classList.add('dragging');e.dataTransfer.effectAllowed='move'}
+function dragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move'}
+function dropCard(e){
+e.preventDefault();
+const targetIdx=parseInt(e.currentTarget.dataset.di);
+if(dragIdx===null||dragIdx===targetIdx)return;
+const wk=plan[curWeek];
+// Swap activities (dates stay)
+const tmpAct=wk.days[dragIdx].activities;
+const tmpActuals=wk.days[dragIdx].actuals;
+wk.days[dragIdx].activities=wk.days[targetIdx].activities;
+wk.days[dragIdx].actuals=wk.days[targetIdx].actuals;
+wk.days[targetIdx].activities=tmpAct;
+wk.days[targetIdx].actuals=tmpActuals;
+wk.days[dragIdx].edited=true;
+wk.days[targetIdx].edited=true;
+savePlanEdits();
+render();
+}
+function dragEnd(e){e.currentTarget.classList.remove('dragging');dragIdx=null}
+
+// ===== EDIT MODAL =====
+function openEditModal(wi,di){
+const wk=plan[wi];const d=wk.days[di];
+document.getElementById('editModalTitle').textContent=`Edit — ${d.dow} ${d.date.getMonth()+1}/${d.date.getDate()}`;
+let html='';
+d.activities.forEach((a,ai)=>{
+html+=`<div style="border:.5px solid var(--bdr);border-radius:8px;padding:10px;margin-bottom:8px;position:relative" id="editAct-${ai}">
+<button style="position:absolute;top:6px;right:8px;background:none;border:none;cursor:pointer;color:var(--coral);font-size:14px" onclick="removeEditAct(${ai})">✕</button>
+<div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+<select class="inp" id="editType-${ai}" style="flex:1;min-width:100px">
+${ACTIVITY_TYPES.map(t=>`<option${t===a.type?' selected':''}>${t}</option>`).join('')}
+</select>
+</div>
+<input class="inp" id="editDetail-${ai}" value="${a.detail}" placeholder="Details" style="margin-bottom:6px">
+<div style="display:flex;gap:6px">
+<div style="flex:1"><label style="font-size:11px;color:var(--tx2)">Miles</label><input class="inp" id="editMi-${ai}" type="number" value="${a.miles||0}" step="0.1" inputmode="decimal"></div>
+<div style="flex:1"><label style="font-size:11px;color:var(--tx2)">Time (min)</label><input class="inp" id="editTime-${ai}" type="number" value="${a.time||0}" inputmode="numeric"></div>
+</div></div>`;
+});
+html+=`<button class="btn btn-o" style="width:100%;margin-bottom:8px" onclick="addEditAct()">+ Add another activity</button>`;
+html+=`<button class="btn btn-g" style="width:100%" onclick="saveEdit(${wi},${di})">Save changes</button>`;
+
+document.getElementById('editModalBody').innerHTML=html;
+document.getElementById('editModalBody').dataset.count=d.activities.length;
+openModal('editModal');
+}
+
+function addEditAct(){
+const body=document.getElementById('editModalBody');
+const cnt=parseInt(body.dataset.count);
+const div=document.createElement('div');
+div.id=`editAct-${cnt}`;
+div.style.cssText='border:.5px solid var(--bdr);border-radius:8px;padding:10px;margin-bottom:8px;position:relative';
+div.innerHTML=`
+<button style="position:absolute;top:6px;right:8px;background:none;border:none;cursor:pointer;color:var(--coral);font-size:14px" onclick="removeEditAct(${cnt})">✕</button>
+<div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+<select class="inp" id="editType-${cnt}" style="flex:1;min-width:100px">
+${ACTIVITY_TYPES.map(t=>`<option>${t}</option>`).join('')}
+</select>
+</div>
+<input class="inp" id="editDetail-${cnt}" placeholder="Details" style="margin-bottom:6px">
+<div style="display:flex;gap:6px">
+<div style="flex:1"><label style="font-size:11px;color:var(--tx2)">Miles</label><input class="inp" id="editMi-${cnt}" type="number" value="0" step="0.1" inputmode="decimal"></div>
+<div style="flex:1"><label style="font-size:11px;color:var(--tx2)">Time (min)</label><input class="inp" id="editTime-${cnt}" type="number" value="0" inputmode="numeric"></div>
+</div>`;
+body.insertBefore(div,body.querySelector('.btn-o'));
+body.dataset.count=cnt+1;
+}
+
+function removeEditAct(idx){
+const el=document.getElementById(`editAct-${idx}`);
+if(el)el.remove();
+}
+
+function saveEdit(wi,di){
+const body=document.getElementById('editModalBody');
+const cnt=parseInt(body.dataset.count);
+const activities=[];
+for(let i=0;i<cnt;i++){
+const typeEl=document.getElementById(`editType-${i}`);
+if(!typeEl)continue;
+const type=typeEl.value;
+const detail=document.getElementById(`editDetail-${i}`)?.value||'';
+const miles=parseFloat(document.getElementById(`editMi-${i}`)?.value||0);
+const time=parseInt(document.getElementById(`editTime-${i}`)?.value||0);
+activities.push({type,detail:detail||`${miles>0?miles+' mi':''}${time>0?(miles>0?', ':'')+time+' min':''}`,miles,time});
+}
+plan[wi].days[di].activities=activities;
+plan[wi].days[di].edited=true;
+plan[wi].days[di].actuals=null;
+savePlanEdits();
+closeModal('editModal');
+render();
+}
+
+// ===== RACE GOALS =====
+function renderRaceGoals(){
+let html='';
+// Always show marathon
+html+=`<div class="race-card">
+<div class="race-info"><div class="race-name">Marathon</div><div class="race-det">Nov 13, 2026 · 26.2 mi · Goal: ${USER.marathonGoal}</div></div>
+</div>`;
+raceGoals.forEach((r,i)=>{
+html+=`<div class="race-card">
+<div class="race-info"><div class="race-name">${r.name}</div><div class="race-det">${r.date} · ${r.distance} · Goal: ${r.goalTime||'—'}</div></div>
+<div class="race-actions">
+<button onclick="editRace(${i})">✎</button>
+<button onclick="deleteRace(${i})">✕</button>
+</div></div>`;
+});
+document.getElementById('raceList').innerHTML=html;
+}
+
+function openRaceModal(idx){
+const isEdit=idx!==undefined;
+const r=isEdit?raceGoals[idx]:{name:'',date:'',distance:'',goalTime:'',notes:''};
+document.getElementById('raceModalTitle').textContent=isEdit?'Edit race':'Add race';
+document.getElementById('raceModalBody').innerHTML=`
+<div style="display:flex;flex-direction:column;gap:8px">
+<input class="inp" id="raceName" value="${r.name}" placeholder="Race name">
+<input class="inp" id="raceDate" type="date" value="${r.date}">
+<input class="inp" id="raceDist" value="${r.distance}" placeholder="Distance (e.g. 10K, Half)">
+<input class="inp" id="raceGoalTime" value="${r.goalTime||''}" placeholder="Goal time (e.g. 1:45:00)">
+<input class="inp" id="raceNotes" value="${r.notes||''}" placeholder="Notes">
+<button class="btn btn-g" onclick="saveRace(${isEdit?idx:-1})">${isEdit?'Update':'Add'}</button>
+</div>`;
+openModal('raceModal');
+}
+function editRace(i){openRaceModal(i)}
+function deleteRace(i){raceGoals.splice(i,1);saveRaces();renderRaceGoals()}
+function saveRace(idx){
+const r={name:document.getElementById('raceName').value,date:document.getElementById('raceDate').value,distance:document.getElementById('raceDist').value,goalTime:document.getElementById('raceGoalTime').value,notes:document.getElementById('raceNotes').value};
+if(!r.name)return;
+if(idx>=0)raceGoals[idx]=r;else raceGoals.push(r);
+saveRaces();closeModal('raceModal');renderRaceGoals();
+}
+
+// ===== NUTRITION PAGE =====
+function renderNutrition(){
+// Weekly calorie targets row
+const wk=getCurrentWeek()||plan[curWeek]||plan[0];
+if(!wk)return;
+const today=todayStr();
+let calHtml='';let total=0;
+wk.days.forEach(d=>{
+const tgt=calcDayTargets(d.activities);
+total+=tgt.cals;
+const isToday=d.dateStr===today;
+calHtml+=`<div class="cal-day${isToday?' today':''}"><div class="cal-n">${d.dow.slice(0,2)}</div><div class="cal-v">${tgt.cals}</div></div>`;
+});
+document.getElementById('calRow').innerHTML=calHtml;
+document.getElementById('calAvg').textContent=`Avg: ${Math.round(total/7)} · Total: ${total}`;
+
+// Day label
+const todayD=findToday();
+const dayName=todayD?todayD.dow:DOW[new Date().getDay()===0?6:new Date().getDay()-1];
+document.getElementById('nutrDayLabel').textContent=`Daily targets — ${dayName}`;
+
+// Targets
+const tgt=calcDayTargets(todayD?todayD.activities:[]);
+const eaten=mealTotal();
+const remCal=Math.max(0,tgt.cals-eaten.cals);
+const calPct=tgt.cals>0?Math.min(100,Math.round(eaten.cals/tgt.cals*100)):0;
+const pPct=tgt.protein>0?Math.min(100,Math.round(eaten.protein/tgt.protein*100)):0;
+const cPct=tgt.carbs>0?Math.min(100,Math.round(eaten.carbs/tgt.carbs*100)):0;
+const fPct=tgt.fat>0?Math.min(100,Math.round(eaten.fat/tgt.fat*100)):0;
+
+document.getElementById('nutrTargets').innerHTML=`
+<div class="trk" style="margin-bottom:8px"><div class="trk-label"><span>Calories</span><span>${eaten.cals} / ${tgt.cals} (${remCal} remaining)</span></div><div class="trk-bar" style="height:8px"><div class="trk-fill" style="width:${calPct}%;background:var(--acc)"></div></div></div>
+<div style="display:flex;gap:8px">
+<div class="trk" style="flex:1"><div class="trk-label"><span style="color:var(--purp)">Protein</span><span>${eaten.protein}/${tgt.protein}g</span></div><div class="trk-bar"><div class="trk-fill" style="width:${pPct}%;background:var(--purp)"></div></div></div>
+<div class="trk" style="flex:1"><div class="trk-label"><span style="color:var(--amber)">Carbs</span><span>${eaten.carbs}/${tgt.carbs}g</span></div><div class="trk-bar"><div class="trk-fill" style="width:${cPct}%;background:var(--amber)"></div></div></div>
+<div class="trk" style="flex:1"><div class="trk-label"><span style="color:var(--pink)">Fat</span><span>${eaten.fat}/${tgt.fat}g</span></div><div class="trk-bar"><div class="trk-fill" style="width:${fPct}%;background:var(--pink)"></div></div></div>
+</div>`;
+
+// Quick chips
+document.getElementById('quickChips').innerHTML=QUICK_CHIPS.map(c=>`<button class="chip" onclick="searchFoodQuery('${c}')">${c}</button>`).join('');
+
+// Meal sections
+let mhtml='';
+['Breakfast','Lunch','Dinner','Snacks'].forEach(slot=>{
+const items=meals[slot]||[];
+const slotCal=items.reduce((s,i)=>s+(i.cal||0),0);
+mhtml+=`<div class="cd meal-sec">
+<div class="meal-hdr"><span>${slot}</span><span>${Math.round(slotCal)} cal</span></div>`;
+items.forEach((item,idx)=>{
+mhtml+=`<div class="meal-item">
+<div class="meal-item-info">
+<div style="font-weight:500">${item.name}</div>
+<div class="meal-item-macros">${item.serving||''} · ${Math.round(item.p)}p ${Math.round(item.c)}c ${Math.round(item.f)}f</div>
+</div>
+<div class="meal-item-cal">${Math.round(item.cal)}</div>
+<button class="meal-item-del" onclick="removeMealItem('${slot}',${idx})">✕</button>
+</div>`;
+});
+mhtml+=`<button style="background:none;border:none;color:var(--acc);font-size:13px;font-weight:600;padding:8px 0;cursor:pointer;width:100%;text-align:left" onclick="setMealSlot('${slot}')">+ Add to ${slot.toLowerCase()}</button>`;
+mhtml+=`</div>`;
+});
+document.getElementById('mealSections').innerHTML=mhtml;
+}
+
+function setMealSlot(slot){currentMealSlot=slot;document.getElementById('foodSearch').focus()}
+function removeMealItem(slot,idx){meals[slot].splice(idx,1);saveMeals();render()}
+
+// ===== FOOD SEARCH =====
+document.getElementById('foodSearch').addEventListener('keydown',e=>{if(e.key==='Enter')searchFood()});
+
+function searchFood(){
+const q=document.getElementById('foodSearch').value.trim();
+if(!q)return;
+searchFoodQuery(q);
+}
+
+async function searchFoodQuery(q){
+document.getElementById('searchResults').innerHTML='<div style="text-align:center;color:var(--tx2);font-size:13px;padding:8px">Searching...</div>';
+let data=null;
+for(let attempt=0;attempt<3;attempt++){
+try{
+const r=await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=8&countries_tags=en:united-states`);
+data=await r.json();
+break;
+}catch(e){await new Promise(r=>setTimeout(r,500))}
+}
+if(!data||!data.products||data.products.length===0){
+document.getElementById('searchResults').innerHTML='<div style="color:var(--tx2);font-size:13px;padding:4px">No results. Try a different term or use manual entry.</div>';
+return;
+}
+let html='';
+data.products.slice(0,6).forEach(p=>{
+const name=p.product_name||'Unknown';
+const brand=p.brands||'';
+const cal=Math.round(p.nutriments?.['energy-kcal_100g']||p.nutriments?.['energy-kcal']||0);
+const prot=Math.round((p.nutriments?.proteins_100g||0)*10)/10;
+const carb=Math.round((p.nutriments?.carbohydrates_100g||0)*10)/10;
+const fat=Math.round((p.nutriments?.fat_100g||0)*10)/10;
+const serving=p.serving_size||'100g';
+html+=`<div style="padding:8px 0;border-bottom:.5px solid #f0f0ec;cursor:pointer" onclick='openFoodConfirm(${JSON.stringify({name:name+(brand?' ('+brand+')':''),cal,p:prot,c:carb,f:fat,serving,per100g:true}).replace(/'/g,"\\'")})'><div style="font-size:14px;font-weight:500">${name}${brand?' <span style="color:var(--tx2);font-size:12px">'+brand+'</span>':''}</div><div style="font-size:12px;color:var(--tx2)">${cal} cal · ${prot}p ${carb}c ${fat}f per 100g</div></div>`;
+});
+document.getElementById('searchResults').innerHTML=html;
+}
+
+function openFoodConfirm(food){
+pendingFood=food;
+const html=`
+<div style="margin-bottom:12px">
+<div style="font-size:14px;font-weight:600;margin-bottom:4px">${food.name}</div>
+<div style="font-size:11px;color:var(--tx2)">Per ${food.per100g?'100g':'serving'}: ${food.cal} cal · ${food.p}p ${food.c}c ${food.f}f</div>
+</div>
+<div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
+<input class="inp" type="number" id="foodAmt" value="1" step="0.1" inputmode="decimal" style="width:70px" oninput="updateFoodPreview()">
+<select class="inp" id="foodUnit" style="flex:1" onchange="updateFoodPreview()">
+<option value="servings">servings</option>
+<option value="grams"${food.per100g?' selected':''}>grams</option>
+<option value="oz">oz</option>
+</select>
+</div>
+<div id="foodPreview" style="background:var(--accL);border-radius:8px;padding:10px;margin-bottom:12px"></div>
+<select class="inp" id="foodMealSlot" style="margin-bottom:10px">
+<option${currentMealSlot==='Breakfast'?' selected':''}>Breakfast</option>
+<option${currentMealSlot==='Lunch'?' selected':''}>Lunch</option>
+<option${currentMealSlot==='Dinner'?' selected':''}>Dinner</option>
+<option${currentMealSlot==='Snacks'?' selected':''}>Snacks</option>
+</select>
+<button class="btn btn-g" style="width:100%" onclick="confirmFood()">Log food</button>`;
+document.getElementById('foodModalBody').innerHTML=html;
+updateFoodPreview();
+openModal('foodModal');
+}
+
+function updateFoodPreview(){
+if(!pendingFood)return;
+const amt=parseFloat(document.getElementById('foodAmt')?.value||1);
+const unit=document.getElementById('foodUnit')?.value||'servings';
+let mult=amt;
+if(unit==='grams'&&pendingFood.per100g)mult=amt/100;
+else if(unit==='oz'&&pendingFood.per100g)mult=amt*28.35/100;
+else if(unit==='grams'&&!pendingFood.per100g)mult=amt/100;
+const cal=Math.round(pendingFood.cal*mult);
+const p=Math.round(pendingFood.p*mult*10)/10;
+const c=Math.round(pendingFood.c*mult*10)/10;
+const f=Math.round(pendingFood.f*mult*10)/10;
+const el=document.getElementById('foodPreview');
+if(el)el.innerHTML=`<div style="font-size:11px;font-weight:600;color:var(--accD);margin-bottom:4px">You're logging:</div>
+<div style="font-size:13px;font-weight:700">${cal} cal</div>
+<div style="display:flex;gap:12px;margin-top:4px;font-size:11px">
+<span style="color:var(--purp);font-weight:600">${p}g protein</span>
+<span style="color:var(--amber);font-weight:600">${c}g carbs</span>
+<span style="color:var(--pink);font-weight:600">${f}g fat</span>
+</div>`;
+}
+
+function confirmFood(){
+if(!pendingFood)return;
+const amt=parseFloat(document.getElementById('foodAmt')?.value||1);
+const unit=document.getElementById('foodUnit')?.value||'servings';
+let mult=amt;
+if(unit==='grams'&&pendingFood.per100g)mult=amt/100;
+else if(unit==='oz'&&pendingFood.per100g)mult=amt*28.35/100;
+const slot=document.getElementById('foodMealSlot')?.value||currentMealSlot;
+const item={
+name:pendingFood.name,
+cal:Math.round(pendingFood.cal*mult),
+p:Math.round(pendingFood.p*mult*10)/10,
+c:Math.round(pendingFood.c*mult*10)/10,
+f:Math.round(pendingFood.f*mult*10)/10,
+serving:`${amt} ${unit}`
+};
+meals[slot].push(item);
+saveMeals();
+closeModal('foodModal');
+document.getElementById('foodSearch').value='';
+document.getElementById('searchResults').innerHTML='';
+pendingFood=null;
+render();
+}
+
+// ===== MANUAL ENTRY =====
+function openManualEntry(){openModal('manualModal')}
+function logManual(){
+const name=document.getElementById('manName').value;
+if(!name)return;
+const cal=parseInt(document.getElementById('manCal').value||0);
+const p=parseFloat(document.getElementById('manP').value||0);
+const c=parseFloat(document.getElementById('manC').value||0);
+const f=parseFloat(document.getElementById('manF').value||0);
+const slot=document.getElementById('manMeal').value;
+meals[slot].push({name,cal,p,c,f,serving:'manual'});
+saveMeals();closeModal('manualModal');
+document.getElementById('manName').value='';
+document.getElementById('manCal').value='';
+document.getElementById('manP').value='';
+document.getElementById('manC').value='';
+document.getElementById('manF').value='';
+render();
+}
+
+// ===== BARCODE SCANNER =====
+function openBarcode(){
+openModal('barcodeModal');
+if(typeof Html5Qrcode==='undefined'){
+const s=document.createElement('script');
+s.src='https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+s.onload=()=>startBarcode();
+document.head.appendChild(s);
+}else{startBarcode()}
+}
+function startBarcode(){
+try{
+barcodeScanner=new Html5Qrcode('barcode-reader');
+barcodeScanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:150},formatsToSupport:[0,1,2,3]},
+async(code)=>{
+barcodeScanner.stop().catch(()=>{});
+try{
+const r=await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+const d=await r.json();
+if(d.status===1&&d.product){
+const p=d.product;
+const food={name:(p.product_name||'Unknown')+(p.brands?' ('+p.brands+')':''),cal:Math.round(p.nutriments?.['energy-kcal_100g']||0),p:Math.round((p.nutriments?.proteins_100g||0)*10)/10,c:Math.round((p.nutriments?.carbohydrates_100g||0)*10)/10,f:Math.round((p.nutriments?.fat_100g||0)*10)/10,serving:p.serving_size||'100g',per100g:true};
+closeModal('barcodeModal');
+openFoodConfirm(food);
+}else{
+closeModal('barcodeModal');
+document.getElementById('foodSearch').value=code;
+searchFood();
+}
+}catch(e){closeModal('barcodeModal')}
+},()=>{}).catch(e=>{console.log('Camera error:',e)});
+}catch(e){console.log('Barcode init error:',e)}
+}
+function closeBarcodeModal(){
+if(barcodeScanner)try{barcodeScanner.stop().catch(()=>{})}catch(e){}
+closeModal('barcodeModal');
+}
+
+// ===== WEIGHT =====
+function logWeight(){
+const v=parseFloat(document.getElementById('wtLogInput')?.value);
+if(!v||v<50||v>500)return;
+USER.wt=v;
+weightHist.push({date:todayStr(),wt:v});
+saveWeightHist();
+render();
+}
+function openGoalWeightModal(){
+document.getElementById('goalWtInput').value=USER.goalWt;
+openModal('goalWeightModal');
+}
+function saveGoalWeight(){
+const v=parseFloat(document.getElementById('goalWtInput')?.value);
+if(!v||v<50||v>500)return;
+USER.goalWt=v;
+dbSet('goalWeight',v);
+closeModal('goalWeightModal');
+render();
+}
+
+// ===== PROGRESS PAGE =====
+function renderProgress(){
+renderWeightChart();
+renderMileageChart();
+renderProgressLog();
+}
+
+function renderWeightChart(){
+const canvas=document.getElementById('wtChart');
+const ctx=canvas.getContext('2d');
+const W=canvas.offsetWidth;const H=180;
+canvas.width=W*2;canvas.height=H*2;
+ctx.scale(2,2);
+ctx.clearRect(0,0,W,H);
+const data=weightHist.length>0?weightHist:[{date:todayStr(),wt:USER.wt}];
+const vals=data.map(d=>d.wt);
+const mn=Math.min(...vals,USER.goalWt)-2;
+const mx=Math.max(...vals)+2;
+const L=40,R=W-10,T=15,B=H-25;
+
+// Y axis
+ctx.fillStyle='#b5b3ac';ctx.font='500 9px Sora';ctx.textAlign='right';
+for(let i=0;i<=4;i++){
+const v=mn+(mx-mn)*i/4;
+const y=B-(i/4)*(B-T);
+ctx.fillText(Math.round(v*10)/10,L-4,y+3);
+ctx.strokeStyle='#eee';ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(L,y);ctx.lineTo(R,y);ctx.stroke();
+}
+
+// Goal line
+const goalY=B-((USER.goalWt-mn)/(mx-mn))*(B-T);
+ctx.strokeStyle='var(--acc)';ctx.lineWidth=1;ctx.setLineDash([4,3]);
+ctx.beginPath();ctx.moveTo(L,goalY);ctx.lineTo(R,goalY);ctx.stroke();
+ctx.setLineDash([]);
+ctx.fillStyle='#1D9E75';ctx.font='500 8px Sora';ctx.textAlign='left';
+ctx.fillText(`Goal: ${USER.goalWt}`,R-60,goalY-4);
+
+// Data line
+if(data.length>1){
+ctx.strokeStyle='#378ADD';ctx.lineWidth=2;ctx.beginPath();
+data.forEach((d,i)=>{
+const x=L+i*(R-L)/(data.length-1);
+const y=B-((d.wt-mn)/(mx-mn))*(B-T);
+i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+});
+ctx.stroke();
+}
+// Dots
+data.forEach((d,i)=>{
+const x=data.length===1?L+(R-L)/2:L+i*(R-L)/(data.length-1);
+const y=B-((d.wt-mn)/(mx-mn))*(B-T);
+ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill();
+ctx.fillStyle='#378ADD';ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();
+});
+
+// X labels
+ctx.fillStyle='#b5b3ac';ctx.font='500 8px Sora';ctx.textAlign='center';
+data.forEach((d,i)=>{
+if(data.length<=10||i%Math.ceil(data.length/6)===0){
+const x=data.length===1?L+(R-L)/2:L+i*(R-L)/(data.length-1);
+const lbl=d.date.slice(5);
+ctx.fillText(lbl,x,H-6);
+}
+});
+}
+
+function renderMileageChart(){
+const canvas=document.getElementById('miChart');
+const ctx=canvas.getContext('2d');
+const W=canvas.offsetWidth;const H=180;
+canvas.width=W*2;canvas.height=H*2;
+ctx.scale(2,2);
+ctx.clearRect(0,0,W,H);
+
+const wks=plan.slice(0,Math.min(plan.length,30));
+if(wks.length===0)return;
+const L=30,R=W-10,T=15,B=H-25;
+const planned=wks.map(w=>w.totalMi);
+const actual=wks.map(w=>w.days.reduce((s,d)=>s+(d.actuals?d.actuals.reduce((t,a)=>t+(a.miles||0),0):0),0));
+const mx=Math.max(...planned,...actual,1);
+
+// Y axis
+ctx.fillStyle='#b5b3ac';ctx.font='500 9px Sora';ctx.textAlign='right';
+for(let i=0;i<=4;i++){
+const v=Math.round(mx*i/4);
+const y=B-(i/4)*(B-T);
+ctx.fillText(v,L-4,y+3);
+ctx.strokeStyle='#eee';ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(L,y);ctx.lineTo(R,y);ctx.stroke();
+}
+
+const bw=Math.max(4,Math.min(16,(R-L)/wks.length-3));
+
+// Green bars (planned)
+planned.forEach((p,i)=>{
+const x=L+i*((R-L)/wks.length)+2;
+const h=(p/mx)*(B-T);
+ctx.fillStyle='rgba(29,158,117,.25)';
+ctx.fillRect(x,B-h,bw,h);
+});
+
+// Coral line (actual)
+const hasActual=actual.some(a=>a>0);
+if(hasActual){
+ctx.strokeStyle='#D85A30';ctx.lineWidth=2;ctx.beginPath();
+let started=false;
+actual.forEach((a,i)=>{
+if(a===0&&!started)return;
+const x=L+i*((R-L)/wks.length)+2+bw/2;
+const y=B-(a/mx)*(B-T);
+if(!started){ctx.moveTo(x,y);started=true}else ctx.lineTo(x,y);
+});
+ctx.stroke();
+actual.forEach((a,i)=>{
+if(a===0)return;
+const x=L+i*((R-L)/wks.length)+2+bw/2;
+const y=B-(a/mx)*(B-T);
+ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill();
+ctx.fillStyle='#D85A30';ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();
+});
+}
+
+// X labels
+ctx.fillStyle='#b5b3ac';ctx.font='500 8px Sora';ctx.textAlign='center';
+wks.forEach((w,i)=>{
+if(wks.length<=15||i%Math.ceil(wks.length/10)===0){
+const x=L+i*((R-L)/wks.length)+2+bw/2;
+ctx.fillText('W'+w.week,x,H-6);
+}
+});
+}
+
+function renderProgressLog(){
+const wk=getCurrentWeek()||plan[0];
+if(!wk)return;
+let html='';
+wk.days.forEach(d=>{
+if(d.actuals){
+d.actuals.forEach(a=>{
+let info=[];
+if(a.miles>0)info.push(`${a.miles} mi`);
+if(a.pace)info.push(a.pace);
+html+=`<div style="padding:4px 0;border-bottom:.5px solid #f0f0ec;font-size:13px;display:flex;align-items:center;gap:6px">
+<span style="font-weight:600;color:var(--accD);min-width:32px">${d.dow}</span>
+<span class="pill" style="background:${ACT_BGS[a.type]};color:${ACT_COLORS[a.type]};padding:2px 8px">${a.type}</span>
+<span>${info.join(' · ')}</span></div>`;
+});
+}
+});
+if(!html)html='<div style="color:var(--tx3);font-style:italic;font-size:13px">No workouts logged yet this week</div>';
+document.getElementById('progLog').innerHTML=html;
+}
+
+// ===== NAVIGATION =====
+function goPage(p){
+document.querySelectorAll('.pg').forEach(el=>el.classList.remove('on'));
+document.querySelectorAll('.nav-i').forEach(el=>el.classList.remove('on'));
+document.getElementById('pg'+p).classList.add('on');
+document.getElementById('nav'+p).classList.add('on');
+if(p==='Prog')renderProgress();
+if(p==='Nutr')renderNutrition();
+window.scrollTo(0,0);
+}
+
+// ===== MODALS =====
+function openModal(id){document.getElementById(id).classList.add('on')}
+function closeModal(id){document.getElementById(id).classList.remove('on')}
+document.querySelectorAll('.modal-bg').forEach(m=>{
+m.addEventListener('click',e=>{if(e.target===m){
+if(m.id==='barcodeModal')closeBarcodeModal();
+else m.classList.remove('on');
+}});
+});
+
+// ===== INIT =====
+async function init(){
+buildPlan();
+await openDB();
+await loadData();
+curWeek=getWeekIndex();
+render();
+}
+init();
 </script>
 </body>
 </html>
