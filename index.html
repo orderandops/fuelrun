@@ -1066,6 +1066,35 @@ function removeMealItem(slot,idx){meals[slot].splice(idx,1);saveMeals();render()
 // ===== FOOD SEARCH =====
 document.getElementById('foodSearch').addEventListener('keydown',e=>{if(e.key==='Enter')searchFood()});
 
+// Common whole foods database (per 100g unless noted)
+const COMMON_FOODS={
+'egg':[
+{name:'Egg (large, whole)',cal:143,p:12.6,c:0.7,f:9.5,serving:'1 large (50g)',per100g:true},
+{name:'Egg whites (large)',cal:52,p:10.8,c:0.7,f:0.2,serving:'3 whites (99g)',per100g:true},
+{name:'Hard boiled egg',cal:155,p:12.6,c:1.1,f:10.6,serving:'1 large (50g)',per100g:true},
+{name:'Scrambled eggs',cal:149,p:10.2,c:1.6,f:11.1,serving:'2 eggs (122g)',per100g:true},
+],
+'banana':[{name:'Banana (medium)',cal:89,p:1.1,c:22.8,f:0.3,serving:'1 medium (118g)',per100g:true}],
+'chicken':[
+{name:'Chicken breast (grilled)',cal:165,p:31,c:0,f:3.6,serving:'4 oz (113g)',per100g:true},
+{name:'Chicken thigh (skinless)',cal:209,p:26,c:0,f:10.9,serving:'1 thigh (116g)',per100g:true},
+],
+'rice':[
+{name:'White rice (cooked)',cal:130,p:2.7,c:28.2,f:0.3,serving:'1 cup (186g)',per100g:true},
+{name:'Brown rice (cooked)',cal:123,p:2.7,c:25.6,f:1,serving:'1 cup (195g)',per100g:true},
+],
+'oatmeal':[{name:'Oatmeal (cooked)',cal:71,p:2.5,c:12,f:1.5,serving:'1 cup (234g)',per100g:true}],
+'greek yogurt':[{name:'Greek yogurt (plain, nonfat)',cal:59,p:10.2,c:3.6,f:0.4,serving:'1 cup (245g)',per100g:true}],
+'apple':[{name:'Apple (medium)',cal:52,p:0.3,c:13.8,f:0.2,serving:'1 medium (182g)',per100g:true}],
+'protein shake':[{name:'Protein shake (whey, 1 scoop)',cal:120,p:24,c:3,f:1.5,serving:'1 scoop (31g)',per100g:false}],
+'sweet potato':[{name:'Sweet potato (baked)',cal:90,p:2,c:20.7,f:0.1,serving:'1 medium (114g)',per100g:true}],
+'peanut butter':[{name:'Peanut butter (2 tbsp)',cal:588,p:25.1,c:20,f:50.4,serving:'2 tbsp (32g)',per100g:true}],
+'salmon':[{name:'Salmon (Atlantic, cooked)',cal:208,p:20.4,c:0,f:13.4,serving:'4 oz (113g)',per100g:true}],
+'bread':[{name:'Whole wheat bread',cal:247,p:13,c:41,f:3.4,serving:'1 slice (28g)',per100g:true}],
+'avocado':[{name:'Avocado',cal:160,p:2,c:8.5,f:14.7,serving:'1/2 avocado (68g)',per100g:true}],
+'turkey':[{name:'Turkey breast (deli)',cal:104,p:18.2,c:3.5,f:1.6,serving:'3 slices (84g)',per100g:true}],
+};
+
 function searchFood(){
 const q=document.getElementById('foodSearch').value.trim();
 if(!q)return;
@@ -1074,28 +1103,59 @@ searchFoodQuery(q);
 
 async function searchFoodQuery(q){
 document.getElementById('searchResults').innerHTML='<div style="text-align:center;color:var(--tx2);font-size:13px;padding:8px">Searching...</div>';
-let data=null;
-for(let attempt=0;attempt<3;attempt++){
-try{
-const r=await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=8&countries_tags=en:united-states`);
-data=await r.json();
-break;
-}catch(e){await new Promise(r=>setTimeout(r,500))}
+
+// Check common foods first
+const qLow=q.toLowerCase();
+let localResults=[];
+Object.keys(COMMON_FOODS).forEach(key=>{
+if(key.includes(qLow)||qLow.includes(key)){
+localResults=localResults.concat(COMMON_FOODS[key]);
 }
-if(!data||!data.products||data.products.length===0){
+});
+
+// Also search API for branded products
+let apiResults=[];
+try{
+const r=await fetch(`https://us.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=10&lc=en&tagtype_0=languages&tag_contains_0=contains&tag_0=en`);
+const data=await r.json();
+if(data&&data.products){
+apiResults=data.products
+.filter(p=>{
+const name=p.product_name||'';
+if(!name||name==='Unknown')return false;
+// Filter out non-English names
+if(/[àâäéèêëïîôùûüç]/i.test(name))return false;
+// Must have calorie data
+if(!p.nutriments||(!p.nutriments['energy-kcal_100g']&&!p.nutriments['energy-kcal_serving']))return false;
+return true;
+})
+.slice(0,6)
+.map(p=>{
+const n=p.nutriments;
+return{
+name:(p.product_name||'Unknown')+(p.brands?' ('+p.brands+')':''),
+cal:Math.round(n['energy-kcal_100g']||n['energy-kcal_serving']||0),
+p:Math.round((n.proteins_100g||0)*10)/10,
+c:Math.round((n.carbohydrates_100g||0)*10)/10,
+f:Math.round((n.fat_100g||0)*10)/10,
+serving:p.serving_size||'100g',
+per100g:!!n['energy-kcal_100g']
+};
+});
+}
+}catch(e){}
+
+// Combine: local first, then API
+const results=[...localResults,...apiResults].slice(0,8);
+
+if(results.length===0){
 document.getElementById('searchResults').innerHTML='<div style="color:var(--tx2);font-size:13px;padding:4px">No results. Try a different term or use manual entry.</div>';
 return;
 }
+
 let html='';
-data.products.slice(0,6).forEach(p=>{
-const name=p.product_name||'Unknown';
-const brand=p.brands||'';
-const cal=Math.round(p.nutriments?.['energy-kcal_100g']||p.nutriments?.['energy-kcal']||0);
-const prot=Math.round((p.nutriments?.proteins_100g||0)*10)/10;
-const carb=Math.round((p.nutriments?.carbohydrates_100g||0)*10)/10;
-const fat=Math.round((p.nutriments?.fat_100g||0)*10)/10;
-const serving=p.serving_size||'100g';
-html+=`<div style="padding:8px 0;border-bottom:.5px solid #f0f0ec;cursor:pointer" onclick='openFoodConfirm(${JSON.stringify({name:name+(brand?' ('+brand+')':''),cal,p:prot,c:carb,f:fat,serving,per100g:true}).replace(/'/g,"\\'")})'><div style="font-size:14px;font-weight:500">${name}${brand?' <span style="color:var(--tx2);font-size:12px">'+brand+'</span>':''}</div><div style="font-size:12px;color:var(--tx2)">${cal} cal · ${prot}p ${carb}c ${fat}f per 100g</div></div>`;
+results.forEach(food=>{
+html+=`<div style="padding:8px 0;border-bottom:.5px solid #f0f0ec;cursor:pointer" onclick='openFoodConfirm(${JSON.stringify(food).replace(/'/g,"\\'")})'><div style="font-size:14px;font-weight:500">${food.name}</div><div style="font-size:12px;color:var(--tx2)">${food.cal} cal · ${food.p}p ${food.c}c ${food.f}f per ${food.per100g?'100g':'serving'}</div></div>`;
 });
 document.getElementById('searchResults').innerHTML=html;
 }
@@ -1201,72 +1261,117 @@ openModal('barcodeModal');
 if(typeof Html5Qrcode==='undefined'){
 const s=document.createElement('script');
 s.src='https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
-s.onload=()=>setTimeout(startBarcode,300);
+s.onload=()=>setTimeout(startBarcode,500);
 document.head.appendChild(s);
-}else{setTimeout(startBarcode,300)}
+}else{setTimeout(startBarcode,500)}
 }
+
+async function lookupBarcode(code){
+document.getElementById('barcode-reader').innerHTML=`<div style="text-align:center;padding:20px;font-size:14px;color:var(--acc);font-weight:600">Barcode: ${code}<br><span style="font-weight:400;color:var(--tx2)">Looking up product...</span></div>`;
+try{
+const r=await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+const d=await r.json();
+if(d.status===1&&d.product){
+const p=d.product;
+const n=p.nutriments||{};
+const food={
+name:(p.product_name||'Unknown')+(p.brands?' ('+p.brands+')':''),
+cal:Math.round(n['energy-kcal_100g']||n['energy-kcal_serving']||n['energy-kcal']||0),
+p:Math.round((n.proteins_100g||n.proteins_serving||0)*10)/10,
+c:Math.round((n.carbohydrates_100g||n.carbohydrates_serving||0)*10)/10,
+f:Math.round((n.fat_100g||n.fat_serving||0)*10)/10,
+serving:p.serving_size||'100g',
+per100g:!!n['energy-kcal_100g']
+};
+closeModal('barcodeModal');
+openFoodConfirm(food);
+}else{
+closeModal('barcodeModal');
+document.getElementById('foodSearch').value=code;
+searchFood();
+}
+}catch(e){
+closeModal('barcodeModal');
+document.getElementById('foodSearch').value=code;
+searchFood();
+}
+}
+
 function startBarcode(){
 const readEl=document.getElementById('barcode-reader');
 if(!readEl)return;
 readEl.innerHTML='';
+
+// Try native BarcodeDetector first (supported in Chrome Android, Safari 15.4+)
+if('BarcodeDetector' in window){
+startNativeBarcode(readEl);
+return;
+}
+
+// Fallback to html5-qrcode library
 try{
-barcodeScanner=new Html5Qrcode('barcode-reader');
-const config={
-fps:10,
-qrbox:function(vw,vh){const s=Math.min(vw,vh)*0.8;return{width:Math.floor(s),height:Math.floor(s*0.5)}},
-aspectRatio:1.0,
-formatsToSupport:[
+const formats=[
 Html5QrcodeSupportedFormats.EAN_13,
 Html5QrcodeSupportedFormats.EAN_8,
 Html5QrcodeSupportedFormats.UPC_A,
 Html5QrcodeSupportedFormats.UPC_E,
 Html5QrcodeSupportedFormats.CODE_128,
 Html5QrcodeSupportedFormats.CODE_39
-]
-};
+];
+barcodeScanner=new Html5Qrcode('barcode-reader',{formatsToSupport:formats,verbose:false});
 barcodeScanner.start(
 {facingMode:'environment'},
-config,
-async(decodedText)=>{
+{fps:15,qrbox:{width:280,height:160}},
+(decodedText)=>{
 try{barcodeScanner.stop().catch(()=>{})}catch(e){}
-document.getElementById('barcode-reader').innerHTML=`<div style="text-align:center;padding:20px;font-size:13px;color:var(--acc)">Found: ${decodedText}<br>Looking up product...</div>`;
-try{
-const r=await fetch(`https://world.openfoodfacts.org/api/v0/product/${decodedText}.json`);
-const d=await r.json();
-if(d.status===1&&d.product){
-const p=d.product;
-const food={
-name:(p.product_name||'Unknown')+(p.brands?' ('+p.brands+')':''),
-cal:Math.round(p.nutriments?.['energy-kcal_100g']||p.nutriments?.['energy-kcal_serving']||0),
-p:Math.round((p.nutriments?.proteins_100g||0)*10)/10,
-c:Math.round((p.nutriments?.carbohydrates_100g||0)*10)/10,
-f:Math.round((p.nutriments?.fat_100g||0)*10)/10,
-serving:p.serving_size||'100g',
-per100g:true
-};
-closeModal('barcodeModal');
-openFoodConfirm(food);
-}else{
-closeModal('barcodeModal');
-document.getElementById('foodSearch').value=decodedText;
-searchFood();
-}
-}catch(e){
-closeModal('barcodeModal');
-document.getElementById('foodSearch').value=decodedText;
-searchFood();
-}
+lookupBarcode(decodedText);
 },
-(errorMessage)=>{}
+(msg)=>{}
 ).catch(err=>{
-readEl.innerHTML=`<div style="text-align:center;padding:20px;font-size:13px;color:var(--coral)">Camera access denied or unavailable.<br>Please allow camera permissions and try again.</div>`;
+readEl.innerHTML=`<div style="text-align:center;padding:20px;font-size:13px;color:var(--coral)">Camera error: ${err}<br>Please allow camera permissions.</div>`;
 });
 }catch(e){
-readEl.innerHTML=`<div style="text-align:center;padding:20px;font-size:13px;color:var(--coral)">Could not start scanner: ${e.message}</div>`;
+readEl.innerHTML=`<div style="text-align:center;padding:20px;font-size:13px;color:var(--coral)">Scanner error: ${e.message}</div>`;
 }
 }
+
+async function startNativeBarcode(readEl){
+try{
+const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}});
+const video=document.createElement('video');
+video.srcObject=stream;
+video.setAttribute('playsinline','true');
+video.style.cssText='width:100%;border-radius:8px;';
+readEl.innerHTML='';
+readEl.appendChild(video);
+await video.play();
+
+const detector=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128','code_39']});
+let scanning=true;
+barcodeScanner={stop:()=>{scanning=false;stream.getTracks().forEach(t=>t.stop())}};
+
+async function scan(){
+if(!scanning)return;
+try{
+const barcodes=await detector.detect(video);
+if(barcodes.length>0){
+scanning=false;
+stream.getTracks().forEach(t=>t.stop());
+lookupBarcode(barcodes[0].rawValue);
+return;
+}
+}catch(e){}
+requestAnimationFrame(scan);
+}
+scan();
+}catch(e){
+readEl.innerHTML=`<div style="text-align:center;padding:20px;font-size:13px;color:var(--coral)">Camera error: ${e.message}</div>`;
+}
+}
+
 function closeBarcodeModal(){
-if(barcodeScanner)try{barcodeScanner.stop().catch(()=>{})}catch(e){}
+if(barcodeScanner)try{barcodeScanner.stop()}catch(e){}
+barcodeScanner=null;
 document.getElementById('barcode-reader').innerHTML='';
 closeModal('barcodeModal');
 }
