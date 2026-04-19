@@ -925,6 +925,7 @@ html+=`<div class="t-done-row">
 <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--acc)" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l2.5 2.5L16 9"/></svg>
 </div>`;
 });
+html+=`<button style="background:none;border:none;color:var(--coral);font-size:12px;font-weight:600;cursor:pointer;padding:6px 0;display:flex;align-items:center;gap:4px" onclick="undoLog(${curWeek},${i})">✕ Undo log</button>`;
 html+=`</div>`;
 }
 
@@ -967,6 +968,13 @@ const timeStr=totalSec>0?`${h>0?h+'h ':''}${m}m ${s}s`:'';
 actuals.push({type:a.type,miles,h,m,s,pace,timeStr});
 });
 d.actuals=actuals;
+savePlanActuals();
+render();
+}
+
+function undoLog(wi,di){
+const wk=plan[wi];const d=wk.days[di];
+d.actuals=null;
 savePlanActuals();
 render();
 }
