@@ -1240,15 +1240,12 @@ mhtml+=`<div class="meal-item">
 mhtml+=`<button style="background:none;border:none;color:var(--acc);font-size:13px;font-weight:600;padding:8px 0;cursor:pointer;width:100%;text-align:left" onclick="setMealSlot('${slot}')">+ Add to ${slot.toLowerCase()}</button>`;
 mhtml+=`</div>`;
 });
-// Copy meals button
-const totalItems=Object.values(meals).reduce((s,items)=>s+items.length,0);
-if(totalItems>0){
+// Copy meals button — always visible
 mhtml+=`<div style="margin-top:4px;margin-bottom:8px">
 <button style="display:flex;align-items:center;justify-content:center;gap:6px;background:var(--accL);color:var(--accD);border:1px solid var(--acc);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;width:100%;font-family:var(--f)" onclick="openCopyMeals()">
 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accD)" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
 Copy meals to another day
 </button></div>`;
-}
 document.getElementById('mealSections').innerHTML=mhtml;
 }
 
@@ -1307,34 +1304,104 @@ if(el){el.style.color='var(--acc)';el.textContent='Meals copied!';}
 // ===== FOOD SEARCH =====
 document.getElementById('foodSearch').addEventListener('keydown',e=>{if(e.key==='Enter')searchFood()});
 
-// Common whole foods database (per 100g unless noted)
-const COMMON_FOODS={
-'egg':[
-{name:'Egg (large, whole)',cal:143,p:12.6,c:0.7,f:9.5,serving:'1 large (50g)',per100g:true},
-{name:'Egg whites (large)',cal:52,p:10.8,c:0.7,f:0.2,serving:'3 whites (99g)',per100g:true},
-{name:'Hard boiled egg',cal:155,p:12.6,c:1.1,f:10.6,serving:'1 large (50g)',per100g:true},
-{name:'Scrambled eggs',cal:149,p:10.2,c:1.6,f:11.1,serving:'2 eggs (122g)',per100g:true},
-],
-'banana':[{name:'Banana (medium)',cal:89,p:1.1,c:22.8,f:0.3,serving:'1 medium (118g)',per100g:true}],
-'chicken':[
-{name:'Chicken breast (grilled)',cal:165,p:31,c:0,f:3.6,serving:'4 oz (113g)',per100g:true},
-{name:'Chicken thigh (skinless)',cal:209,p:26,c:0,f:10.9,serving:'1 thigh (116g)',per100g:true},
-],
-'rice':[
-{name:'White rice (cooked)',cal:130,p:2.7,c:28.2,f:0.3,serving:'1 cup (186g)',per100g:true},
-{name:'Brown rice (cooked)',cal:123,p:2.7,c:25.6,f:1,serving:'1 cup (195g)',per100g:true},
-],
-'oatmeal':[{name:'Oatmeal (cooked)',cal:71,p:2.5,c:12,f:1.5,serving:'1 cup (234g)',per100g:true}],
-'greek yogurt':[{name:'Greek yogurt (plain, nonfat)',cal:59,p:10.2,c:3.6,f:0.4,serving:'1 cup (245g)',per100g:true}],
-'apple':[{name:'Apple (medium)',cal:52,p:0.3,c:13.8,f:0.2,serving:'1 medium (182g)',per100g:true}],
-'protein shake':[{name:'Protein shake (whey, 1 scoop)',cal:120,p:24,c:3,f:1.5,serving:'1 scoop (31g)',per100g:false}],
-'sweet potato':[{name:'Sweet potato (baked)',cal:90,p:2,c:20.7,f:0.1,serving:'1 medium (114g)',per100g:true}],
-'peanut butter':[{name:'Peanut butter (2 tbsp)',cal:588,p:25.1,c:20,f:50.4,serving:'2 tbsp (32g)',per100g:true}],
-'salmon':[{name:'Salmon (Atlantic, cooked)',cal:208,p:20.4,c:0,f:13.4,serving:'4 oz (113g)',per100g:true}],
-'bread':[{name:'Whole wheat bread',cal:247,p:13,c:41,f:3.4,serving:'1 slice (28g)',per100g:true}],
-'avocado':[{name:'Avocado',cal:160,p:2,c:8.5,f:14.7,serving:'1/2 avocado (68g)',per100g:true}],
-'turkey':[{name:'Turkey breast (deli)',cal:104,p:18.2,c:3.5,f:1.6,serving:'3 slices (84g)',per100g:true}],
-};
+// Common whole foods database — USDA data, per serving
+const CF=[
+// Fruits
+{n:'Apple (medium)',cal:95,p:0.5,c:25,f:0.3,s:'1 medium (182g)',k:['apple']},
+{n:'Banana (medium)',cal:105,p:1.3,c:27,f:0.4,s:'1 medium (118g)',k:['banana']},
+{n:'Strawberries',cal:49,p:1,c:12,f:0.5,s:'1 cup (152g)',k:['strawberry','strawberries','berry']},
+{n:'Blueberries',cal:84,p:1.1,c:21,f:0.5,s:'1 cup (148g)',k:['blueberry','blueberries','berry']},
+{n:'Raspberries',cal:64,p:1.5,c:15,f:0.8,s:'1 cup (123g)',k:['raspberry','raspberries','berry']},
+{n:'Grapefruit (half)',cal:52,p:0.9,c:13,f:0.2,s:'1/2 medium (154g)',k:['grapefruit']},
+{n:'Orange (medium)',cal:62,p:1.2,c:15,f:0.2,s:'1 medium (131g)',k:['orange']},
+{n:'Grapes',cal:104,p:1.1,c:27,f:0.2,s:'1 cup (151g)',k:['grape','grapes']},
+{n:'Watermelon',cal:46,p:0.9,c:12,f:0.2,s:'1 cup diced (152g)',k:['watermelon','melon']},
+{n:'Mango',cal:99,p:1.4,c:25,f:0.6,s:'1 cup (165g)',k:['mango']},
+{n:'Pineapple',cal:82,p:0.9,c:22,f:0.2,s:'1 cup (165g)',k:['pineapple']},
+{n:'Peach (medium)',cal:59,p:1.4,c:14,f:0.4,s:'1 medium (150g)',k:['peach']},
+{n:'Pear (medium)',cal:101,p:0.7,c:27,f:0.2,s:'1 medium (178g)',k:['pear']},
+{n:'Cherries',cal:87,p:1.5,c:22,f:0.3,s:'1 cup (138g)',k:['cherry','cherries']},
+{n:'Avocado',cal:234,p:2.9,c:12,f:21,s:'1 medium (150g)',k:['avocado']},
+// Vegetables
+{n:'Broccoli (cooked)',cal:55,p:3.7,c:11,f:0.6,s:'1 cup (156g)',k:['broccoli']},
+{n:'Spinach (raw)',cal:7,p:0.9,c:1.1,f:0.1,s:'1 cup (30g)',k:['spinach']},
+{n:'Sweet potato (baked)',cal:103,p:2.3,c:24,f:0.1,s:'1 medium (114g)',k:['sweet potato']},
+{n:'Potato (baked)',cal:161,p:4.3,c:37,f:0.2,s:'1 medium (173g)',k:['potato','baked potato']},
+{n:'Carrots (raw)',cal:52,p:1.2,c:12,f:0.3,s:'1 cup (128g)',k:['carrot','carrots']},
+{n:'Tomato (medium)',cal:22,p:1.1,c:4.8,f:0.2,s:'1 medium (123g)',k:['tomato']},
+{n:'Cucumber',cal:16,p:0.7,c:3.1,f:0.2,s:'1 cup sliced (119g)',k:['cucumber']},
+{n:'Bell pepper',cal:31,p:1,c:6,f:0.3,s:'1 medium (119g)',k:['bell pepper','pepper']},
+{n:'Kale (raw)',cal:33,p:2.9,c:6,f:0.6,s:'1 cup chopped (67g)',k:['kale']},
+{n:'Green beans (cooked)',cal:44,p:2.4,c:10,f:0.4,s:'1 cup (125g)',k:['green beans','beans']},
+{n:'Corn (cooked)',cal:132,p:5,c:29,f:1.8,s:'1 medium ear (90g)',k:['corn']},
+{n:'Mushrooms (raw)',cal:15,p:2.2,c:2.3,f:0.2,s:'1 cup sliced (70g)',k:['mushroom','mushrooms']},
+{n:'Onion (medium)',cal:44,p:1.2,c:10,f:0.1,s:'1 medium (110g)',k:['onion']},
+{n:'Asparagus (cooked)',cal:40,p:4.3,c:7.4,f:0.4,s:'1 cup (180g)',k:['asparagus']},
+// Proteins
+{n:'Egg (large, whole)',cal:72,p:6.3,c:0.4,f:4.8,s:'1 large (50g)',k:['egg','eggs']},
+{n:'Egg whites',cal:17,p:3.6,c:0.2,f:0.1,s:'1 large white (33g)',k:['egg white','egg whites']},
+{n:'Hard boiled egg',cal:78,p:6.3,c:0.6,f:5.3,s:'1 large (50g)',k:['hard boiled','boiled egg']},
+{n:'Scrambled eggs',cal:182,p:12.5,c:2,f:13.5,s:'2 large eggs (122g)',k:['scrambled egg','scrambled']},
+{n:'Chicken breast (grilled)',cal:187,p:35,c:0,f:4.1,s:'4 oz (113g)',k:['chicken breast','chicken']},
+{n:'Chicken thigh (skinless)',cal:209,p:26,c:0,f:10.9,s:'1 thigh (116g)',k:['chicken thigh','chicken']},
+{n:'Ground beef (93% lean)',cal:170,p:22,c:0,f:8.5,s:'4 oz (113g)',k:['ground beef','beef','hamburger']},
+{n:'Salmon (Atlantic, cooked)',cal:234,p:23,c:0,f:15,s:'4 oz (113g)',k:['salmon']},
+{n:'Tuna (canned in water)',cal:100,p:22,c:0,f:1,s:'3 oz (85g)',k:['tuna']},
+{n:'Shrimp (cooked)',cal:101,p:20,c:1.3,f:1.4,s:'4 oz (113g)',k:['shrimp']},
+{n:'Turkey breast (deli)',cal:88,p:15,c:3,f:1.4,s:'3 slices (84g)',k:['turkey']},
+{n:'Steak (sirloin, grilled)',cal:207,p:30,c:0,f:9,s:'4 oz (113g)',k:['steak','sirloin','beef']},
+{n:'Pork chop (grilled)',cal:187,p:26,c:0,f:8.5,s:'4 oz (113g)',k:['pork chop','pork']},
+{n:'Bacon',cal:120,p:9,c:0.4,f:9.4,s:'3 slices (34g)',k:['bacon']},
+{n:'Tofu (firm)',cal:88,p:10,c:2.2,f:5.3,s:'1/2 cup (126g)',k:['tofu']},
+// Dairy
+{n:'Greek yogurt (plain, nonfat)',cal:100,p:17,c:6,f:0.7,s:'1 cup (170g)',k:['greek yogurt','yogurt']},
+{n:'Milk (2%)',cal:122,p:8.1,c:11.7,f:4.8,s:'1 cup (244ml)',k:['milk']},
+{n:'Cottage cheese (low fat)',cal:163,p:28,c:6.1,f:2.3,s:'1 cup (226g)',k:['cottage cheese']},
+{n:'Cheddar cheese',cal:113,p:7,c:0.4,f:9.3,s:'1 oz (28g)',k:['cheddar','cheese']},
+{n:'Mozzarella cheese',cal:85,p:6.3,c:0.7,f:6.3,s:'1 oz (28g)',k:['mozzarella','cheese']},
+{n:'Cream cheese',cal:99,p:1.7,c:1.6,f:9.8,s:'2 tbsp (29g)',k:['cream cheese']},
+{n:'Butter',cal:102,p:0.1,c:0,f:11.5,s:'1 tbsp (14g)',k:['butter']},
+// Grains & carbs
+{n:'White rice (cooked)',cal:206,p:4.3,c:45,f:0.4,s:'1 cup (186g)',k:['white rice','rice']},
+{n:'Brown rice (cooked)',cal:216,p:5,c:45,f:1.8,s:'1 cup (195g)',k:['brown rice','rice']},
+{n:'Oatmeal (cooked)',cal:166,p:5.9,c:28,f:3.6,s:'1 cup (234g)',k:['oatmeal','oats']},
+{n:'Whole wheat bread',cal:69,p:3.6,c:12,f:1,s:'1 slice (28g)',k:['bread','wheat bread','whole wheat']},
+{n:'White bread',cal:67,p:2,c:13,f:0.8,s:'1 slice (25g)',k:['bread','white bread']},
+{n:'Pasta (cooked)',cal:220,p:8.1,c:43,f:1.3,s:'1 cup (140g)',k:['pasta','spaghetti','noodles']},
+{n:'Quinoa (cooked)',cal:222,p:8.1,c:39,f:3.5,s:'1 cup (185g)',k:['quinoa']},
+{n:'Tortilla (flour, 8in)',cal:140,p:3.6,c:24,f:3.5,s:'1 tortilla (49g)',k:['tortilla','wrap']},
+{n:'Bagel (plain)',cal:245,p:10,c:48,f:1.5,s:'1 medium (89g)',k:['bagel']},
+{n:'English muffin',cal:134,p:4.4,c:26,f:1,s:'1 muffin (57g)',k:['english muffin','muffin']},
+{n:'Granola',cal:200,p:5,c:29,f:8,s:'1/2 cup (49g)',k:['granola']},
+// Nuts & seeds
+{n:'Peanut butter',cal:188,p:8,c:6.4,f:16,s:'2 tbsp (32g)',k:['peanut butter','pb']},
+{n:'Almond butter',cal:196,p:6.8,c:6,f:18,s:'2 tbsp (32g)',k:['almond butter']},
+{n:'Almonds',cal:164,p:6,c:6,f:14,s:'1 oz (28g)',k:['almonds','almond']},
+{n:'Walnuts',cal:185,p:4.3,c:3.9,f:18,s:'1 oz (28g)',k:['walnuts','walnut']},
+{n:'Cashews',cal:157,p:5.2,c:8.6,f:12,s:'1 oz (28g)',k:['cashews','cashew']},
+{n:'Chia seeds',cal:138,p:4.7,c:12,f:8.7,s:'2 tbsp (28g)',k:['chia','chia seeds']},
+{n:'Flax seeds',cal:110,p:4,c:6,f:8.5,s:'2 tbsp (20g)',k:['flax','flaxseed']},
+// Drinks & supplements
+{n:'Protein shake (whey)',cal:120,p:24,c:3,f:1.5,s:'1 scoop (31g)',k:['protein shake','protein powder','whey']},
+{n:'Coffee (black)',cal:2,p:0.3,c:0,f:0,s:'1 cup (237ml)',k:['coffee','black coffee']},
+{n:'Orange juice',cal:112,p:1.7,c:26,f:0.5,s:'1 cup (248ml)',k:['orange juice','oj']},
+{n:'Almond milk (unsweetened)',cal:30,p:1,c:1,f:2.5,s:'1 cup (240ml)',k:['almond milk']},
+{n:'Oat milk',cal:120,p:3,c:16,f:5,s:'1 cup (240ml)',k:['oat milk']},
+// Snacks & misc
+{n:'Hummus',cal:70,p:2,c:6,f:5,s:'2 tbsp (30g)',k:['hummus']},
+{n:'Trail mix',cal:173,p:5,c:17,f:11,s:'1/4 cup (38g)',k:['trail mix']},
+{n:'Dark chocolate (70%)',cal:170,p:2.2,c:13,f:12,s:'1 oz (28g)',k:['dark chocolate','chocolate']},
+{n:'Honey',cal:64,p:0.1,c:17,f:0,s:'1 tbsp (21g)',k:['honey']},
+{n:'Olive oil',cal:119,p:0,c:0,f:14,s:'1 tbsp (14ml)',k:['olive oil','oil']},
+{n:'Rice cakes',cal:35,p:0.7,c:7.3,f:0.3,s:'1 cake (9g)',k:['rice cake','rice cakes']},
+{n:'Pretzels',cal:110,p:2.6,c:23,f:1,s:'1 oz (28g)',k:['pretzels','pretzel']},
+{n:'Popcorn (air popped)',cal:31,p:1,c:6.2,f:0.4,s:'1 cup (8g)',k:['popcorn']},
+// Meals & combos
+{n:'PB&J sandwich',cal:376,p:13,c:50,f:15,s:'1 sandwich',k:['pbj','pb&j','peanut butter jelly']},
+{n:'Turkey sandwich',cal:320,p:22,c:34,f:10,s:'1 sandwich',k:['turkey sandwich','sandwich']},
+{n:'Protein bar (avg)',cal:210,p:20,c:22,f:7,s:'1 bar (60g)',k:['protein bar','bar']},
+{n:'Energy gel',cal:100,p:0,c:25,f:0,s:'1 gel (32g)',k:['energy gel','gel','gu']},
+];
 
 function searchFood(){
 const q=document.getElementById('foodSearch').value.trim();
@@ -1344,33 +1411,44 @@ searchFoodQuery(q);
 
 async function searchFoodQuery(q){
 document.getElementById('searchResults').innerHTML='<div style="text-align:center;color:var(--tx2);font-size:13px;padding:8px">Searching...</div>';
-
-// Check common foods first
 const qLow=q.toLowerCase();
-let localResults=[];
-Object.keys(COMMON_FOODS).forEach(key=>{
-if(key.includes(qLow)||qLow.includes(key)){
-localResults=localResults.concat(COMMON_FOODS[key]);
-}
-});
 
-// Also search API for branded products
-let apiResults=[];
+// 1. Search built-in database
+let localResults=CF.filter(f=>f.k.some(k=>k.includes(qLow)||qLow.includes(k)))
+.map(f=>({name:f.n,cal:f.cal,p:f.p,c:f.c,f:f.f,serving:f.s,per100g:false}));
+
+// 2. Search USDA FoodData Central (best for whole foods)
+let usdaResults=[];
 try{
-const r=await fetch(`https://us.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=10&lc=en&tagtype_0=languages&tag_contains_0=contains&tag_0=en`);
+const r=await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(q)}&pageSize=6&dataType=SR%20Legacy,Survey%20(FNDDS)&api_key=DEMO_KEY`);
+const data=await r.json();
+if(data&&data.foods){
+usdaResults=data.foods.slice(0,5).map(f=>{
+const nut=k=>{const n=f.foodNutrients?.find(n=>n.nutrientName===k);return n?Math.round(n.value*10)/10:0};
+const cal=nut('Energy');
+const p=nut('Protein');
+const c=nut('Carbohydrate, by difference');
+const fat=nut('Total lipid (fat)');
+return{name:f.description,cal,p,c,f:fat,cal100:cal,p100:p,c100:c,f100:fat,serving:f.servingSize?`${f.servingSize}${f.servingSizeUnit||'g'}`:'100g',per100g:true};
+}).filter(f=>f.cal>0);
+}
+}catch(e){}
+
+// 3. Search Open Food Facts (branded products)
+let offResults=[];
+try{
+const r=await fetch(`https://us.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=6&lc=en&tagtype_0=languages&tag_contains_0=contains&tag_0=en`);
 const data=await r.json();
 if(data&&data.products){
-apiResults=data.products
+offResults=data.products
 .filter(p=>{
 const name=p.product_name||'';
 if(!name||name==='Unknown')return false;
-// Filter out non-English names
 if(/[àâäéèêëïîôùûüç]/i.test(name))return false;
-// Must have calorie data
 if(!p.nutriments||(!p.nutriments['energy-kcal_100g']&&!p.nutriments['energy-kcal_serving']))return false;
 return true;
 })
-.slice(0,6)
+.slice(0,4)
 .map(p=>{
 const n=p.nutriments;
 const hasSrv=!!(n['energy-kcal_serving']);
@@ -1392,8 +1470,8 @@ per100g:false
 }
 }catch(e){}
 
-// Combine: local first, then API
-const results=[...localResults,...apiResults].slice(0,8);
+// Combine: local first, then USDA, then branded
+const results=[...localResults,...usdaResults,...offResults].slice(0,10);
 
 if(results.length===0){
 document.getElementById('searchResults').innerHTML='<div style="color:var(--tx2);font-size:13px;padding:4px">No results. Try a different term or use manual entry.</div>';
@@ -1402,7 +1480,8 @@ return;
 
 let html='';
 results.forEach(food=>{
-html+=`<div style="padding:8px 0;border-bottom:.5px solid #f0f0ec;cursor:pointer" onclick='openFoodConfirm(${JSON.stringify(food).replace(/'/g,"\\'")})'><div style="font-size:14px;font-weight:500">${food.name}</div><div style="font-size:12px;color:var(--tx2)">${food.cal} cal · ${food.p}p ${food.c}c ${food.f}f per serving</div></div>`;
+const label=food.per100g?'per 100g':'per serving';
+html+=`<div style="padding:8px 0;border-bottom:.5px solid #f0f0ec;cursor:pointer" onclick='openFoodConfirm(${JSON.stringify(food).replace(/'/g,"\\'")})'><div style="font-size:14px;font-weight:500">${food.name}</div><div style="font-size:12px;color:var(--tx2)">${food.cal} cal · ${food.p}p ${food.c}c ${food.f}f ${label}</div></div>`;
 });
 document.getElementById('searchResults').innerHTML=html;
 }
