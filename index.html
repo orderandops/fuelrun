@@ -180,6 +180,10 @@ Today's plan
 <div class="cd-t">Weight</div>
 <div id="homeWeight"></div>
 </div>
+
+<div id="quoteCard" style="background:var(--cd);border:.5px solid var(--bdr);border-radius:var(--r);padding:16px;margin-bottom:8px;position:relative">
+<div id="quoteContent"></div>
+</div>
 </div>
 
 <!-- TRAINING PAGE -->
@@ -731,7 +735,7 @@ return{cals:adjCals,protein:proteinG,carbs:carbG,fat:fatG};
 
 // ===== RENDER FUNCTIONS =====
 function render(){
-renderHeader();renderHome();renderTraining();renderNutrition();renderProgress();
+renderHeader();renderHome();renderQuote();renderTraining();renderNutrition();renderProgress();
 }
 
 function renderHeader(){
@@ -1792,6 +1796,143 @@ if(m.id==='barcodeModal')closeBarcodeModal();
 else m.classList.remove('on');
 }});
 });
+
+// ===== DAILY QUOTE ENGINE =====
+const QUOTES={
+rest:[
+{q:"Rest is not idleness. It is the key to a stronger comeback.",a:"Unknown"},
+{q:"Recovery is where the magic happens. Your muscles grow when you rest.",a:"Unknown"},
+{q:"Take rest; a field that has rested gives a bountiful crop.",a:"Ovid"},
+{q:"Almost every wise saying has an opposite one, no less wise, to balance it. Rest is good, but so is action.",a:"Unknown"},
+{q:"Your body hears everything your mind says. Today, tell it to rest and recover.",a:"Unknown"},
+{q:"The time to relax is when you don't have time for it.",a:"Sydney J. Harris"},
+{q:"Rest when you're weary. Refresh and renew yourself, your body, your mind, your spirit.",a:"Ralph Marston"},
+],
+easyRun:[
+{q:"The miracle isn't that I finished. The miracle is that I had the courage to start.",a:"John Bingham"},
+{q:"Every run is a work of art, a drawing on each day's canvas.",a:"Dagny Scott"},
+{q:"Run often. Run long. But never outrun your joy of running.",a:"Julie Isphording"},
+{q:"There is magic in misery. Just ask any runner.",a:"Dean Karnazes"},
+{q:"I run because if I didn't, I'd be sluggish and glum and spend too much time on the couch.",a:"Kristin Armstrong"},
+{q:"An easy run today builds the foundation for greatness tomorrow.",a:"Unknown"},
+{q:"Consistency is more important than intensity. Show up today.",a:"Unknown"},
+],
+longRun:[
+{q:"The long run puts the tiger in the cat.",a:"Bill Squires"},
+{q:"You are stronger than you think. Remember that on the long miles.",a:"Unknown"},
+{q:"The body does not want you to do this. As you run, it tells you to stop but the mind clings on.",a:"Haile Gebrselassie"},
+{q:"Pain is temporary. Quitting lasts forever.",a:"Lance Armstrong"},
+{q:"If you want to run, run a mile. If you want to experience a different life, run a marathon.",a:"Emil Zatopek"},
+{q:"Long runs teach patience, and patience wins marathons.",a:"Unknown"},
+{q:"Today's long run is race day's confidence.",a:"Unknown"},
+],
+speedWork:[
+{q:"Speed work is the sharp edge of training. Today you get faster.",a:"Unknown"},
+{q:"The only way to define your limits is by going beyond them.",a:"Arthur C. Clarke"},
+{q:"Success isn't always about greatness. It's about consistency.",a:"Dwayne Johnson"},
+{q:"Fast running is not forced. You have to relax and let the run come out of you.",a:"Desiree Linden"},
+{q:"Run the mile you're in.",a:"Ryan Hall"},
+{q:"Tempo runs teach your body to push the edge. Embrace the discomfort.",a:"Unknown"},
+],
+weightLoss:[
+{q:"Every pound lost is a step closer to your strongest self.",a:"Unknown"},
+{q:"Progress, not perfection. You're heading in the right direction.",a:"Unknown"},
+{q:"The scale is moving. Your discipline is paying off. Keep going.",a:"Unknown"},
+{q:"Small daily improvements are the key to staggering long-term results.",a:"Unknown"},
+{q:"You didn't come this far to only come this far.",a:"Unknown"},
+],
+weightGain:[
+{q:"One day or one weigh-in does not define your journey. Keep showing up.",a:"Unknown"},
+{q:"Weight fluctuates. Commitment doesn't. Stay the course.",a:"Unknown"},
+{q:"The comeback is always stronger than the setback.",a:"Unknown"},
+{q:"Strength does not come from what you can do. It comes from overcoming what you thought you couldn't.",a:"Rikki Rogers"},
+{q:"Fall seven times, stand up eight.",a:"Japanese proverb"},
+{q:"A river cuts through rock not because of its power, but because of its persistence.",a:"Jim Watkins"},
+],
+taper:[
+{q:"The hay is in the barn. Trust your training.",a:"Unknown"},
+{q:"Taper madness is real, but so is your preparation. You're ready.",a:"Unknown"},
+{q:"The hard work is done. Now let your body absorb it all.",a:"Unknown"},
+{q:"You've already done the work. The race is the celebration.",a:"Unknown"},
+],
+raceWeek:[
+{q:"You have trained for this moment. Trust the process and enjoy every mile.",a:"Unknown"},
+{q:"Run the race that is set before you with endurance.",a:"Hebrews 12:1"},
+{q:"This is what you've been working toward. Leave nothing on the course.",a:"Unknown"},
+{q:"26.2 miles of proving what you already know: you are unstoppable.",a:"Unknown"},
+],
+peak:[
+{q:"Peak training is where champions are forged. You're in the fire now.",a:"Unknown"},
+{q:"The pain you feel today will be the strength you feel tomorrow.",a:"Arnold Schwarzenegger"},
+{q:"Hard days are the best because that's when champions are made.",a:"Gabby Douglas"},
+{q:"You're running more miles than most people drive to work. Be proud.",a:"Unknown"},
+],
+general:[
+{q:"Running is the greatest metaphor for life, because you get out of it what you put into it.",a:"Oprah Winfrey"},
+{q:"I often hear someone say I'm not a runner. There is some point at which you start to be a runner, but it's different for everyone.",a:"John Bingham"},
+{q:"Our running shoes have magic in them. The power to transform a bad day into a good day.",a:"Mina Samuels"},
+{q:"A runner must run with dreams in his heart.",a:"Emil Zatopek"},
+{q:"Life is short. Running makes it seem longer.",a:"Baron Hansen"},
+{q:"That's the thing about running: your greatest runs are rarely measured by racing success.",a:"Kara Goucher"},
+]
+};
+
+function getDailyQuote(){
+const today=new Date();
+const dayOfYear=Math.floor((today-new Date(today.getFullYear(),0,0))/(1000*60*60*24));
+const todayD=findToday();
+
+// Determine context
+let category='general';
+let pool=[];
+
+// Check weight trend
+const curWt=weightHist.length>0?weightHist[weightHist.length-1].wt:USER.wt;
+const prevWt=weightHist.length>1?weightHist[weightHist.length-2].wt:USER.wt;
+const wtChange=curWt-prevWt;
+
+// Weight-based quotes (20% chance if there's a change)
+if(wtChange<-0.3&&dayOfYear%5===0){
+category='weightLoss';
+}else if(wtChange>0.3&&dayOfYear%5===1){
+category='weightGain';
+}
+
+// Training-based quotes (primary)
+if(category==='general'&&todayD){
+const acts=todayD.activities;
+if(acts.length===0){
+category='rest';
+}else{
+const hasLong=acts.some(a=>a.type==='Long run');
+const hasSpeed=acts.some(a=>['Tempo','Intervals'].includes(a.type));
+if(hasLong)category='longRun';
+else if(hasSpeed)category='speedWork';
+else category='easyRun';
+}
+}
+
+// Phase-based overrides
+const curPlanWeek=getCurrentWeek();
+if(curPlanWeek){
+if(curPlanWeek.phase==='TAPER'&&category==='general')category='taper';
+if(curPlanWeek.phase==='RACE')category='raceWeek';
+if(curPlanWeek.phase==='PEAK'&&category==='easyRun'&&dayOfYear%3===0)category='peak';
+}
+
+pool=QUOTES[category]||QUOTES.general;
+// Use day of year as seed for consistent daily quote
+const idx=dayOfYear%pool.length;
+return pool[idx];
+}
+
+function renderQuote(){
+const q=getDailyQuote();
+document.getElementById('quoteContent').innerHTML=`
+<div style="font-size:32px;font-weight:700;color:var(--accL);line-height:1;position:absolute;top:10px;left:14px">"</div>
+<div style="font-size:14px;font-weight:500;color:var(--tx);line-height:1.5;padding-left:24px;font-style:italic">${q.q}</div>
+<div style="font-size:11px;color:var(--tx2);margin-top:8px;padding-left:24px">— ${q.a}</div>`;
+}
 
 // ===== INIT =====
 async function init(){
