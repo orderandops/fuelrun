@@ -370,6 +370,16 @@ Progress
 </div>
 </div>
 
+<div class="modal-bg" id="copyMealsModal">
+<div class="modal">
+<div class="modal-top">
+<h3>Copy meals</h3>
+<button class="modal-x" onclick="closeModal('copyMealsModal')">✕</button>
+</div>
+<div id="copyMealsBody"></div>
+</div>
+</div>
+
 <script>
 // ===== CONFIG =====
 const USER={wt:128.5,goalWt:125,ht:170.18,age:40,sex:'F',marathonDate:'2026-11-14',marathonGoal:'3:45:00'};
@@ -1230,11 +1240,69 @@ mhtml+=`<div class="meal-item">
 mhtml+=`<button style="background:none;border:none;color:var(--acc);font-size:13px;font-weight:600;padding:8px 0;cursor:pointer;width:100%;text-align:left" onclick="setMealSlot('${slot}')">+ Add to ${slot.toLowerCase()}</button>`;
 mhtml+=`</div>`;
 });
+// Copy meals button
+const totalItems=Object.values(meals).reduce((s,items)=>s+items.length,0);
+if(totalItems>0){
+mhtml+=`<div style="margin-top:4px;margin-bottom:8px">
+<button style="display:flex;align-items:center;justify-content:center;gap:6px;background:var(--accL);color:var(--accD);border:1px solid var(--acc);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;width:100%;font-family:var(--f)" onclick="openCopyMeals()">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accD)" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+Copy meals to another day
+</button></div>`;
+}
 document.getElementById('mealSections').innerHTML=mhtml;
 }
 
 function setMealSlot(slot){currentMealSlot=slot;document.getElementById('foodSearch').focus()}
 function removeMealItem(slot,idx){meals[slot].splice(idx,1);saveMeals();renderNutrition()}
+
+function openCopyMeals(){
+const activeDay=getActiveDay();
+const totalItems=Object.values(meals).reduce((s,items)=>s+items.length,0);
+const totalCal=Object.values(meals).reduce((s,items)=>s+items.reduce((t,i)=>t+(i.cal||0),0),0);
+// Find day name
+let dayLabel=activeDay;
+for(const wk of plan){const d=wk.days.find(d=>d.dateStr===activeDay);if(d){dayLabel=`${d.dow} ${activeDay.slice(5).replace('-','/')}`;break;}}
+
+document.getElementById('copyMealsBody').innerHTML=`
+<div style="font-size:12px;color:var(--tx2);margin-bottom:4px">Copying from</div>
+<div style="font-size:14px;font-weight:600;margin-bottom:14px">${dayLabel} · ${Math.round(totalCal)} cal · ${totalItems} items</div>
+<div style="font-size:12px;color:var(--tx2);margin-bottom:6px">Copy to</div>
+<input class="inp" type="date" id="copyTargetDate" style="margin-bottom:12px">
+<div id="copySummary" style="background:var(--accL);border-radius:8px;padding:10px;margin-bottom:14px;font-size:12px;color:var(--accD);display:none"></div>
+<button class="btn btn-g" style="width:100%" onclick="confirmCopyMeals()">Copy meals</button>`;
+
+// Update summary when date changes
+setTimeout(()=>{
+const inp=document.getElementById('copyTargetDate');
+if(inp)inp.addEventListener('change',()=>{
+const target=inp.value;
+if(!target)return;
+const targetDate=parseDate(target);
+const targetLabel=targetDate.toLocaleDateString('en-US',{weekday:'long',month:'numeric',day:'numeric'});
+const el=document.getElementById('copySummary');
+if(el){el.style.display='block';el.innerHTML=`This will copy <b>${totalItems} items</b> (${Math.round(totalCal)} cal) to <b>${targetLabel}</b>. Existing meals on that day will be kept.`;}
+});
+},100);
+
+openModal('copyMealsModal');
+}
+
+async function confirmCopyMeals(){
+const targetDate=document.getElementById('copyTargetDate')?.value;
+if(!targetDate){return}
+// Load existing meals on target day
+const existing=await cloudGet('meals_'+targetDate)||await localGet('meals_'+targetDate)||{Breakfast:[],Lunch:[],Dinner:[],Snacks:[]};
+// Append current meals to target day
+['Breakfast','Lunch','Dinner','Snacks'].forEach(slot=>{
+if(!existing[slot])existing[slot]=[];
+(meals[slot]||[]).forEach(item=>{existing[slot].push({...item})});
+});
+await dbSet('meals_'+targetDate,existing);
+closeModal('copyMealsModal');
+// Show confirmation
+const el=document.getElementById('dataMsg');
+if(el){el.style.color='var(--acc)';el.textContent='Meals copied!';}
+}
 
 // ===== FOOD SEARCH =====
 document.getElementById('foodSearch').addEventListener('keydown',e=>{if(e.key==='Enter')searchFood()});
