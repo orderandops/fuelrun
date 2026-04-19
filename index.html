@@ -249,10 +249,11 @@ Log food
 </div>
 <div class="cd">
 <div class="cd-t">Your data</div>
-<div style="font-size:12px;color:var(--tx2);margin-bottom:10px">Your data is stored locally on this device. Export a backup to keep it safe, or restore from a previous backup.</div>
-<div style="display:flex;gap:8px;flex-wrap:wrap">
-<button class="btn btn-g" style="flex:1;min-width:120px" onclick="exportData()">Export backup</button>
-<button class="btn btn-o" style="flex:1;min-width:120px" onclick="document.getElementById('importFile').click()">Restore backup</button>
+<div style="font-size:12px;color:var(--tx2);margin-bottom:10px">Your data syncs to the cloud automatically. If you have data from before cloud sync was enabled, tap "Sync to cloud" to upload it.</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+<button class="btn btn-g" style="flex:1;min-width:100px" onclick="syncToCloud()">Sync to cloud</button>
+<button class="btn btn-o" style="flex:1;min-width:100px" onclick="exportData()">Export</button>
+<button class="btn btn-o" style="flex:1;min-width:100px" onclick="document.getElementById('importFile').click()">Restore</button>
 </div>
 <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
 <div id="dataMsg" style="margin-top:8px;font-size:12px"></div>
@@ -427,20 +428,60 @@ await cloudSet(k,v);
 }
 
 async function loadData(){
-const m=await dbGet('meals_'+todayStr());
+// Try cloud first for each key. If cloud empty but local has data, auto-push to cloud.
+const keys=['weightHist','raceGoals','goalWeight','planEdits','planActuals','meals_'+todayStr()];
+for(const k of keys){
+let cloud=await cloudGet(k);
+let local=await localGet(k);
+if(cloud!==undefined){
+// Cloud has data — use it, update local cache
+localSet(k,cloud);
+}else if(local!==undefined){
+// Local has data but cloud doesn't — push to cloud
+await cloudSet(k,local);
+}
+}
+// Now read from cloud (which is now synced)
+const m=await cloudGet('meals_'+todayStr())||await localGet('meals_'+todayStr());
 if(m)meals=m; else meals={Breakfast:[],Lunch:[],Dinner:[],Snacks:[]};
-const w=await dbGet('weightHist');if(w)weightHist=w;
-const rg=await dbGet('raceGoals');if(rg)raceGoals=rg;
-const gw=await dbGet('goalWeight');if(gw)USER.goalWt=gw;
-const pe=await dbGet('planEdits');
+const w=await cloudGet('weightHist')||await localGet('weightHist');
+if(w)weightHist=w;
+const rg=await cloudGet('raceGoals')||await localGet('raceGoals');
+if(rg)raceGoals=rg;
+const gw=await cloudGet('goalWeight')||await localGet('goalWeight');
+if(gw)USER.goalWt=gw;
+const pe=await cloudGet('planEdits')||await localGet('planEdits');
 if(pe){pe.forEach(e=>{
 for(const wk of plan){const d=wk.days.find(d=>d.dateStr===e.dateStr);if(d){d.activities=e.activities;d.edited=true;break;}}
 });}
-const pa=await dbGet('planActuals');
+const pa=await cloudGet('planActuals')||await localGet('planActuals');
 if(pa){pa.forEach(a=>{
 for(const wk of plan){const d=wk.days.find(d=>d.dateStr===a.dateStr);if(d){d.actuals=a.actuals;break;}}
 });}
 }
+
+async function syncToCloud(){
+const el=document.getElementById('dataMsg');
+if(el){el.style.color='var(--tx2)';el.textContent='Syncing to cloud...';}
+try{
+if(!db){if(el){el.style.color='var(--coral)';el.textContent='No local data found.';}return;}
+const tx=db.transaction('kv','readonly');
+const store=tx.objectStore('kv');
+const allKeys=await new Promise(r=>{const req=store.getAllKeys();req.onsuccess=()=>r(req.result);req.onerror=()=>r([])});
+let count=0;
+for(const k of allKeys){
+const v=await localGet(k);
+if(v!==undefined){
+await cloudSet(String(k),v);
+count++;
+}
+}
+if(el){el.style.color='var(--acc)';el.textContent=`Synced ${count} items to cloud!`;}
+}catch(e){
+if(el){el.style.color='var(--coral)';el.textContent='Sync failed: '+e.message;}
+}
+}
+
 async function saveMeals(){await dbSet('meals_'+todayStr(),meals)}
 async function saveWeightHist(){await dbSet('weightHist',weightHist)}
 async function saveRaces(){await dbSet('raceGoals',raceGoals)}
