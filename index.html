@@ -1260,7 +1260,7 @@ ctx.clearRect(0,0,W,H);
 const wks=plan.slice(0,Math.min(plan.length,30));
 if(wks.length===0)return;
 const L=30,R=W-10,T=15,B=H-25;
-const planned=wks.map(w=>w.totalMi);
+const planned=wks.map(w=>Math.round(w.days.reduce((s,d)=>s+d.activities.reduce((t,a)=>t+(a.miles||0),0),0)*10)/10);
 const actual=wks.map(w=>w.days.reduce((s,d)=>s+(d.actuals?d.actuals.reduce((t,a)=>t+(a.miles||0),0):0),0));
 const mx=Math.max(...planned,...actual,1);
 
