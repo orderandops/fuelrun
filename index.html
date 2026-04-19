@@ -247,6 +247,16 @@ Log food
 <div class="cd-t">This week log</div>
 <div id="progLog"></div>
 </div>
+<div class="cd">
+<div class="cd-t">Your data</div>
+<div style="font-size:12px;color:var(--tx2);margin-bottom:10px">Your data is stored locally on this device. Export a backup to keep it safe, or restore from a previous backup.</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn btn-g" style="flex:1;min-width:120px" onclick="exportData()">Export backup</button>
+<button class="btn btn-o" style="flex:1;min-width:120px" onclick="document.getElementById('importFile').click()">Restore backup</button>
+</div>
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+<div id="dataMsg" style="margin-top:8px;font-size:12px"></div>
+</div>
 </div>
 
 <!-- NAV -->
@@ -370,11 +380,51 @@ let currentMealSlot='Breakfast';
 let pendingFood=null;
 let barcodeScanner=null;
 
-// ===== INDEXEDDB =====
+// ===== CLOUD STORAGE (Upstash Redis) =====
+const UPSTASH_URL='https://cheerful-bonefish-102040.upstash.io';
+const UPSTASH_TOKEN='gQAAAAAAAY6YAAIocDIxNzE1YjM3MDEwMDU0NzYxYjdiN2Q3YzhlMzg1ZjRhMXAyMTAyMDQw';
+
+async function cloudGet(k){
+try{
+const r=await fetch(`${UPSTASH_URL}/get/${encodeURIComponent('fuelrun:'+k)}`,{headers:{Authorization:`Bearer ${UPSTASH_TOKEN}`}});
+const d=await r.json();
+if(d.result){try{return JSON.parse(d.result)}catch(e){return d.result}}
+return undefined;
+}catch(e){console.warn('Cloud get error:',k,e);return undefined}
+}
+
+async function cloudSet(k,v){
+try{
+const r=await fetch(`${UPSTASH_URL}`,{
+method:'POST',
+headers:{Authorization:`Bearer ${UPSTASH_TOKEN}`,'Content-Type':'application/json'},
+body:JSON.stringify(['SET','fuelrun:'+k,JSON.stringify(v)])
+});
+return await r.json();
+}catch(e){console.warn('Cloud set error:',k,e)}
+}
+
+// Local cache (IndexedDB) for offline speed, Upstash is source of truth
 let db;
-function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open('fuelrun',3);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('kv'))d.createObjectStore('kv')};r.onsuccess=e=>{db=e.target.result;res()};r.onerror=e=>rej(e)})}
-function dbGet(k){return new Promise(r=>{const t=db.transaction('kv','readonly').objectStore('kv').get(k);t.onsuccess=()=>r(t.result);t.onerror=()=>r(undefined)})}
-function dbSet(k,v){return new Promise(r=>{const t=db.transaction('kv','readwrite').objectStore('kv').put(v,k);t.onsuccess=()=>r();t.onerror=()=>r()})}
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open('fuelrun',3);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('kv'))d.createObjectStore('kv')};r.onsuccess=e=>{db=e.target.result;res()};r.onerror=e=>{db=null;res()}})}
+function localGet(k){if(!db)return Promise.resolve(undefined);return new Promise(r=>{try{const t=db.transaction('kv','readonly').objectStore('kv').get(k);t.onsuccess=()=>r(t.result);t.onerror=()=>r(undefined)}catch(e){r(undefined)}})}
+function localSet(k,v){if(!db)return Promise.resolve();return new Promise(r=>{try{const t=db.transaction('kv','readwrite').objectStore('kv').put(v,k);t.onsuccess=()=>r();t.onerror=()=>r()}catch(e){r()}})}
+
+// Read: try cloud first, fall back to local cache
+async function dbGet(k){
+const cloud=await cloudGet(k);
+if(cloud!==undefined){
+localSet(k,cloud);
+return cloud;
+}
+return await localGet(k);
+}
+
+// Write: save to both cloud and local cache
+async function dbSet(k,v){
+localSet(k,v);
+await cloudSet(k,v);
+}
 
 async function loadData(){
 const m=await dbGet('meals_'+todayStr());
@@ -383,9 +433,13 @@ const w=await dbGet('weightHist');if(w)weightHist=w;
 const rg=await dbGet('raceGoals');if(rg)raceGoals=rg;
 const gw=await dbGet('goalWeight');if(gw)USER.goalWt=gw;
 const pe=await dbGet('planEdits');
-if(pe){pe.forEach(e=>{const wk=plan.find(w=>w.week===e.week);if(wk){const d=wk.days.find(d=>d.dateStr===e.dateStr);if(d){d.activities=e.activities}}});}
+if(pe){pe.forEach(e=>{
+for(const wk of plan){const d=wk.days.find(d=>d.dateStr===e.dateStr);if(d){d.activities=e.activities;d.edited=true;break;}}
+});}
 const pa=await dbGet('planActuals');
-if(pa){pa.forEach(a=>{const wk=plan.find(w=>w.week===a.week);if(wk){const d=wk.days.find(d=>d.dateStr===a.dateStr);if(d)d.actuals=a.actuals}});}
+if(pa){pa.forEach(a=>{
+for(const wk of plan){const d=wk.days.find(d=>d.dateStr===a.dateStr);if(d){d.actuals=a.actuals;break;}}
+});}
 }
 async function saveMeals(){await dbSet('meals_'+todayStr(),meals)}
 async function saveWeightHist(){await dbSet('weightHist',weightHist)}
@@ -1631,9 +1685,60 @@ try{
 await openDB();
 await loadData();
 }catch(e){console.warn('DB load error:',e)}
+// Request persistent storage so iOS/browsers don't evict data
+if(navigator.storage&&navigator.storage.persist){
+try{await navigator.storage.persist()}catch(e){}
+}
 curWeek=getWeekIndex();
 try{render()}catch(e){console.error('Render error:',e)}
 }
+
+// ===== DATA EXPORT/IMPORT =====
+async function exportData(){
+try{
+const data={};
+const keys=['weightHist','raceGoals','goalWeight','planEdits','planActuals'];
+for(const k of keys){const v=await cloudGet(k);if(v!==undefined)data[k]=v}
+// Get today's meals
+const mKey='meals_'+todayStr();
+const mv=await cloudGet(mKey);
+if(mv)data[mKey]=mv;
+const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;
+a.download=`fuelrun-backup-${todayStr()}.json`;
+a.click();
+URL.revokeObjectURL(url);
+const el=document.getElementById('dataMsg');
+if(el){el.style.color='var(--acc)';el.textContent='Backup exported!';}
+}catch(e){
+const el=document.getElementById('dataMsg');
+if(el){el.style.color='var(--coral)';el.textContent='Export failed: '+e.message;}
+}
+}
+
+async function importData(event){
+const file=event.target.files[0];
+if(!file)return;
+try{
+const text=await file.text();
+const data=JSON.parse(text);
+for(const[k,v]of Object.entries(data)){
+await dbSet(k,v);
+}
+await loadData();
+curWeek=getWeekIndex();
+render();
+const el=document.getElementById('dataMsg');
+if(el){el.style.color='var(--acc)';el.textContent='Backup restored! All data loaded.';}
+event.target.value='';
+}catch(e){
+const el=document.getElementById('dataMsg');
+if(el){el.style.color='var(--coral)';el.textContent='Restore failed: '+e.message;}
+}
+}
+
 init();
 </script>
 </body>
