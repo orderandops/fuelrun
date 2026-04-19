@@ -138,8 +138,8 @@ html,body{font-family:var(--f);color:var(--tx);background:var(--bg);-webkit-tap-
 .race-actions button{background:none;border:none;cursor:pointer;font-size:14px;color:var(--tx2)}
 
 /* Barcode */
-#barcode-reader{width:100%;max-width:300px;margin:0 auto}
-#barcode-reader video{border-radius:8px}
+#barcode-reader{width:100%;margin:0 auto;min-height:250px}
+#barcode-reader video{border-radius:8px;width:100%}
 
 /* Charts */
 canvas{display:block;width:100%;border-radius:var(--r)}
@@ -350,7 +350,7 @@ Progress
 
 <script>
 // ===== CONFIG =====
-const USER={wt:128.5,goalWt:125,ht:170.18,age:40,sex:'F',marathonDate:'2026-11-13',marathonGoal:'3:45:00'};
+const USER={wt:128.5,goalWt:125,ht:170.18,age:40,sex:'F',marathonDate:'2026-11-14',marathonGoal:'3:45:00'};
 const WEEK1_START=new Date(2026,3,20); // Apr 20 2026
 const DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const ACTIVITY_TYPES=['Easy run','Long run','Tempo','Intervals','HIIT','Hike','Bike','Mtn bike','Kayak','Swim','Walk','Yoga','Other'];
@@ -410,78 +410,164 @@ function parseDate(s){const p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2])}
 // ===== TRAINING PLAN =====
 function buildPlan(){
 plan=[];
-const baseEnd=new Date(2026,5,30); // Jun 30
-const raceDay=new Date(2026,10,13); // Nov 13
-const totalWeeks=Math.ceil(daysBetween(WEEK1_START,raceDay)/7);
-// Base phase weeks
-const baseWeeks=Math.ceil(daysBetween(WEEK1_START,baseEnd)/7);
+const hiitRot=[15,20,15];
 
-for(let w=0;w<totalWeeks;w++){
+// ===== PRE-TRAINING WEEK: Apr 13-19 (current week, all rest) =====
+const preStart=new Date(2026,3,13);
+const preDays=[];
+for(let d=0;d<7;d++){
+const dt=addDays(preStart,d);
+preDays.push({dow:DOW[d],date:dt,dateStr:dateStr(dt),activities:[],actuals:null,edited:false});
+}
+plan.push({week:0,start:preStart,days:preDays,totalMi:0,phase:'PRE'});
+
+// ===== BASE TRAINING: W1-W11 (Apr 20 - Jul 5) =====
+// Rest: Mon,Thu. HIIT 3x: Tue,Wed,Fri. Long run: Sun (no HIIT). Sat: easy (no HIIT).
+const baseMi=[12,13,15,11,18,19,21,15,24,25,27]; // W4,W8 are deloads
+const basePhase=['BUILD','BUILD','BUILD','DELOAD','BUILD','BUILD','BUILD','DELOAD','BUILD','BUILD','BUILD'];
+
+for(let w=0;w<11;w++){
 const wkStart=addDays(WEEK1_START,w*7);
-const isBase=w<baseWeeks;
-const isDeload=(w+1)%4===0;
-const taperStart=totalWeeks-3;
-const isTaper=w>=taperStart;
-const raceWeek=w===totalWeeks-1;
+const weekMi=baseMi[w];
+const longMi=Math.round(weekMi*0.3*10)/10;
+const rem=weekMi-longMi;
+const wType=w%2===0?'Tempo':'Intervals';
+const speedMi=Math.round(rem*0.28*10)/10;
+const satMi=Math.round(rem*0.22*10)/10;
+const easyMi=Math.round((rem-speedMi-satMi)/2*10)/10;
+const h1=hiitRot[w%3],h2=hiitRot[(w+1)%3],h3=hiitRot[(w+2)%3];
 
-// Progressive mileage
-let weekMi;
-if(isBase){
-weekMi=12+Math.floor(w*1.5);
-if(isDeload)weekMi=Math.round(weekMi*0.7);
-}else{
-const mw=w-baseWeeks;
-weekMi=25+Math.floor(mw*1.8);
-if(isTaper){
-const tw=w-taperStart;
-weekMi=Math.round((25+Math.floor((taperStart-baseWeeks)*1.8))*(tw===0 ? 0.75 : tw===1 ? 0.5 : 0.3));
-}
-if(isDeload&&!isTaper)weekMi=Math.round(weekMi*0.7);
-}
-weekMi=Math.min(weekMi,50);
-
-// Distribute miles across 5 days (Mon=rest, Thu=rest)
-// Tue=easy, Wed=tempo/intervals, Fri=easy, Sat=moderate, Sun=long
-const longPct = isBase ? 0.3 : 0.35;
-const longMi=Math.round(weekMi*longPct*10)/10;
-const remaining=weekMi-longMi;
-const easyMi=Math.round(remaining/4*10)/10;
-
-const hiitMins=[10,15,20];
 const days=[];
 for(let d=0;d<7;d++){
 const dt=addDays(wkStart,d);
 const ds=dateStr(dt);
-const dow=DOW[d];
 let activities=[];
-
 if(d===0||d===3){
-// Rest days (Mon, Thu)
-}else if(d===6){
-// Sunday = long run
-activities.push({type:'Long run',detail:`${longMi} mi`,miles:longMi,time:0});
-if(w%3===2)activities.push({type:'HIIT',detail:`${hiitMins[w%3]} min`,miles:0,time:hiitMins[w%3]});
+// Rest
+}else if(d===1){
+// Tue: easy + HIIT
+activities.push({type:'Easy run',detail:`${easyMi} mi`,miles:easyMi,time:0});
+activities.push({type:'HIIT',detail:`${h1} min`,miles:0,time:h1});
 }else if(d===2){
-// Wednesday = tempo or intervals
-const type=w%2===0?'Tempo':'Intervals';
-const mi=Math.round(easyMi*1.2*10)/10;
-activities.push({type,detail:`${mi} mi`,miles:mi,time:0});
-activities.push({type:'HIIT',detail:`${hiitMins[(w+1)%3]} min`,miles:0,time:hiitMins[(w+1)%3]});
-}else{
-// Tue, Fri, Sat = easy runs
-const mi=d===5?Math.round(easyMi*1.3*10)/10:easyMi;
-activities.push({type:'Easy run',detail:`${mi} mi`,miles:mi,time:0});
-if(d===1&&w%3===0)activities.push({type:'HIIT',detail:`${hiitMins[(w+2)%3]} min`,miles:0,time:hiitMins[(w+2)%3]});
+// Wed: speed work + HIIT
+activities.push({type:wType,detail:`${speedMi} mi`,miles:speedMi,time:0});
+activities.push({type:'HIIT',detail:`${h2} min`,miles:0,time:h2});
+}else if(d===4){
+// Fri: easy + HIIT
+activities.push({type:'Easy run',detail:`${easyMi} mi`,miles:easyMi,time:0});
+activities.push({type:'HIIT',detail:`${h3} min`,miles:0,time:h3});
+}else if(d===5){
+// Sat: easy (no HIIT)
+activities.push({type:'Easy run',detail:`${satMi} mi`,miles:satMi,time:0});
+}else if(d===6){
+// Sun: long run (no HIIT)
+activities.push({type:'Long run',detail:`${longMi} mi`,miles:longMi,time:0});
+}
+days.push({dow:DOW[d],date:dt,dateStr:ds,activities,actuals:null,edited:false});
+}
+plan.push({week:w+1,start:wkStart,days,totalMi:weekMi,phase:basePhase[w]});
 }
 
-if(raceWeek&&d===6){
-activities=[{type:'Long run',detail:'Marathon! 26.2 mi',miles:26.2,time:0}];
+// ===== REST WEEK: W12 (Jul 6-12) =====
+const restStart=addDays(WEEK1_START,11*7);
+const restDays=[];
+for(let d=0;d<7;d++){
+const dt=addDays(restStart,d);
+restDays.push({dow:DOW[d],date:dt,dateStr:dateStr(dt),activities:[],actuals:null,edited:false});
+}
+plan.push({week:12,start:restStart,days:restDays,totalMi:0,phase:'REST'});
+
+// ===== MARATHON TRAINING: displayed as W1-W18, stored as plan index 12-29 =====
+// Rest: Mon,Thu. HIIT 3x: Tue,Wed,Fri. Long run: Sun (no HIIT). Sat: easy (no HIIT).
+// Wed = speed work (tempo/intervals alternate). Max long=18, max weekly=45. Race Sat Nov 14.
+const mStart=new Date(2026,6,13); // Jul 13
+const mTargets=[
+{mi:28,long:10,phase:'BUILD'},   // M-W1
+{mi:31,long:11,phase:'BUILD'},   // M-W2
+{mi:34,long:13,phase:'BUILD'},   // M-W3
+{mi:26,long:9,phase:'DELOAD'},   // M-W4
+{mi:38,long:15,phase:'BUILD'},   // M-W5
+{mi:41,long:16,phase:'BUILD'},   // M-W6
+{mi:43,long:17,phase:'BUILD'},   // M-W7
+{mi:33,long:12,phase:'DELOAD'},  // M-W8
+{mi:0,long:0,phase:'REST'},      // M-W9 rest week
+{mi:43,long:17,phase:'PEAK'},    // M-W10
+{mi:45,long:18,phase:'PEAK'},    // M-W11
+{mi:42,long:16,phase:'PEAK'},    // M-W12
+{mi:33,long:12,phase:'DELOAD'},  // M-W13
+{mi:44,long:18,phase:'PEAK'},    // M-W14
+{mi:45,long:17,phase:'PEAK'},    // M-W15
+{mi:34,long:13,phase:'TAPER'},   // M-W16
+{mi:22,long:8,phase:'TAPER'},    // M-W17
+{mi:6,long:0,phase:'RACE'},      // M-W18
+];
+
+for(let m=0;m<mTargets.length;m++){
+const wkStart=addDays(mStart,m*7);
+const t=mTargets[m];
+const mWeekNum=m+1; // Marathon week 1-18
+
+// Rest week
+if(t.phase==='REST'){
+const rd=[];
+for(let d=0;d<7;d++){
+const dt=addDays(wkStart,d);
+rd.push({dow:DOW[d],date:dt,dateStr:dateStr(dt),activities:[],actuals:null,edited:false});
+}
+plan.push({week:mWeekNum,start:wkStart,days:rd,totalMi:0,phase:'REST',isMarathon:true});
+continue;
 }
 
-days.push({dow,date:dt,dateStr:ds,activities,actuals:null,edited:false});
+// Race week: easy Tue/Wed+HIIT, rest Thu, shakeout Fri, RACE Sat, rest Sun
+if(t.phase==='RACE'){
+const rd=[];
+for(let d=0;d<7;d++){
+const dt=addDays(wkStart,d);
+let activities=[];
+if(d===1){activities.push({type:'Easy run',detail:'2 mi',miles:2,time:0});activities.push({type:'HIIT',detail:'10 min',miles:0,time:10});}
+else if(d===2){activities.push({type:'Easy run',detail:'2 mi',miles:2,time:0});activities.push({type:'HIIT',detail:'10 min',miles:0,time:10});}
+else if(d===4){activities.push({type:'Easy run',detail:'2 mi (shakeout)',miles:2,time:0});}
+else if(d===5){activities.push({type:'Long run',detail:'Marathon! 26.2 mi',miles:26.2,time:0});}
+rd.push({dow:DOW[d],date:dt,dateStr:dateStr(dt),activities,actuals:null,edited:false});
+}
+plan.push({week:mWeekNum,start:wkStart,days:rd,totalMi:6,phase:'RACE',isMarathon:true});
+continue;
 }
 
-plan.push({week:w+1,start:wkStart,days,totalMi:weekMi,isBase,isDeload,isTaper,raceWeek});
+// Normal marathon training week
+const weekMi=t.mi;
+const longMi=t.long;
+const rem=weekMi-longMi;
+const wType=m%2===0?'Tempo':'Intervals';
+const speedMi=Math.round(rem*0.24*10)/10;
+const satMi=Math.round(rem*0.21*10)/10;
+const easyMi=Math.round((rem-speedMi-satMi)/2*10)/10;
+const h1=hiitRot[m%3],h2=hiitRot[(m+1)%3],h3=hiitRot[(m+2)%3];
+
+const days=[];
+for(let d=0;d<7;d++){
+const dt=addDays(wkStart,d);
+const ds=dateStr(dt);
+let activities=[];
+if(d===0||d===3){
+// Rest
+}else if(d===1){
+activities.push({type:'Easy run',detail:`${easyMi} mi`,miles:easyMi,time:0});
+activities.push({type:'HIIT',detail:`${h1} min`,miles:0,time:h1});
+}else if(d===2){
+activities.push({type:wType,detail:`${speedMi} mi`,miles:speedMi,time:0});
+activities.push({type:'HIIT',detail:`${h2} min`,miles:0,time:h2});
+}else if(d===4){
+activities.push({type:'Easy run',detail:`${easyMi} mi`,miles:easyMi,time:0});
+activities.push({type:'HIIT',detail:`${h3} min`,miles:0,time:h3});
+}else if(d===5){
+activities.push({type:'Easy run',detail:`${satMi} mi`,miles:satMi,time:0});
+}else if(d===6){
+activities.push({type:'Long run',detail:`${longMi} mi`,miles:longMi,time:0});
+}
+days.push({dow:DOW[d],date:dt,dateStr:ds,activities,actuals:null,edited:false});
+}
+plan.push({week:mWeekNum,start:wkStart,days,totalMi:weekMi,phase:t.phase,isMarathon:true});
 }
 }
 
@@ -637,7 +723,13 @@ function renderTraining(){
 const wk=plan[curWeek];
 if(!wk)return;
 
-document.getElementById('wkLabel').textContent=`Week ${wk.week} · ${fmtDate(wk.start)} – ${fmtDate(addDays(wk.start,6))}`;
+let prefix;
+if(wk.phase==='PRE')prefix='Pre-training';
+else if(wk.isMarathon)prefix='Marathon W';
+else if(wk.week===12)prefix='Rest week';
+else prefix='Base W';
+const label=wk.phase==='PRE'?'Pre-training':wk.week===12&&!wk.isMarathon?'Rest week':`${prefix}${wk.week}`;
+document.getElementById('wkLabel').textContent=`${label} · ${fmtDate(wk.start)} – ${fmtDate(addDays(wk.start,6))}`;
 
 // Stats
 const planMi=Math.round(wk.days.reduce((s,d)=>s+d.activities.reduce((t,a)=>t+(a.miles||0),0),0)*10)/10;
@@ -867,7 +959,7 @@ function renderRaceGoals(){
 let html='';
 // Always show marathon
 html+=`<div class="race-card">
-<div class="race-info"><div class="race-name">Marathon</div><div class="race-det">Nov 13, 2026 · 26.2 mi · Goal: ${USER.marathonGoal}</div></div>
+<div class="race-info"><div class="race-name">Marathon</div><div class="race-det">Nov 14, 2026 · 26.2 mi · Goal: ${USER.marathonGoal}</div></div>
 </div>`;
 raceGoals.forEach((r,i)=>{
 html+=`<div class="race-card">
@@ -1109,35 +1201,73 @@ openModal('barcodeModal');
 if(typeof Html5Qrcode==='undefined'){
 const s=document.createElement('script');
 s.src='https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
-s.onload=()=>startBarcode();
+s.onload=()=>setTimeout(startBarcode,300);
 document.head.appendChild(s);
-}else{startBarcode()}
+}else{setTimeout(startBarcode,300)}
 }
 function startBarcode(){
+const readEl=document.getElementById('barcode-reader');
+if(!readEl)return;
+readEl.innerHTML='';
 try{
 barcodeScanner=new Html5Qrcode('barcode-reader');
-barcodeScanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:150},formatsToSupport:[0,1,2,3]},
-async(code)=>{
-barcodeScanner.stop().catch(()=>{});
+const config={
+fps:10,
+qrbox:function(vw,vh){const s=Math.min(vw,vh)*0.8;return{width:Math.floor(s),height:Math.floor(s*0.5)}},
+aspectRatio:1.0,
+formatsToSupport:[
+Html5QrcodeSupportedFormats.EAN_13,
+Html5QrcodeSupportedFormats.EAN_8,
+Html5QrcodeSupportedFormats.UPC_A,
+Html5QrcodeSupportedFormats.UPC_E,
+Html5QrcodeSupportedFormats.CODE_128,
+Html5QrcodeSupportedFormats.CODE_39
+]
+};
+barcodeScanner.start(
+{facingMode:'environment'},
+config,
+async(decodedText)=>{
+try{barcodeScanner.stop().catch(()=>{})}catch(e){}
+document.getElementById('barcode-reader').innerHTML=`<div style="text-align:center;padding:20px;font-size:13px;color:var(--acc)">Found: ${decodedText}<br>Looking up product...</div>`;
 try{
-const r=await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+const r=await fetch(`https://world.openfoodfacts.org/api/v0/product/${decodedText}.json`);
 const d=await r.json();
 if(d.status===1&&d.product){
 const p=d.product;
-const food={name:(p.product_name||'Unknown')+(p.brands?' ('+p.brands+')':''),cal:Math.round(p.nutriments?.['energy-kcal_100g']||0),p:Math.round((p.nutriments?.proteins_100g||0)*10)/10,c:Math.round((p.nutriments?.carbohydrates_100g||0)*10)/10,f:Math.round((p.nutriments?.fat_100g||0)*10)/10,serving:p.serving_size||'100g',per100g:true};
+const food={
+name:(p.product_name||'Unknown')+(p.brands?' ('+p.brands+')':''),
+cal:Math.round(p.nutriments?.['energy-kcal_100g']||p.nutriments?.['energy-kcal_serving']||0),
+p:Math.round((p.nutriments?.proteins_100g||0)*10)/10,
+c:Math.round((p.nutriments?.carbohydrates_100g||0)*10)/10,
+f:Math.round((p.nutriments?.fat_100g||0)*10)/10,
+serving:p.serving_size||'100g',
+per100g:true
+};
 closeModal('barcodeModal');
 openFoodConfirm(food);
 }else{
 closeModal('barcodeModal');
-document.getElementById('foodSearch').value=code;
+document.getElementById('foodSearch').value=decodedText;
 searchFood();
 }
-}catch(e){closeModal('barcodeModal')}
-},()=>{}).catch(e=>{console.log('Camera error:',e)});
-}catch(e){console.log('Barcode init error:',e)}
+}catch(e){
+closeModal('barcodeModal');
+document.getElementById('foodSearch').value=decodedText;
+searchFood();
+}
+},
+(errorMessage)=>{}
+).catch(err=>{
+readEl.innerHTML=`<div style="text-align:center;padding:20px;font-size:13px;color:var(--coral)">Camera access denied or unavailable.<br>Please allow camera permissions and try again.</div>`;
+});
+}catch(e){
+readEl.innerHTML=`<div style="text-align:center;padding:20px;font-size:13px;color:var(--coral)">Could not start scanner: ${e.message}</div>`;
+}
 }
 function closeBarcodeModal(){
 if(barcodeScanner)try{barcodeScanner.stop().catch(()=>{})}catch(e){}
+document.getElementById('barcode-reader').innerHTML='';
 closeModal('barcodeModal');
 }
 
