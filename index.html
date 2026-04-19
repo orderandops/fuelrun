@@ -234,6 +234,7 @@ Log food
 
 <!-- PROGRESS PAGE -->
 <div class="pg" id="pgProg">
+<div class="cd" id="progWeightCard"></div>
 <div class="cd">
 <div class="cd-t">Weight trend</div>
 <canvas id="wtChart" height="180"></canvas>
@@ -350,7 +351,7 @@ Progress
 <script>
 // ===== CONFIG =====
 const USER={wt:128.5,goalWt:125,ht:170.18,age:40,sex:'F',marathonDate:'2026-11-13',marathonGoal:'3:45:00'};
-const WEEK1_START=new Date(2026,3,13); // Apr 13 2026
+const WEEK1_START=new Date(2026,3,20); // Apr 20 2026
 const DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const ACTIVITY_TYPES=['Easy run','Long run','Tempo','Intervals','HIIT','Hike','Bike','Mtn bike','Kayak','Swim','Walk','Yoga','Other'];
 const ACT_COLORS={'Easy run':'var(--acc)','Long run':'var(--coral)','Tempo':'var(--acc)','Intervals':'var(--acc)','HIIT':'var(--purp)','Hike':'var(--amber)','Bike':'var(--blue)','Mtn bike':'var(--blue)','Kayak':'var(--accD)','Swim':'var(--blue)','Walk':'var(--acc)','Yoga':'var(--pink)','Other':'var(--tx2)'};
@@ -570,7 +571,7 @@ document.getElementById('todayPlan').innerHTML='<span style="color:var(--tx3);fo
 // This week summary
 const wk=getCurrentWeek();
 if(wk){
-const planMi=wk.totalMi;
+const planMi=Math.round(wk.days.reduce((s,d)=>s+d.activities.reduce((t,a)=>t+(a.miles||0),0),0)*10)/10;
 const hiitMin=wk.days.reduce((s,d)=>s+d.activities.filter(a=>a.type==='HIIT').reduce((t,a)=>t+(a.time||0),0),0);
 const actMi=wk.days.reduce((s,d)=>s+(d.actuals?d.actuals.reduce((t,a)=>t+(a.miles||0),0):0),0);
 const miPct=planMi>0?Math.min(100,Math.round(actMi/planMi*100)):0;
@@ -596,20 +597,17 @@ document.getElementById('homeNutr').innerHTML=`
 <div class="trk" style="flex:1"><div class="trk-label"><span style="color:var(--pink);font-size:11px">Fat</span><span style="font-size:11px">${eaten.fat}/${tgt.fat}g</span></div><div class="trk-bar"><div class="trk-fill" style="width:${fPct}%;background:var(--pink)"></div></div></div>
 </div>`;
 
-// Weight
+// Weight (read-only summary on home)
 const curWt=weightHist.length>0?weightHist[weightHist.length-1].wt:USER.wt;
 const toGo=Math.round((curWt-USER.goalWt)*10)/10;
+const wtPct=USER.wt>USER.goalWt?Math.min(100,Math.round(((USER.wt-curWt)/(USER.wt-USER.goalWt))*100)):0;
 document.getElementById('homeWeight').innerHTML=`
-<div style="display:flex;gap:12px;align-items:center;margin-bottom:8px">
-<div style="flex:1;text-align:center"><div style="font-size:11px;color:var(--tx2)">Current</div><div style="font-size:22px;font-weight:700">${curWt}</div></div>
-<div style="flex:1;text-align:center;cursor:pointer" onclick="openGoalWeightModal()"><div style="font-size:11px;color:var(--tx2)">Goal ✎</div><div style="font-size:22px;font-weight:700">${USER.goalWt}</div></div>
-<div style="flex:1;text-align:center"><div style="font-size:11px;color:var(--tx2)">To go</div><div style="font-size:22px;font-weight:700;color:${toGo>0?'var(--coral)':'var(--acc)'}">${toGo>0?toGo:0}</div></div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+<div><span style="font-size:24px;font-weight:700">${curWt}</span> <span style="font-size:13px;color:var(--tx2)">lbs</span></div>
+<div style="text-align:right"><span style="font-size:13px;color:var(--tx2)">Goal: ${USER.goalWt} lbs</span><br><span style="font-size:13px;font-weight:600;color:${toGo>0?'var(--coral)':'var(--acc)'}">${toGo>0?toGo+' lbs to go':'At goal!'}</span></div>
 </div>
-<div style="display:flex;gap:6px;align-items:center">
-<input class="inp inp-sm" type="number" id="wtLogInput" step="0.1" inputmode="decimal" placeholder="${curWt}" style="width:80px">
-<span style="font-size:13px;color:var(--tx2)">lbs</span>
-<button class="btn btn-g" onclick="logWeight()">Log</button>
-</div>`;
+<div class="trk-bar" style="height:8px"><div class="trk-fill" style="width:${wtPct}%;background:var(--acc)"></div></div>
+`;
 }
 
 function mealTotal(){
@@ -642,7 +640,7 @@ if(!wk)return;
 document.getElementById('wkLabel').textContent=`Week ${wk.week} · ${fmtDate(wk.start)} – ${fmtDate(addDays(wk.start,6))}`;
 
 // Stats
-const planMi=wk.totalMi;
+const planMi=Math.round(wk.days.reduce((s,d)=>s+d.activities.reduce((t,a)=>t+(a.miles||0),0),0)*10)/10;
 const actMi=Math.round(wk.days.reduce((s,d)=>s+(d.actuals?d.actuals.reduce((t,a)=>t+(a.miles||0),0):0),0)*10)/10;
 const hiitMin=wk.days.reduce((s,d)=>s+d.activities.filter(a=>a.type==='HIIT').reduce((t,a)=>t+(a.time||0),0),0);
 const restDays=wk.days.filter(d=>d.activities.length===0).length;
@@ -1167,9 +1165,29 @@ render();
 
 // ===== PROGRESS PAGE =====
 function renderProgress(){
+renderProgWeight();
 renderWeightChart();
 renderMileageChart();
 renderProgressLog();
+}
+
+function renderProgWeight(){
+const curWt=weightHist.length>0?weightHist[weightHist.length-1].wt:USER.wt;
+const toGo=Math.round((curWt-USER.goalWt)*10)/10;
+document.getElementById('progWeightCard').innerHTML=`
+<div class="cd-t">Weight</div>
+<div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+<div style="flex:1;text-align:center"><div style="font-size:12px;color:var(--tx2)">Current</div><div style="font-size:26px;font-weight:700">${curWt}</div></div>
+<div style="flex:1;text-align:center"><div style="font-size:12px;color:var(--tx2)">Goal</div><div style="font-size:26px;font-weight:700">${USER.goalWt}</div></div>
+<div style="flex:1;text-align:center"><div style="font-size:12px;color:var(--tx2)">To go</div><div style="font-size:26px;font-weight:700;color:${toGo>0?'var(--coral)':'var(--acc)'}">${toGo>0?toGo:0}</div></div>
+</div>
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+<input class="inp inp-sm" type="number" id="wtLogInput" step="0.1" inputmode="decimal" placeholder="${curWt}" style="width:90px;font-size:15px">
+<span style="font-size:13px;color:var(--tx2)">lbs</span>
+<button class="btn btn-g" onclick="logWeight()">Log weight</button>
+</div>
+<button style="background:none;border:none;color:var(--acc);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px" onclick="openGoalWeightModal()">✎ Edit goal weight</button>
+`;
 }
 
 function renderWeightChart(){
