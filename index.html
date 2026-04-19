@@ -1132,14 +1132,20 @@ return true;
 .slice(0,6)
 .map(p=>{
 const n=p.nutriments;
+const hasSrv=!!(n['energy-kcal_serving']);
+const has100=!!(n['energy-kcal_100g']);
 return{
 name:(p.product_name||'Unknown')+(p.brands?' ('+p.brands+')':''),
-cal:Math.round(n['energy-kcal_100g']||n['energy-kcal_serving']||0),
-p:Math.round((n.proteins_100g||0)*10)/10,
-c:Math.round((n.carbohydrates_100g||0)*10)/10,
-f:Math.round((n.fat_100g||0)*10)/10,
-serving:p.serving_size||'100g',
-per100g:!!n['energy-kcal_100g']
+cal:hasSrv?Math.round(n['energy-kcal_serving']):Math.round(n['energy-kcal_100g']||0),
+p:hasSrv?Math.round((n.proteins_serving||0)*10)/10:Math.round((n.proteins_100g||0)*10)/10,
+c:hasSrv?Math.round((n.carbohydrates_serving||0)*10)/10:Math.round((n.carbohydrates_100g||0)*10)/10,
+f:hasSrv?Math.round((n.fat_serving||0)*10)/10:Math.round((n.fat_100g||0)*10)/10,
+cal100:has100?Math.round(n['energy-kcal_100g']):0,
+p100:has100?Math.round((n.proteins_100g||0)*10)/10:0,
+c100:has100?Math.round((n.carbohydrates_100g||0)*10)/10:0,
+f100:has100?Math.round((n.fat_100g||0)*10)/10:0,
+serving:p.serving_size||'1 serving',
+per100g:false
 };
 });
 }
@@ -1155,23 +1161,24 @@ return;
 
 let html='';
 results.forEach(food=>{
-html+=`<div style="padding:8px 0;border-bottom:.5px solid #f0f0ec;cursor:pointer" onclick='openFoodConfirm(${JSON.stringify(food).replace(/'/g,"\\'")})'><div style="font-size:14px;font-weight:500">${food.name}</div><div style="font-size:12px;color:var(--tx2)">${food.cal} cal · ${food.p}p ${food.c}c ${food.f}f per ${food.per100g?'100g':'serving'}</div></div>`;
+html+=`<div style="padding:8px 0;border-bottom:.5px solid #f0f0ec;cursor:pointer" onclick='openFoodConfirm(${JSON.stringify(food).replace(/'/g,"\\'")})'><div style="font-size:14px;font-weight:500">${food.name}</div><div style="font-size:12px;color:var(--tx2)">${food.cal} cal · ${food.p}p ${food.c}c ${food.f}f per serving</div></div>`;
 });
 document.getElementById('searchResults').innerHTML=html;
 }
 
 function openFoodConfirm(food){
 pendingFood=food;
+const servingLabel=food.serving||'1 serving';
 const html=`
 <div style="margin-bottom:12px">
 <div style="font-size:14px;font-weight:600;margin-bottom:4px">${food.name}</div>
-<div style="font-size:11px;color:var(--tx2)">Per ${food.per100g?'100g':'serving'}: ${food.cal} cal · ${food.p}p ${food.c}c ${food.f}f</div>
+<div style="font-size:11px;color:var(--tx2)">Per serving (${servingLabel}): ${food.cal} cal · ${food.p}p ${food.c}c ${food.f}f</div>
 </div>
 <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
-<input class="inp" type="number" id="foodAmt" value="1" step="0.1" inputmode="decimal" style="width:70px" oninput="updateFoodPreview()">
+<input class="inp" type="number" id="foodAmt" value="1" step="0.5" inputmode="decimal" style="width:70px" oninput="updateFoodPreview()">
 <select class="inp" id="foodUnit" style="flex:1" onchange="updateFoodPreview()">
-<option value="servings">servings</option>
-<option value="grams"${food.per100g?' selected':''}>grams</option>
+<option value="servings" selected>servings</option>
+<option value="grams">grams</option>
 <option value="oz">oz</option>
 </select>
 </div>
@@ -1192,14 +1199,26 @@ function updateFoodPreview(){
 if(!pendingFood)return;
 const amt=parseFloat(document.getElementById('foodAmt')?.value||1);
 const unit=document.getElementById('foodUnit')?.value||'servings';
-let mult=amt;
-if(unit==='grams'&&pendingFood.per100g)mult=amt/100;
-else if(unit==='oz'&&pendingFood.per100g)mult=amt*28.35/100;
-else if(unit==='grams'&&!pendingFood.per100g)mult=amt/100;
-const cal=Math.round(pendingFood.cal*mult);
-const p=Math.round(pendingFood.p*mult*10)/10;
-const c=Math.round(pendingFood.c*mult*10)/10;
-const f=Math.round(pendingFood.f*mult*10)/10;
+let cal,p,c,f;
+if(unit==='servings'){
+// Multiply per-serving values directly
+cal=Math.round(pendingFood.cal*amt);
+p=Math.round(pendingFood.p*amt*10)/10;
+c=Math.round(pendingFood.c*amt*10)/10;
+f=Math.round(pendingFood.f*amt*10)/10;
+}else{
+// Use per-100g data if available, otherwise estimate from per-serving
+const base100cal=pendingFood.cal100||pendingFood.cal;
+const base100p=pendingFood.p100||pendingFood.p;
+const base100c=pendingFood.c100||pendingFood.c;
+const base100f=pendingFood.f100||pendingFood.f;
+let grams=unit==='grams'?amt:amt*28.35;
+const mult=grams/100;
+cal=Math.round(base100cal*mult);
+p=Math.round(base100p*mult*10)/10;
+c=Math.round(base100c*mult*10)/10;
+f=Math.round(base100f*mult*10)/10;
+}
 const el=document.getElementById('foodPreview');
 if(el)el.innerHTML=`<div style="font-size:11px;font-weight:600;color:var(--accD);margin-bottom:4px">You're logging:</div>
 <div style="font-size:13px;font-weight:700">${cal} cal</div>
@@ -1214,18 +1233,26 @@ function confirmFood(){
 if(!pendingFood)return;
 const amt=parseFloat(document.getElementById('foodAmt')?.value||1);
 const unit=document.getElementById('foodUnit')?.value||'servings';
-let mult=amt;
-if(unit==='grams'&&pendingFood.per100g)mult=amt/100;
-else if(unit==='oz'&&pendingFood.per100g)mult=amt*28.35/100;
+let cal,p,c,f;
+if(unit==='servings'){
+cal=Math.round(pendingFood.cal*amt);
+p=Math.round(pendingFood.p*amt*10)/10;
+c=Math.round(pendingFood.c*amt*10)/10;
+f=Math.round(pendingFood.f*amt*10)/10;
+}else{
+const base100cal=pendingFood.cal100||pendingFood.cal;
+const base100p=pendingFood.p100||pendingFood.p;
+const base100c=pendingFood.c100||pendingFood.c;
+const base100f=pendingFood.f100||pendingFood.f;
+let grams=unit==='grams'?amt:amt*28.35;
+const mult=grams/100;
+cal=Math.round(base100cal*mult);
+p=Math.round(base100p*mult*10)/10;
+c=Math.round(base100c*mult*10)/10;
+f=Math.round(base100f*mult*10)/10;
+}
 const slot=document.getElementById('foodMealSlot')?.value||currentMealSlot;
-const item={
-name:pendingFood.name,
-cal:Math.round(pendingFood.cal*mult),
-p:Math.round(pendingFood.p*mult*10)/10,
-c:Math.round(pendingFood.c*mult*10)/10,
-f:Math.round(pendingFood.f*mult*10)/10,
-serving:`${amt} ${unit}`
-};
+const item={name:pendingFood.name,cal,p,c,f,serving:`${amt} ${unit}`};
 meals[slot].push(item);
 saveMeals();
 closeModal('foodModal');
@@ -1274,14 +1301,20 @@ const d=await r.json();
 if(d.status===1&&d.product){
 const p=d.product;
 const n=p.nutriments||{};
+const hasSrv=!!(n['energy-kcal_serving']);
+const has100=!!(n['energy-kcal_100g']);
 const food={
 name:(p.product_name||'Unknown')+(p.brands?' ('+p.brands+')':''),
-cal:Math.round(n['energy-kcal_100g']||n['energy-kcal_serving']||n['energy-kcal']||0),
-p:Math.round((n.proteins_100g||n.proteins_serving||0)*10)/10,
-c:Math.round((n.carbohydrates_100g||n.carbohydrates_serving||0)*10)/10,
-f:Math.round((n.fat_100g||n.fat_serving||0)*10)/10,
-serving:p.serving_size||'100g',
-per100g:!!n['energy-kcal_100g']
+cal:hasSrv?Math.round(n['energy-kcal_serving']):Math.round(n['energy-kcal_100g']||0),
+p:hasSrv?Math.round((n.proteins_serving||0)*10)/10:Math.round((n.proteins_100g||0)*10)/10,
+c:hasSrv?Math.round((n.carbohydrates_serving||0)*10)/10:Math.round((n.carbohydrates_100g||0)*10)/10,
+f:hasSrv?Math.round((n.fat_serving||0)*10)/10:Math.round((n.fat_100g||0)*10)/10,
+cal100:has100?Math.round(n['energy-kcal_100g']):0,
+p100:has100?Math.round((n.proteins_100g||0)*10)/10:0,
+c100:has100?Math.round((n.carbohydrates_100g||0)*10)/10:0,
+f100:has100?Math.round((n.fat_100g||0)*10)/10:0,
+serving:p.serving_size||'1 serving',
+per100g:false
 };
 closeModal('barcodeModal');
 openFoodConfirm(food);
