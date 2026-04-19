@@ -204,6 +204,11 @@ Race goals
 <div class="pg" id="pgNutr">
 <div class="cd">
 <div class="cd-t">Weekly calorie targets</div>
+<div class="wk-nav" style="margin-bottom:6px">
+<button onclick="changeNutrWeek(-1)">‹</button>
+<span class="wk-label" id="nutrWkLabel"></span>
+<button onclick="changeNutrWeek(1)">›</button>
+</div>
 <div class="cal-row" id="calRow"></div>
 <div id="calAvg" style="font-size:12px;color:var(--tx2);text-align:center"></div>
 </div>
@@ -380,6 +385,7 @@ let raceGoals=[];
 let currentMealSlot='Breakfast';
 let pendingFood=null;
 let barcodeScanner=null;
+let nutrWeek=null; // null = auto (current week)
 
 // ===== CLOUD STORAGE (Upstash Redis) =====
 const UPSTASH_URL='https://cheerful-bonefish-102040.upstash.io';
@@ -872,7 +878,7 @@ const hasMiles=MILE_ACTS.includes(a.type)&&a.miles>0;
 html+=`<div class="t-log-row">
 <span class="pill" style="background:${ACT_BGS[a.type]};color:${ACT_COLORS[a.type]}">${a.type}</span>`;
 if(hasMiles){
-html+=`<input class="inp inp-sm" type="number" id="logMi-${curWeek}-${i}-${ai}" placeholder="${a.miles}" step="0.01" inputmode="decimal" style="width:56px">
+html+=`<input class="inp inp-sm" type="number" id="logMi-${curWeek}-${i}-${ai}" placeholder="0" step="0.01" inputmode="decimal" style="width:56px">
 <span style="font-size:12px;color:var(--tx2)">mi</span>`;
 }
 html+=`<input class="inp inp-sm" type="number" id="logH-${curWeek}-${i}-${ai}" placeholder="0" inputmode="numeric" style="width:38px">
@@ -926,7 +932,7 @@ const miEl=document.getElementById(`logMi-${wi}-${di}-${ai}`);
 const hEl=document.getElementById(`logH-${wi}-${di}-${ai}`);
 const mEl=document.getElementById(`logM-${wi}-${di}-${ai}`);
 const sEl=document.getElementById(`logS-${wi}-${di}-${ai}`);
-const miles=hasMiles?parseFloat(miEl?.value||a.miles):0;
+const miles=hasMiles?parseFloat(miEl?.value||0):0;
 const h=parseInt(hEl?.value||0);
 const m=parseInt(mEl?.value||0);
 const s=parseInt(sEl?.value||0);
@@ -949,6 +955,11 @@ render();
 function changeWeek(dir){
 curWeek=Math.max(0,Math.min(plan.length-1,curWeek+dir));
 render();
+}
+
+function changeNutrWeek(dir){
+nutrWeek=Math.max(0,Math.min(plan.length-1,(nutrWeek===null?getWeekIndex():nutrWeek)+dir));
+renderNutrition();
 }
 
 // ===== DRAG & DROP =====
@@ -1093,12 +1104,25 @@ saveRaces();closeModal('raceModal');renderRaceGoals();
 
 // ===== NUTRITION PAGE =====
 function renderNutrition(){
-// Weekly calorie targets row
-const wk=getCurrentWeek()||plan[curWeek]||plan[0];
-if(!wk)return;
+// Determine which week to show for calorie targets
+if(nutrWeek===null)nutrWeek=getWeekIndex();
+const calWk=plan[nutrWeek];
+if(!calWk)return;
+
+// Week label
+let wkPrefix;
+if(calWk.phase==='PRE')wkPrefix='Pre-training';
+else if(calWk.isMarathon){
+if(calWk.phase==='REST')wkPrefix='Rest week';
+else wkPrefix='Marathon W'+calWk.week;
+}else if(calWk.week===12)wkPrefix='Rest week';
+else wkPrefix='Base W'+calWk.week;
+document.getElementById('nutrWkLabel').textContent=`${wkPrefix} · ${fmtDate(calWk.start)} – ${fmtDate(addDays(calWk.start,6))}`;
+
+// Weekly calorie row
 const today=todayStr();
 let calHtml='';let total=0;
-wk.days.forEach(d=>{
+calWk.days.forEach(d=>{
 const tgt=calcDayTargets(d.activities);
 total+=tgt.cals;
 const isToday=d.dateStr===today;
@@ -1107,12 +1131,11 @@ calHtml+=`<div class="cal-day${isToday?' today':''}"><div class="cal-n">${d.dow.
 document.getElementById('calRow').innerHTML=calHtml;
 document.getElementById('calAvg').textContent=`Avg: ${Math.round(total/7)} · Total: ${total}`;
 
-// Day label
+// Day label and daily targets (always show TODAY's targets regardless of which week is displayed)
 const todayD=findToday();
 const dayName=todayD?todayD.dow:DOW[new Date().getDay()===0?6:new Date().getDay()-1];
 document.getElementById('nutrDayLabel').textContent=`Daily targets — ${dayName}`;
 
-// Targets
 const tgt=calcDayTargets(todayD?todayD.activities:[]);
 const eaten=mealTotal();
 const remCal=Math.max(0,tgt.cals-eaten.cals);
