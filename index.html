@@ -922,10 +922,11 @@ if(a.timeStr)info.push(a.timeStr);
 html+=`<div class="t-done-row">
 <span class="pill" style="background:${ACT_BGS[a.type]};color:${ACT_COLORS[a.type]};padding:2px 8px">${a.type}</span>
 <span style="color:var(--tx)">${info.join(' · ')}</span>
+<span style="flex:1"></span>
 <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--acc)" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l2.5 2.5L16 9"/></svg>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="#E24B4A" stroke="#fff" stroke-width="2" style="cursor:pointer" onclick="undoLog(${curWeek},${i})"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
 </div>`;
 });
-html+=`<button style="background:none;border:none;color:var(--coral);font-size:12px;font-weight:600;cursor:pointer;padding:6px 0;display:flex;align-items:center;gap:4px" onclick="undoLog(${curWeek},${i})">✕ Undo log</button>`;
 html+=`</div>`;
 }
 
