@@ -1448,34 +1448,51 @@ async function searchFoodQuery(q){
 document.getElementById('searchResults').innerHTML='<div style="text-align:center;color:var(--tx2);font-size:13px;padding:8px">Searching...</div>';
 const qLow=q.toLowerCase();
 
-// 1. Search built-in database
+// 1. Built-in database (instant)
 let localResults=CF.filter(f=>f.k.some(k=>k.includes(qLow)||qLow.includes(k)))
 .map(f=>({name:f.n,cal:f.cal,p:f.p,c:f.c,f:f.f,serving:f.s,per100g:false}));
 
-// 2. Search USDA FoodData Central (best for whole foods)
-let usdaResults=[];
+// Show local results immediately while APIs load
+if(localResults.length>0){
+let html='';
+localResults.forEach(food=>{
+html+=`<div style="padding:8px 0;border-bottom:.5px solid #f0f0ec;cursor:pointer" onclick='openFoodConfirm(${JSON.stringify(food).replace(/'/g,"\\'")})'><div style="font-size:14px;font-weight:500">${food.name}</div><div style="font-size:12px;color:var(--tx2)">${food.cal} cal · ${food.p}p ${food.c}c ${food.f}f per serving</div></div>`;
+});
+html+='<div style="text-align:center;color:var(--tx2);font-size:11px;padding:6px">Loading more results...</div>';
+document.getElementById('searchResults').innerHTML=html;
+}
+
+// Helper: fetch with timeout
+function fetchTimeout(url,opts,ms){
+return Promise.race([
+fetch(url,opts),
+new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))
+]);
+}
+
+// 2+3: Run USDA and Open Food Facts in parallel
+const [usdaRes,offRes]=await Promise.allSettled([
+// USDA
+(async()=>{
 try{
-const r=await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(q)}&pageSize=6&dataType=SR%20Legacy,Survey%20(FNDDS)&api_key=DEMO_KEY`);
+const r=await fetchTimeout(`https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(q)}&pageSize=5&dataType=SR%20Legacy,Survey%20(FNDDS)&api_key=DEMO_KEY`,{},4000);
 const data=await r.json();
 if(data&&data.foods){
-usdaResults=data.foods.slice(0,5).map(f=>{
+return data.foods.slice(0,5).map(f=>{
 const nut=k=>{const n=f.foodNutrients?.find(n=>n.nutrientName===k);return n?Math.round(n.value*10)/10:0};
-const cal=nut('Energy');
-const p=nut('Protein');
-const c=nut('Carbohydrate, by difference');
-const fat=nut('Total lipid (fat)');
-return{name:f.description,cal,p,c,f:fat,cal100:cal,p100:p,c100:c,f100:fat,serving:f.servingSize?`${f.servingSize}${f.servingSizeUnit||'g'}`:'100g',per100g:true};
+return{name:f.description,cal:nut('Energy'),p:nut('Protein'),c:nut('Carbohydrate, by difference'),f:nut('Total lipid (fat)'),cal100:nut('Energy'),p100:nut('Protein'),c100:nut('Carbohydrate, by difference'),f100:nut('Total lipid (fat)'),serving:f.servingSize?`${f.servingSize}${f.servingSizeUnit||'g'}`:'100g',per100g:true};
 }).filter(f=>f.cal>0);
 }
-}catch(e){}
-
-// 3. Search Open Food Facts (branded products)
-let offResults=[];
+return[];
+}catch(e){return[]}
+})(),
+// Open Food Facts
+(async()=>{
 try{
-const r=await fetch(`https://us.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=6&lc=en&tagtype_0=languages&tag_contains_0=contains&tag_0=en`);
+const r=await fetchTimeout(`https://us.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=8&lc=en&tagtype_0=languages&tag_contains_0=contains&tag_0=en`,{},4000);
 const data=await r.json();
 if(data&&data.products){
-offResults=data.products
+return data.products
 .filter(p=>{
 const name=p.product_name||'';
 if(!name||name==='Unknown')return false;
@@ -1483,7 +1500,7 @@ if(/[àâäéèêëïîôùûüç]/i.test(name))return false;
 if(!p.nutriments||(!p.nutriments['energy-kcal_100g']&&!p.nutriments['energy-kcal_serving']))return false;
 return true;
 })
-.slice(0,4)
+.slice(0,6)
 .map(p=>{
 const n=p.nutriments;
 const hasSrv=!!(n['energy-kcal_serving']);
@@ -1503,9 +1520,14 @@ per100g:false
 };
 });
 }
-}catch(e){}
+return[];
+}catch(e){return[]}
+})()
+]);
 
-// Combine: local first, then USDA, then branded
+const usdaResults=usdaRes.status==='fulfilled'?usdaRes.value:[];
+const offResults=offRes.status==='fulfilled'?offRes.value:[];
+
 const results=[...localResults,...usdaResults,...offResults].slice(0,10);
 
 if(results.length===0){
