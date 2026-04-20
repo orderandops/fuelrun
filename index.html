@@ -421,12 +421,17 @@ try{return JSON.parse(d.result)}catch(e){return d.result}
 
 async function cloudSet(k,v){
 try{
-await fetch(`${UPSTASH_URL}`,{
+const body=JSON.stringify(['SET','fuelrun:'+k,JSON.stringify(v)]);
+const r=await fetch(`${UPSTASH_URL}`,{
 method:'POST',
 headers:{Authorization:`Bearer ${UPSTASH_TOKEN}`,'Content-Type':'application/json'},
-body:JSON.stringify(['SET','fuelrun:'+k,JSON.stringify(v)])
+body
 });
-}catch(e){}
+if(!r.ok){console.error('Cloud save HTTP error:',r.status,k)}
+const d=await r.json();
+if(d.error){console.error('Cloud save error:',k,d.error)}
+return d;
+}catch(e){console.error('Cloud save failed:',k,e);return null}
 }
 
 async function cloudGetMulti(keys){
@@ -965,7 +970,7 @@ const el=document.getElementById(`log-${wi}-${di}`);
 if(el)el.style.display=el.style.display==='none'?'block':'none';
 }
 
-function saveLog(wi,di){
+async function saveLog(wi,di){
 const wk=plan[wi];const d=wk.days[di];
 const actuals=[];
 d.activities.forEach((a,ai)=>{
@@ -990,14 +995,14 @@ const timeStr=totalSec>0?`${h>0?h+'h ':''}${m}m ${s}s`:'';
 actuals.push({type:a.type,miles,h,m,s,pace,timeStr});
 });
 d.actuals=actuals;
-savePlanActuals();
+await savePlanActuals();
 render();
 }
 
-function undoLog(wi,di){
+async function undoLog(wi,di){
 const wk=plan[wi];const d=wk.days[di];
 d.actuals=null;
-savePlanActuals();
+await savePlanActuals();
 render();
 }
 
@@ -1258,15 +1263,14 @@ document.getElementById('mealSections').innerHTML=mhtml;
 }
 
 function setMealSlot(slot){currentMealSlot=slot;document.getElementById('foodSearch').focus()}
-function removeMealItem(slot,idx){meals[slot].splice(idx,1);saveMeals();renderNutrition()}
+async function removeMealItem(slot,idx){meals[slot].splice(idx,1);await saveMeals();renderNutrition()}
 
-function editMealItem(item){
+async function editMealItem(item){
 const slot=item.slot;
 const idx=item.idx;
-// Get the full item from meals before removing
 const fullItem=meals[slot][idx];
 meals[slot].splice(idx,1);
-saveMeals();
+await saveMeals();
 currentMealSlot=slot;
 // Reconstruct original food data
 const food={
@@ -1608,7 +1612,7 @@ if(el)el.innerHTML=`<div style="font-size:11px;font-weight:600;color:var(--accD)
 </div>`;
 }
 
-function confirmFood(){
+async function confirmFood(){
 if(!pendingFood)return;
 const amt=parseFloat(document.getElementById('foodAmt')?.value||1);
 const unit=document.getElementById('foodUnit')?.value||'servings';
@@ -1636,7 +1640,7 @@ origCal:pendingFood.cal,origP:pendingFood.p,origC:pendingFood.c,origF:pendingFoo
 origCal100:pendingFood.cal100||0,origP100:pendingFood.p100||0,origC100:pendingFood.c100||0,origF100:pendingFood.f100||0,
 origServing:pendingFood.serving||'1 serving',origPer100g:!!pendingFood.per100g,origAmt:amt,origUnit:unit};
 meals[slot].push(item);
-saveMeals();
+await saveMeals();
 closeModal('foodModal');
 document.getElementById('foodSearch').value='';
 document.getElementById('searchResults').innerHTML='';
@@ -1646,7 +1650,7 @@ render();
 
 // ===== MANUAL ENTRY =====
 function openManualEntry(){openModal('manualModal')}
-function logManual(){
+async function logManual(){
 const name=document.getElementById('manName').value;
 if(!name)return;
 const cal=parseInt(document.getElementById('manCal').value||0);
@@ -1655,7 +1659,7 @@ const c=parseFloat(document.getElementById('manC').value||0);
 const f=parseFloat(document.getElementById('manF').value||0);
 const slot=document.getElementById('manMeal').value;
 meals[slot].push({name,cal,p,c,f,serving:'manual'});
-saveMeals();closeModal('manualModal');
+await saveMeals();closeModal('manualModal');
 document.getElementById('manName').value='';
 document.getElementById('manCal').value='';
 document.getElementById('manP').value='';
