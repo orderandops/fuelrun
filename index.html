@@ -1257,14 +1257,29 @@ function setMealSlot(slot){currentMealSlot=slot;document.getElementById('foodSea
 function removeMealItem(slot,idx){meals[slot].splice(idx,1);saveMeals();renderNutrition()}
 
 function editMealItem(item){
-// Remove the old item, then open confirm modal with its data so user can adjust
 const slot=item.slot;
 const idx=item.idx;
+// Get the full item from meals before removing
+const fullItem=meals[slot][idx];
 meals[slot].splice(idx,1);
 saveMeals();
-// Open food confirm with this item's data
 currentMealSlot=slot;
-const food={name:item.name,cal:item.cal,p:item.p,c:item.c,f:item.f,serving:item.serving||'1 serving',per100g:false};
+// Reconstruct original food data
+const food={
+name:fullItem.name,
+cal:fullItem.origCal||fullItem.cal,
+p:fullItem.origP||fullItem.p,
+c:fullItem.origC||fullItem.c,
+f:fullItem.origF||fullItem.f,
+cal100:fullItem.origCal100||0,
+p100:fullItem.origP100||0,
+c100:fullItem.origC100||0,
+f100:fullItem.origF100||0,
+serving:fullItem.origServing||fullItem.serving||'1 serving',
+per100g:fullItem.origPer100g||false,
+editAmt:fullItem.origAmt||1,
+editUnit:fullItem.origUnit||'servings'
+};
 openFoodConfirm(food);
 }
 
@@ -1505,17 +1520,19 @@ document.getElementById('searchResults').innerHTML=html;
 function openFoodConfirm(food){
 pendingFood=food;
 const servingLabel=food.serving||'1 serving';
+const editAmt=food.editAmt||1;
+const editUnit=food.editUnit||'servings';
 const html=`
 <div style="margin-bottom:12px">
 <div style="font-size:14px;font-weight:600;margin-bottom:4px">${food.name}</div>
 <div style="font-size:11px;color:var(--tx2)">Per serving (${servingLabel}): ${food.cal} cal · ${food.p}p ${food.c}c ${food.f}f</div>
 </div>
 <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
-<input class="inp" type="number" id="foodAmt" value="1" step="0.5" inputmode="decimal" style="width:70px" oninput="updateFoodPreview()">
+<input class="inp" type="number" id="foodAmt" value="${editAmt}" step="0.5" inputmode="decimal" style="width:70px" oninput="updateFoodPreview()">
 <select class="inp" id="foodUnit" style="flex:1" onchange="updateFoodPreview()">
-<option value="servings" selected>servings</option>
-<option value="grams">grams</option>
-<option value="oz">oz</option>
+<option value="servings"${editUnit==='servings'?' selected':''}>servings</option>
+<option value="grams"${editUnit==='grams'?' selected':''}>grams</option>
+<option value="oz"${editUnit==='oz'?' selected':''}>oz</option>
 </select>
 </div>
 <div id="foodPreview" style="background:var(--accL);border-radius:8px;padding:10px;margin-bottom:12px"></div>
@@ -1588,7 +1605,10 @@ c=Math.round(base100c*mult*10)/10;
 f=Math.round(base100f*mult*10)/10;
 }
 const slot=document.getElementById('foodMealSlot')?.value||currentMealSlot;
-const item={name:pendingFood.name,cal,p,c,f,serving:`${amt} ${unit}`};
+const item={name:pendingFood.name,cal,p,c,f,serving:`${amt} ${unit}`,
+origCal:pendingFood.cal,origP:pendingFood.p,origC:pendingFood.c,origF:pendingFood.f,
+origCal100:pendingFood.cal100||0,origP100:pendingFood.p100||0,origC100:pendingFood.c100||0,origF100:pendingFood.f100||0,
+origServing:pendingFood.serving||'1 serving',origPer100g:!!pendingFood.per100g,origAmt:amt,origUnit:unit};
 meals[slot].push(item);
 saveMeals();
 closeModal('foodModal');
