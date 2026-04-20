@@ -412,72 +412,76 @@ const UPSTASH_TOKEN='gQAAAAAAAY6YAAIocDIxNzE1YjM3MDEwMDU0NzYxYjdiN2Q3YzhlMzg1ZjR
 async function cloudGet(k){
 try{
 const r=await fetch(`${UPSTASH_URL}/get/${encodeURIComponent('fuelrun:'+k)}`,{headers:{Authorization:`Bearer ${UPSTASH_TOKEN}`}});
+if(!r.ok)return undefined;
 const d=await r.json();
-if(d.result){try{return JSON.parse(d.result)}catch(e){return d.result}}
-return undefined;
-}catch(e){console.warn('Cloud get error:',k,e);return undefined}
+if(d.error||d.result===null||d.result===undefined)return undefined;
+try{return JSON.parse(d.result)}catch(e){return d.result}
+}catch(e){return undefined}
 }
 
 async function cloudSet(k,v){
 try{
-const r=await fetch(`${UPSTASH_URL}`,{
+await fetch(`${UPSTASH_URL}`,{
 method:'POST',
 headers:{Authorization:`Bearer ${UPSTASH_TOKEN}`,'Content-Type':'application/json'},
 body:JSON.stringify(['SET','fuelrun:'+k,JSON.stringify(v)])
 });
-return await r.json();
-}catch(e){console.warn('Cloud set error:',k,e)}
+}catch(e){}
 }
 
-// Local cache (IndexedDB) for offline speed, Upstash is source of truth
+async function cloudGetMulti(keys){
+try{
+const cmds=keys.map(k=>['GET','fuelrun:'+k]);
+const r=await fetch(`${UPSTASH_URL}/pipeline`,{
+method:'POST',
+headers:{Authorization:`Bearer ${UPSTASH_TOKEN}`,'Content-Type':'application/json'},
+body:JSON.stringify(cmds)
+});
+if(!r.ok)return keys.map(()=>undefined);
+const results=await r.json();
+return results.map(d=>{
+if(!d||d.error||d.result===null||d.result===undefined)return undefined;
+try{return JSON.parse(d.result)}catch(e){return d.result}
+});
+}catch(e){return keys.map(()=>undefined)}
+}
+
 let db;
-function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open('fuelrun',3);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('kv'))d.createObjectStore('kv')};r.onsuccess=e=>{db=e.target.result;res()};r.onerror=e=>{db=null;res()}})}
+function openDB(){return new Promise((res)=>{try{const r=indexedDB.open('fuelrun',3);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('kv'))d.createObjectStore('kv')};r.onsuccess=e=>{db=e.target.result;res()};r.onerror=()=>{db=null;res()}}catch(e){db=null;res()}})}
 function localGet(k){if(!db)return Promise.resolve(undefined);return new Promise(r=>{try{const t=db.transaction('kv','readonly').objectStore('kv').get(k);t.onsuccess=()=>r(t.result);t.onerror=()=>r(undefined)}catch(e){r(undefined)}})}
 function localSet(k,v){if(!db)return Promise.resolve();return new Promise(r=>{try{const t=db.transaction('kv','readwrite').objectStore('kv').put(v,k);t.onsuccess=()=>r();t.onerror=()=>r()}catch(e){r()}})}
 
-// Read: try cloud first, fall back to local cache
-async function dbGet(k){
-const cloud=await cloudGet(k);
-if(cloud!==undefined){
-localSet(k,cloud);
-return cloud;
-}
-return await localGet(k);
-}
-
-// Write: save to both cloud and local cache
 async function dbSet(k,v){
 localSet(k,v);
 await cloudSet(k,v);
 }
 
 async function loadData(){
-// Try cloud first for each key. If cloud empty but local has data, auto-push to cloud.
-const keys=['weightHist','raceGoals','goalWeight','planEdits','planActuals','meals_'+todayStr()];
-for(const k of keys){
-let cloud=await cloudGet(k);
-let local=await localGet(k);
-if(cloud!==undefined){
-// Cloud has data — use it, update local cache
-localSet(k,cloud);
-}else if(local!==undefined){
-// Local has data but cloud doesn't — push to cloud
-await cloudSet(k,local);
+const keys=['meals_'+todayStr(),'weightHist','raceGoals','goalWeight','planEdits','planActuals'];
+const cloudVals=await cloudGetMulti(keys);
+const vals=[];
+for(let i=0;i<keys.length;i++){
+if(cloudVals[i]!==undefined){
+localSet(keys[i],cloudVals[i]);
+vals.push(cloudVals[i]);
+}else{
+const local=await localGet(keys[i]);
+if(local!==undefined){
+cloudSet(keys[i],local);
+vals.push(local);
+}else{
+vals.push(undefined);
 }
 }
-// Now read from cloud (which is now synced)
-await loadMealsForDay(getActiveDay());
-const w=await cloudGet('weightHist')||await localGet('weightHist');
+}
+const[m,w,rg,gw,pe,pa]=vals;
+if(m)meals=m; else meals={Breakfast:[],Lunch:[],Dinner:[],Snacks:[]};
 if(w)weightHist=w;
-const rg=await cloudGet('raceGoals')||await localGet('raceGoals');
 if(rg)raceGoals=rg;
-const gw=await cloudGet('goalWeight')||await localGet('goalWeight');
 if(gw)USER.goalWt=gw;
-const pe=await cloudGet('planEdits')||await localGet('planEdits');
 if(pe){pe.forEach(e=>{
 for(const wk of plan){const d=wk.days.find(d=>d.dateStr===e.dateStr);if(d){d.activities=e.activities;d.edited=true;break;}}
 });}
-const pa=await cloudGet('planActuals')||await localGet('planActuals');
 if(pa){pa.forEach(a=>{
 for(const wk of plan){const d=wk.days.find(d=>d.dateStr===a.dateStr);if(d){d.actuals=a.actuals;break;}}
 });}
