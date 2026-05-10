@@ -146,6 +146,47 @@ html,body{font-family:var(--f);color:var(--tx);background:var(--bg);-webkit-tap-
 
 /* Charts */
 canvas{display:block;width:100%;border-radius:var(--r)}
+
+/* Cycle Tracker */
+.cy-tabs{display:flex;gap:4px;margin-bottom:10px}
+.cy-tab{flex:1;padding:8px;border:1px solid var(--bdr);background:var(--cd);border-radius:8px;font-size:12px;cursor:pointer;font-family:var(--f);font-weight:500;color:var(--tx2);text-align:center}
+.cy-tab.on{background:var(--coral);color:#fff;border-color:var(--coral)}
+.cy-card{background:var(--cd);border:.5px solid var(--bdr);border-radius:var(--r);padding:12px;margin-bottom:8px}
+.cy-card-t{font-size:12px;font-weight:700;color:var(--coral);margin-bottom:8px}
+.cy-label{font-size:11px;color:var(--tx2);font-weight:500;margin-bottom:4px;margin-top:8px}
+.cy-pills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+.cy-pill{border:1px solid var(--bdr);background:var(--cd);border-radius:16px;padding:5px 11px;font-size:11px;cursor:pointer;color:var(--tx2);font-family:var(--f);transition:all .15s}
+.cy-pill.on{background:var(--coral);color:#fff;border-color:var(--coral)}
+.cy-check{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+.cy-chk{border:1px solid var(--bdr);background:var(--cd);border-radius:6px;padding:5px 9px;font-size:10px;cursor:pointer;color:var(--tx2);font-family:var(--f)}
+.cy-chk.on{background:var(--accL);border-color:var(--acc);color:var(--accD)}
+.cy-toggle{display:block;width:100%;text-align:left;border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;font-size:12px;cursor:pointer;margin-bottom:5px;font-family:var(--f);background:transparent;color:var(--tx2)}
+.cy-toggle.on{background:rgba(216,90,48,.08);border-color:rgba(216,90,48,.3);color:var(--coral)}
+.cy-slider{width:100%;accent-color:var(--coral);height:4px;cursor:pointer;margin-bottom:6px}
+.cy-slider-g{accent-color:var(--acc)}
+.cy-mini{width:100%;border:1px solid var(--bdr);border-radius:6px;padding:7px 10px;font-size:12px;font-family:var(--f);outline:none}
+.cy-date-nav{display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 0}
+.cy-date-nav button{background:none;border:none;font-size:20px;color:var(--coral);cursor:pointer;padding:4px 8px}
+.cy-date-btn{background:none;border:1px solid var(--bdr);border-radius:8px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;color:var(--tx);font-family:var(--f)}
+.cy-save{width:100%;padding:12px;background:var(--coral);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--f);margin-top:8px;margin-bottom:16px}
+.cy-phase{padding:7px 14px;display:flex;justify-content:space-between;align-items:center;border-radius:8px;margin-bottom:8px}
+.cy-toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--coral);color:#fff;padding:7px 18px;border-radius:16px;font-size:12px;font-weight:600;z-index:999}
+.cy-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cy-cal-hdr{text-align:center;font-size:10px;color:var(--tx3);font-weight:600;padding:3px 0}
+.cy-cal-d{text-align:center;font-size:11px;padding:7px 2px;border-radius:6px;cursor:pointer;position:relative;border:none;background:transparent;font-family:var(--f);color:var(--tx)}
+.cy-cal-dot{width:4px;height:4px;border-radius:2px;background:var(--acc);margin:2px auto 0}
+.cy-legend{display:flex;gap:10px;flex-wrap:wrap;padding:10px 0;justify-content:center}
+.cy-legend-i{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--tx2)}
+.cy-legend-box{width:10px;height:10px;border-radius:3px}
+.cy-heat-row{display:flex;gap:1px;flex-wrap:wrap;margin-bottom:3px}
+.cy-heat-cell{width:16px;height:16px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:6px;color:var(--tx3)}
+.cy-med-row{display:flex;gap:10px;min-height:44px}
+.cy-med-dot{display:flex;flex-direction:column;align-items:center;padding-top:2px}
+.cy-med-line{width:1px;flex:1;background:var(--bdr);margin-top:3px}
+.cy-med-content{flex:1;padding-bottom:14px}
+.cy-tbl{width:100%;border-collapse:collapse;margin:4px 0}
+.cy-th{text-align:left;padding:5px 6px;border-bottom:1px solid var(--bdr);font-size:10px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.4px}
+.cy-td{padding:5px 6px;border-bottom:1px solid #f0f0ec;font-size:11px;color:var(--tx)}
 </style>
 </head>
 <body>
@@ -175,6 +216,11 @@ Today's plan
 <div class="cd">
 <div class="cd-t">Nutrition</div>
 <div id="homeNutr"></div>
+</div>
+
+<div class="cd">
+<div class="cd-t" style="color:var(--coral)">Cycle</div>
+<div id="homeCycle"></div>
 </div>
 
 <div class="cd">
@@ -244,8 +290,26 @@ Log food
 <div id="mealSections"></div>
 </div>
 
-<!-- PROGRESS PAGE -->
+<!-- CYCLE PAGE -->
+<div class="pg" id="pgCycle">
+<div class="cy-tabs">
+<button class="cy-tab on" id="cyTabLog" onclick="setCycleTab('log')">Log</button>
+<button class="cy-tab" id="cyTabCal" onclick="setCycleTab('cal')">Calendar</button>
+<button class="cy-tab" id="cyTabRpt" onclick="setCycleTab('rpt')">Report</button>
+</div>
+<div id="cyToast" style="display:none" class="cy-toast"></div>
+<div id="cycleContent"></div>
+</div>
+
+<!-- INSIGHTS PAGE (merged Progress + Cycle Insights) -->
 <div class="pg" id="pgProg">
+<div class="cy-tabs">
+<button class="cy-tab on" id="insTabProg" onclick="setInsightTab('prog')">Progress</button>
+<button class="cy-tab" id="insTabTrends" onclick="setInsightTab('trends')">Cycle Trends</button>
+<button class="cy-tab" id="insTabHeat" onclick="setInsightTab('heat')">Heatmap</button>
+</div>
+<div id="insightsContent">
+<div id="insightProgContent">
 <div class="cd" id="progWeightCard"></div>
 <div class="cd">
 <div class="cd-t">Weight trend</div>
@@ -261,7 +325,7 @@ Log food
 </div>
 <div class="cd">
 <div class="cd-t">Your data</div>
-<div style="font-size:12px;color:var(--tx2);margin-bottom:10px">Your data syncs to the cloud automatically. If you have data from before cloud sync was enabled, tap "Sync to cloud" to upload it.</div>
+<div style="font-size:12px;color:var(--tx2);margin-bottom:10px">Your data syncs to the cloud automatically.</div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
 <button class="btn btn-g" style="flex:1;min-width:100px" onclick="syncToCloud()">Sync to cloud</button>
 <button class="btn btn-o" style="flex:1;min-width:100px" onclick="exportData()">Export</button>
@@ -269,6 +333,9 @@ Log food
 </div>
 <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
 <div id="dataMsg" style="margin-top:8px;font-size:12px"></div>
+</div>
+</div>
+<div id="insightCycleContent" style="display:none"></div>
 </div>
 </div>
 
@@ -286,9 +353,13 @@ Training
 <svg viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="1.8"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
 Nutrition
 </button>
+<button class="nav-i" onclick="goPage('Cycle')" id="navCycle">
+<svg viewBox="0 0 24 24" fill="none" stroke="#D85A30" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+Cycle
+</button>
 <button class="nav-i" onclick="goPage('Prog')" id="navProg">
 <svg viewBox="0 0 24 24" fill="none" stroke="#378ADD" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-Progress
+Insights
 </button>
 </nav>
 </div>
@@ -462,7 +533,7 @@ await cloudSet(k,v);
 }
 
 async function loadData(){
-const keys=['meals_'+todayStr(),'weightHist','raceGoals','goalWeight','planEdits','planActuals'];
+const keys=['meals_'+todayStr(),'weightHist','raceGoals','goalWeight','planEdits','planActuals','cyEntries','cyPeriodStarts'];
 const cloudVals=await cloudGetMulti(keys);
 const vals=[];
 for(let i=0;i<keys.length;i++){
@@ -479,7 +550,7 @@ vals.push(undefined);
 }
 }
 }
-const[m,w,rg,gw,pe,pa]=vals;
+const[m,w,rg,gw,pe,pa,ce,cps]=vals;
 if(m)meals=m; else meals={Breakfast:[],Lunch:[],Dinner:[],Snacks:[]};
 if(w)weightHist=w;
 if(rg)raceGoals=rg;
@@ -490,6 +561,8 @@ for(const wk of plan){const d=wk.days.find(d=>d.dateStr===e.dateStr);if(d){d.act
 if(pa){pa.forEach(a=>{
 for(const wk of plan){const d=wk.days.find(d=>d.dateStr===a.dateStr);if(d){d.actuals=a.actuals;break;}}
 });}
+if(ce)cyEntries=ce;
+if(cps&&cps.length>0)cyPeriodStarts=cps;
 }
 
 async function syncToCloud(){
@@ -755,7 +828,7 @@ return{cals:adjCals,protein:proteinG,carbs:carbG,fat:fatG};
 
 // ===== RENDER FUNCTIONS =====
 function render(){
-renderHeader();renderHome();renderQuote();renderTraining();renderNutrition();renderProgress();
+renderHeader();renderHome();renderHomeCycle();renderQuote();renderTraining();renderNutrition();renderProgress();
 }
 
 function renderHeader(){
@@ -1995,8 +2068,9 @@ document.querySelectorAll('.pg').forEach(el=>el.classList.remove('on'));
 document.querySelectorAll('.nav-i').forEach(el=>el.classList.remove('on'));
 document.getElementById('pg'+p).classList.add('on');
 document.getElementById('nav'+p).classList.add('on');
-if(p==='Prog')renderProgress();
+if(p==='Prog'){renderProgress();renderInsightsCycle()}
 if(p==='Nutr')renderNutrition();
+if(p==='Cycle')renderCycle();
 window.scrollTo(0,0);
 }
 
@@ -2150,15 +2224,16 @@ document.getElementById('quoteContent').innerHTML=`
 // ===== INIT =====
 async function init(){
 buildPlan();
+initCycleData();
 try{
 await openDB();
 await loadData();
 }catch(e){console.warn('DB load error:',e)}
-// Request persistent storage so iOS/browsers don't evict data
 if(navigator.storage&&navigator.storage.persist){
 try{await navigator.storage.persist()}catch(e){}
 }
 curWeek=getWeekIndex();
+cySelectedDate=todayStr();
 try{render()}catch(e){console.error('Render error:',e)}
 }
 
@@ -2208,7 +2283,304 @@ if(el){el.style.color='var(--coral)';el.textContent='Restore failed: '+e.message
 }
 }
 
+// ===== CYCLE TRACKER MODULE =====
+const CY_BASELINE=27;
+const CY_FLOW=['none','light','moderate','heavy'];
+const CY_CRAMP=['none','mild','moderate','severe','debilitating'];
+const CY_NSWEATS=['none','mild/damp','moderate/wet','severe/soaked'];
+const CY_SWEAT_LOC=['under breasts','back','neck','chest','generalized'];
+const CY_BFOG=['none','mild','moderate','severe'];
+const CY_EREACT=['normal','heightened','significantly heightened'];
+const CY_JOINT_LOC=['knees','lower back','hands','other'];
+const CY_JOINT=['none','mild','moderate','severe'];
+const CY_PALP_CTX=['at rest','during activity','lying down'];
+const CY_RECOVERY=['normal','slower than usual','significantly slower'];
+const CY_HEADACHE=['none','mild','moderate','severe'];
+const CY_LIBIDO=['low','normal','high'];
+const CY_PHASES={follicular:'Follicular',ovulation:'Ovulation',luteal:'Luteal',menstrual:'Menstrual'};
+const CY_MED_HISTORY=[
+{date:'2025-08-11',med:'Trazodone',dose:'50 mg',action:'started',notes:'Prescribed for insomnia. Stopped after ~1 week — severe migraines.'},
+{date:'2025-10-01',med:'Therapy',dose:'',action:'started',notes:'Started therapy with Laura. Biweekly. Recommended SSRI for anxiety.'},
+{date:'2025-11-07',med:'Prozac',dose:'',action:'started',notes:'First SSRI. Cognitive issues, dissociative episode. Stopped after ~3 weeks.'},
+{date:'2025-12-04',med:'Lexapro',dose:'5 mg',action:'started',notes:'Started low dose. No side effects.'},
+{date:'2025-12-17',med:'Lexapro',dose:'10 mg',action:'increased',notes:'Great for 5-6 weeks. Gradual decline.'},
+{date:'2026-02-15',med:'CBD/Delta 8',dose:'',action:'started',notes:'Started mid-February.'},
+{date:'2026-04-28',med:'Lexapro',dose:'20 mg',action:'increased',notes:'Doubled dose per therapist. No side effects yet.'}
+];
+
+let cyEntries={};
+let cyPeriodStarts=[
+"2023-10-30","2023-11-26",
+"2024-02-11","2024-03-06","2024-04-02","2024-04-28","2024-05-24",
+"2024-06-19","2024-07-18","2024-08-11","2024-09-06","2024-10-04","2024-10-31","2024-11-26","2024-12-21",
+"2025-01-16","2025-02-14","2025-03-14","2025-04-09","2025-05-04","2025-05-31",
+"2025-06-25","2025-07-21","2025-08-17","2025-09-14","2025-10-11","2025-11-06","2025-11-30","2025-12-28",
+"2026-01-22","2026-02-18","2026-03-15","2026-04-11","2026-05-08"
+];
+let cySelectedDate=null;let cyTab='log';let insightTab='prog';let cyMonthOffset=0;
+
+function cyDefaultEntry(){return{flow:'none',cramps:'none',nightSweats:'none',sweatLocations:[],sleepQuality:3,timesWoken:0,brainFog:'none',wordRetrieval:false,wordRetrievalNotes:'',irritability:5,patience:5,socialMotivation:5,ruminating:false,ruminatingNotes:'',anxiety:5,emotionalReactivity:'normal',jointPain:'none',jointLocations:[],palpitations:false,palpitationContext:[],hotFlashes:false,hotFlashSeverity:'mild',hotFlashDuration:'',energy:5,fatigue:1,recovery:'normal',headache:'none',libido:'normal',moodNotes:'',isPeriodStart:false}}
+
+function initCycleData(){
+const b=cyDefaultEntry();
+if(!cyEntries['2026-05-05'])cyEntries['2026-05-05']={...b,nightSweats:'severe/soaked',sweatLocations:['chest'],sleepQuality:2,timesWoken:1,moodNotes:'Woke up soaking from night sweats.'};
+if(!cyEntries['2026-05-08'])cyEntries['2026-05-08']={...b,isPeriodStart:true,flow:'moderate',ruminating:true,ruminatingNotes:'Morning rumination — first time in months.',moodNotes:'Period started. Rumination episode.'};
+if(!cyEntries['2026-05-09'])cyEntries['2026-05-09']={...b,nightSweats:'mild/damp',sweatLocations:['chest']};
+}
+
+function cyFmt(d){const p=d.split('-').map(Number);return new Date(p[0],p[1]-1,p[2]).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+function cyFmtFull(d){const p=d.split('-').map(Number);return new Date(p[0],p[1]-1,p[2]).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}
+function cyAddDays(d,n){const p=d.split('-').map(Number);const dt=new Date(p[0],p[1]-1,p[2]);dt.setDate(dt.getDate()+n);return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`}
+function cyDiffDays(a,b){const pa=a.split('-').map(Number),pb=b.split('-').map(Number);return Math.round((new Date(pb[0],pb[1]-1,pb[2])-new Date(pa[0],pa[1]-1,pa[2]))/86400000)}
+
+function getCycleLengths(){const sorted=[...cyPeriodStarts].sort();return sorted.slice(1).map((d,i)=>({start:sorted[i],end:d,length:cyDiffDays(sorted[i],d)}))}
+function getAvgCycleLength(){const cl=getCycleLengths();if(cl.length===0)return CY_BASELINE;const recent=cl.slice(-6);return Math.round(recent.reduce((s,c)=>s+c.length,0)/recent.length)}
+function getCyclePredictions(){const last=cyPeriodStarts.length>0?[...cyPeriodStarts].sort().pop():null;if(!last)return null;const avg=getAvgCycleLength();return{nextPeriod:cyAddDays(last,avg),ovDay:cyAddDays(last,avg-14),fertileStart:cyAddDays(last,avg-19),fertileEnd:cyAddDays(last,avg-13),lastStart:last,avg}}
+function getCurrentCycleDay(forDate){const pred=getCyclePredictions();if(!pred)return null;const d=cyDiffDays(pred.lastStart,forDate||cySelectedDate||todayStr());return d>=0?d+1:null}
+function getCurrentPhase(forDate){const cd=getCurrentCycleDay(forDate);const avg=getAvgCycleLength();if(!cd)return null;if(cd<=5)return'menstrual';if(cd<=avg-16)return'follicular';if(cd<=avg-12)return'ovulation';return'luteal'}
+async function saveCycleData(){await dbSet('cyEntries',cyEntries);await dbSet('cyPeriodStarts',cyPeriodStarts)}
+
+function renderHomeCycle(){
+const pred=getCyclePredictions();const phase=getCurrentPhase(todayStr());const cd=getCurrentCycleDay(todayStr());
+const el=document.getElementById('homeCycle');if(!el)return;
+if(!pred||!cd){el.innerHTML='<div style="font-size:12px;color:var(--tx3)">Log period starts to see predictions</div>';return}
+const avg=pred.avg;
+const pct=Math.min(100,Math.round(cd/avg*100));
+// Phase positions as percentages
+const fertileStartDay=avg-19;const fertileEndDay=avg-13;const ovDay=avg-14;
+const fertStartPct=Math.max(0,Math.round(fertileStartDay/avg*100));
+const fertWidthPct=Math.round((fertileEndDay-fertileStartDay)/avg*100);
+const ovPct=Math.round(ovDay/avg*100);
+const periodPct=Math.round(5/avg*100); // ~5 day period
+let h=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:12px;font-weight:600;color:var(--tx)">${CY_PHASES[phase]||''}</span><span style="font-size:11px;color:var(--tx2)">Day ${cd} of ~${avg}</span></div>`;
+// Bar
+h+=`<div style="position:relative;height:26px;background:#eee;border-radius:13px;overflow:hidden;margin-bottom:6px">`;
+// Orange fill = progress
+h+=`<div style="position:absolute;left:0;top:0;height:100%;width:${pct}%;background:var(--coral);border-radius:13px ${pct>=98?'13px 13px':'0 0'} 13px;transition:width .3s"></div>`;
+// Green fertile zone
+h+=`<div style="position:absolute;left:${fertStartPct}%;top:0;height:100%;width:${fertWidthPct}%;background:rgba(29,158,117,.18)"></div>`;
+// Purple ovulation marker
+h+=`<div style="position:absolute;left:${ovPct}%;top:0;height:100%;width:${Math.max(3,Math.round(1/avg*100))}%;background:rgba(127,119,221,.35);border-radius:3px"></div>`;
+// Period label inside bar if enough room
+if(pct>12){h+=`<div style="position:absolute;top:50%;left:${Math.min(pct/2,pct-6)}%;transform:translateY(-50%);font-size:8px;font-weight:600;color:#fff;letter-spacing:.3px;text-transform:uppercase">period</div>`}
+h+=`</div>`;
+// Labels under bar
+h+=`<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--tx3);margin-bottom:8px;padding:0 2px"><span>Day 1</span><span style="color:var(--acc);font-weight:500">Fertile window</span><span style="color:var(--purp);font-weight:500">Ovulation</span><span>Day ${avg}</span></div>`;
+// Predicted dates
+h+=`<div style="display:flex;gap:12px;font-size:12px;color:var(--tx2)"><div><span style="font-weight:500;color:var(--coral)">Next period:</span> ${cyFmt(pred.nextPeriod)}</div><div><span style="font-weight:500;color:var(--purp)">Ovulation:</span> ${cyFmt(pred.ovDay)}</div></div>`;
+el.innerHTML=h;
+}
+
+// Cycle tab switching
+function setCycleTab(t){cyTab=t;document.querySelectorAll('#pgCycle .cy-tab').forEach(el=>el.classList.remove('on'));document.getElementById('cyTab'+(t==='log'?'Log':t==='cal'?'Cal':'Rpt')).classList.add('on');renderCycle()}
+function setInsightTab(t){insightTab=t;document.querySelectorAll('#pgProg .cy-tab').forEach(el=>el.classList.remove('on'));document.getElementById('insTab'+(t==='prog'?'Prog':t==='trends'?'Trends':'Heat')).classList.add('on');
+document.getElementById('insightProgContent').style.display=t==='prog'?'block':'none';
+document.getElementById('insightCycleContent').style.display=t!=='prog'?'block':'none';
+if(t==='prog')renderProgress();else renderInsightsCycle()}
+
+function cyPills(opts,val,field){return`<div class="cy-pills">${opts.map(o=>`<button class="cy-pill${val===o?' on':''}" onclick="cySet('${field}','${o}')">${o}</button>`).join('')}</div>`}
+function cyChecks(opts,selected,field){return`<div class="cy-check">${opts.map(o=>`<button class="cy-chk${selected.includes(o)?' on':''}" onclick="cyToggleArr('${field}','${o}')">${selected.includes(o)?'✓ ':''}${o}</button>`).join('')}</div>`}
+function cySlider(val,min,max,field,isGreen){return`<input type="range" class="cy-slider${isGreen?' cy-slider-g':''}" min="${min}" max="${max}" value="${val}" oninput="cySet('${field}',parseInt(this.value));renderCycle()">`}
+
+function cySet(field,val){if(!cySelectedDate)cySelectedDate=todayStr();if(!cyEntries[cySelectedDate])cyEntries[cySelectedDate]=cyDefaultEntry();cyEntries[cySelectedDate][field]=val;renderCycle()}
+function cyToggleArr(field,val){if(!cySelectedDate)cySelectedDate=todayStr();if(!cyEntries[cySelectedDate])cyEntries[cySelectedDate]=cyDefaultEntry();const arr=cyEntries[cySelectedDate][field]||[];if(arr.includes(val))cyEntries[cySelectedDate][field]=arr.filter(v=>v!==val);else cyEntries[cySelectedDate][field]=[...arr,val];renderCycle()}
+function cyToggleBool(field){if(!cySelectedDate)cySelectedDate=todayStr();if(!cyEntries[cySelectedDate])cyEntries[cySelectedDate]=cyDefaultEntry();cyEntries[cySelectedDate][field]=!cyEntries[cySelectedDate][field];renderCycle()}
+function cySetNotes(field,val){if(!cySelectedDate)cySelectedDate=todayStr();if(!cyEntries[cySelectedDate])cyEntries[cySelectedDate]=cyDefaultEntry();cyEntries[cySelectedDate][field]=val}
+
+function cyNavDate(dir){cySelectedDate=cyAddDays(cySelectedDate||todayStr(),dir);renderCycle()}
+async function cySaveEntry(){await saveCycleData();const t=document.getElementById('cyToast');if(t){t.textContent='Saved ✓';t.style.display='block';setTimeout(()=>t.style.display='none',1500)}renderHomeCycle()}
+
+function cySetPeriodStart(dateVal){if(!dateVal)return;cyPeriodStarts=[...cyPeriodStarts.filter(d=>d!==dateVal),dateVal].sort();renderCycle()}
+
+// ===== RENDER CYCLE LOG =====
+function renderCycle(){
+if(cyTab==='log')renderCycleLog();
+else if(cyTab==='cal')renderCycleCal();
+else if(cyTab==='rpt')renderCycleReport();
+}
+
+function renderCycleLog(){
+const ds=cySelectedDate||todayStr();
+const e=cyEntries[ds]||cyDefaultEntry();
+const phase=getCurrentPhase(ds);const cd=getCurrentCycleDay(ds);const pred=getCyclePredictions();
+let h='';
+// Date nav
+h+=`<div class="cy-date-nav"><button onclick="cyNavDate(-1)">‹</button><button class="cy-date-btn" onclick="document.getElementById('cyDatePick').style.display=document.getElementById('cyDatePick').style.display==='none'?'block':'none'">${ds===todayStr()?'Today':cyFmtFull(ds)}</button><button onclick="cyNavDate(1)">›</button></div>`;
+h+=`<div id="cyDatePick" style="display:none;text-align:center;margin-bottom:8px"><input type="date" class="inp" value="${ds}" onchange="cySelectedDate=this.value;document.getElementById('cyDatePick').style.display='none';renderCycle()" style="max-width:200px"></div>`;
+// Phase strip
+if(phase&&cd){const pc={menstrual:'rgba(216,90,48,.1)',follicular:'rgba(29,158,117,.1)',ovulation:'rgba(127,119,221,.1)',luteal:'rgba(239,159,39,.1)'};h+=`<div class="cy-phase" style="background:${pc[phase]}"><span style="font-size:12px;font-weight:600;color:var(--tx2)">${CY_PHASES[phase]}</span><span style="font-size:11px;color:var(--tx2)">Day ${cd}</span></div>`}
+// Period
+h+=`<div class="cy-card"><div class="cy-card-t">Period</div>`;
+h+=`<div class="cy-label">First day of period</div><input type="date" class="inp" value="${cyPeriodStarts.length>0?[...cyPeriodStarts].sort().pop():''}" onchange="cySetPeriodStart(this.value)" style="margin-bottom:8px;font-size:13px;border-color:rgba(216,90,48,.3);background:rgba(216,90,48,.04)">`;
+if(pred)h+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(29,158,117,.06);border-radius:8px;margin-bottom:6px"><div style="width:8px;height:8px;border-radius:4px;background:var(--acc)"></div><span style="font-size:12px;color:var(--tx2)">Predicted next period: <b>${cyFmt(pred.nextPeriod)}</b></span></div>`;
+if(e.isPeriodStart||e.flow!=='none'){h+=`<div class="cy-label">Flow intensity</div>${cyPills(CY_FLOW,e.flow,'flow')}<div class="cy-label">Cramping</div>${cyPills(CY_CRAMP,e.cramps,'cramps')}`}
+h+=`</div>`;
+// Night sweats
+h+=`<div class="cy-card"><div class="cy-card-t">Night Sweats</div>${cyPills(CY_NSWEATS,e.nightSweats,'nightSweats')}`;
+if(e.nightSweats!=='none')h+=`<div class="cy-label">Location</div>${cyChecks(CY_SWEAT_LOC,e.sweatLocations||[],'sweatLocations')}`;
+h+=`</div>`;
+// Sleep
+h+=`<div class="cy-card"><div class="cy-card-t">Sleep</div><div class="cy-label">Quality: ${e.sleepQuality}/5</div>${cySlider(e.sleepQuality,1,5,'sleepQuality',true)}<div class="cy-label">Times woken: ${e.timesWoken}</div>${cySlider(e.timesWoken,0,10,'timesWoken',false)}</div>`;
+// Cognitive
+h+=`<div class="cy-card"><div class="cy-card-t">Cognitive</div><div class="cy-label">Brain fog</div>${cyPills(CY_BFOG,e.brainFog,'brainFog')}<button class="cy-toggle${e.wordRetrieval?' on':''}" onclick="cyToggleBool('wordRetrieval');renderCycle()">${e.wordRetrieval?'✓ ':''}Word retrieval difficulty</button>`;
+if(e.wordRetrieval)h+=`<input class="cy-mini" placeholder="Notes..." value="${e.wordRetrievalNotes||''}" onchange="cySetNotes('wordRetrievalNotes',this.value)">`;
+h+=`</div>`;
+// Mood
+h+=`<div class="cy-card"><div class="cy-card-t">Mood & Emotional</div>`;
+h+=`<div class="cy-label">Irritability: ${e.irritability}/10</div>${cySlider(e.irritability,1,10,'irritability',false)}`;
+h+=`<div class="cy-label">Patience: ${e.patience}/10</div>${cySlider(e.patience,1,10,'patience',true)}`;
+h+=`<div class="cy-label">Social motivation: ${e.socialMotivation}/10</div>${cySlider(e.socialMotivation,1,10,'socialMotivation',true)}`;
+h+=`<div class="cy-label">Anxiety: ${e.anxiety}/10</div>${cySlider(e.anxiety,1,10,'anxiety',false)}`;
+h+=`<div class="cy-label">Emotional reactivity</div>${cyPills(CY_EREACT,e.emotionalReactivity,'emotionalReactivity')}`;
+h+=`<button class="cy-toggle${e.ruminating?' on':''}" onclick="cyToggleBool('ruminating');renderCycle()">${e.ruminating?'✓ ':''}Ruminating thoughts</button>`;
+if(e.ruminating)h+=`<input class="cy-mini" placeholder="What about..." value="${e.ruminatingNotes||''}" onchange="cySetNotes('ruminatingNotes',this.value)">`;
+h+=`</div>`;
+// Physical
+h+=`<div class="cy-card"><div class="cy-card-t">Physical</div>`;
+h+=`<div class="cy-label">Energy: ${e.energy}/10</div>${cySlider(e.energy,1,10,'energy',true)}`;
+h+=`<div class="cy-label">Fatigue: ${e.fatigue}/10</div><div style="font-size:10px;color:var(--tx3);margin-bottom:4px">1 = none · 10 = can't shake it</div>${cySlider(e.fatigue,1,10,'fatigue',false)}`;
+h+=`<div class="cy-label">Joint pain</div>${cyPills(CY_JOINT,e.jointPain,'jointPain')}`;
+if(e.jointPain!=='none')h+=`<div class="cy-label">Location</div>${cyChecks(CY_JOINT_LOC,e.jointLocations||[],'jointLocations')}`;
+h+=`<button class="cy-toggle${e.palpitations?' on':''}" onclick="cyToggleBool('palpitations');renderCycle()">${e.palpitations?'✓ ':''}Heart palpitations</button>`;
+if(e.palpitations)h+=cyChecks(CY_PALP_CTX,e.palpitationContext||[],'palpitationContext');
+h+=`<button class="cy-toggle${e.hotFlashes?' on':''}" onclick="cyToggleBool('hotFlashes');renderCycle()">${e.hotFlashes?'✓ ':''}Hot flashes (daytime)</button>`;
+if(e.hotFlashes){h+=cyPills(['mild','moderate','severe'],e.hotFlashSeverity,'hotFlashSeverity');h+=`<input class="cy-mini" placeholder="Duration (e.g. 5 min)" value="${e.hotFlashDuration||''}" onchange="cySetNotes('hotFlashDuration',this.value)">`}
+h+=`<div class="cy-label">Exercise recovery</div>${cyPills(CY_RECOVERY,e.recovery,'recovery')}`;
+h+=`<div class="cy-label">Headache</div>${cyPills(CY_HEADACHE,e.headache,'headache')}`;
+h+=`<div class="cy-label">Libido</div>${cyPills(CY_LIBIDO,e.libido,'libido')}`;
+h+=`</div>`;
+// Notes
+h+=`<div class="cy-card"><div class="cy-card-t">Notes</div><textarea class="cy-mini" placeholder="Anything else..." rows="3" style="resize:vertical" onchange="cySetNotes('moodNotes',this.value)">${e.moodNotes||''}</textarea></div>`;
+// Med history (collapsible)
+h+=`<div class="cy-card"><div class="cy-card-t">Medication History</div><button class="cy-toggle" onclick="document.getElementById('cyMedTimeline').style.display=document.getElementById('cyMedTimeline').style.display==='none'?'block':'none'">▸ Show timeline</button><div id="cyMedTimeline" style="display:none;margin-top:8px">`;
+const acColors={started:'var(--acc)',increased:'var(--purp)'};
+CY_MED_HISTORY.forEach((m,i)=>{h+=`<div class="cy-med-row"><div class="cy-med-dot"><div style="width:8px;height:8px;border-radius:4px;background:${acColors[m.action]||'var(--tx2)'}"></div>${i<CY_MED_HISTORY.length-1?'<div class="cy-med-line"></div>':''}</div><div class="cy-med-content"><div style="font-size:10px;color:var(--tx2);font-weight:600">${cyFmt(m.date)}</div><div style="font-size:12px;font-weight:600">${m.med}${m.dose?' — '+m.dose:''}</div><div style="font-size:10px;color:var(--tx2);line-height:1.3">${m.notes}</div></div></div>`});
+h+=`</div></div>`;
+// Save
+h+=`<button class="cy-save" onclick="cySaveEntry()">Save Entry</button>`;
+document.getElementById('cycleContent').innerHTML=h;
+}
+
+// ===== CYCLE CALENDAR =====
+function renderCycleCal(){
+const pred=getCyclePredictions();const avg=getAvgCycleLength();const cl=getCycleLengths();
+let h='';
+// Stats
+h+=`<div style="display:flex;gap:6px;margin-bottom:10px">`;
+h+=`<div class="wk-stat"><div class="wk-sv" style="color:var(--coral)">${avg}d</div><div class="wk-sl">Avg cycle</div></div>`;
+h+=`<div class="wk-stat"><div class="wk-sv" style="color:var(--coral)">${cl.length}</div><div class="wk-sl">Cycles</div></div>`;
+h+=`<div class="wk-stat"><div class="wk-sv" style="color:var(--coral)">${cl.length>0?cl[cl.length-1].length+'d':'—'}</div><div class="wk-sl">Last</div></div></div>`;
+if(pred){h+=`<div class="cy-card" style="margin-bottom:10px"><div style="font-size:12px;font-weight:700;color:var(--coral);margin-bottom:6px">Predictions</div><div style="font-size:12px;color:var(--tx2);margin-bottom:3px"><span style="display:inline-block;width:8px;height:8px;border-radius:4px;background:var(--coral);margin-right:6px"></span>Next period: <b>${cyFmt(pred.nextPeriod)}</b></div><div style="font-size:12px;color:var(--tx2);margin-bottom:3px"><span style="display:inline-block;width:8px;height:8px;border-radius:4px;background:var(--purp);margin-right:6px"></span>Ovulation: <b>${cyFmt(pred.ovDay)}</b></div><div style="font-size:12px;color:var(--tx2)"><span style="display:inline-block;width:8px;height:8px;border-radius:4px;background:#3AAFB9;margin-right:6px"></span>Fertile: <b>${cyFmt(pred.fertileStart)} – ${cyFmt(pred.fertileEnd)}</b></div></div>`}
+// Month nav
+const base=new Date();base.setMonth(base.getMonth()+cyMonthOffset);
+const yr=base.getFullYear(),mo=base.getMonth();
+const firstDay=new Date(yr,mo,1).getDay();const daysInMo=new Date(yr,mo+1,0).getDate();
+const moLabel=new Date(yr,mo).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+h+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><button style="background:none;border:none;font-size:20px;color:var(--coral);cursor:pointer" onclick="cyMonthOffset--;renderCycle()">‹</button><span style="font-size:14px;font-weight:600">${moLabel}</span><button style="background:none;border:none;font-size:20px;color:var(--coral);cursor:pointer" onclick="cyMonthOffset++;renderCycle()">›</button></div>`;
+h+=`<div class="cy-cal-grid">`;
+['S','M','T','W','T','F','S'].forEach(d=>h+=`<div class="cy-cal-hdr">${d}</div>`);
+for(let i=0;i<firstDay;i++)h+=`<div></div>`;
+for(let day=1;day<=daysInMo;day++){
+const ds=`${yr}-${String(mo+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+const isPS=cyPeriodStarts.includes(ds);const hasE=!!cyEntries[ds];
+let cls='cy-cal-d';let bg='';
+// Period days
+for(const ps of cyPeriodStarts){const diff=cyDiffDays(ps,ds);if(diff>=0&&diff<5)bg='rgba(216,90,48,.15)'}
+if(pred){const pDiff=cyDiffDays(pred.nextPeriod,ds);if(pDiff>=0&&pDiff<5)bg=bg||'rgba(216,90,48,.06)';
+if(pred.fertileStart&&pred.fertileEnd){const fd=cyDiffDays(pred.fertileStart,ds),fe=cyDiffDays(ds,pred.fertileEnd);if(fd>=0&&fe>=0)bg='rgba(58,175,185,.12)'}
+if(pred.ovDay===ds)bg='rgba(127,119,221,.15)'}
+const isToday=ds===todayStr();
+h+=`<button class="${cls}" style="background:${bg};${isToday?'font-weight:700;color:var(--acc)':''}${isPS?';color:var(--coral);font-weight:700':''}" onclick="cySelectedDate='${ds}';setCycleTab('log')">${day}${hasE?'<div class="cy-cal-dot"></div>':''}${isPS?'<div class="cy-cal-dot" style="background:var(--coral)"></div>':''}</button>`;
+}
+h+=`</div>`;
+h+=`<div class="cy-legend"><div class="cy-legend-i"><div class="cy-legend-box" style="background:rgba(216,90,48,.3)"></div>Period</div><div class="cy-legend-i"><div class="cy-legend-box" style="background:rgba(58,175,185,.25)"></div>Fertile</div><div class="cy-legend-i"><div class="cy-legend-box" style="background:rgba(127,119,221,.25)"></div>Ovulation</div></div>`;
+document.getElementById('cycleContent').innerHTML=h;
+}
+
+// ===== CYCLE REPORT =====
+function renderCycleReport(){
+const cl=getCycleLengths();const avg=getAvgCycleLength();const pred=getCyclePredictions();
+const entryDates=Object.keys(cyEntries).sort();const dateRange=entryDates.length>0?`${cyFmt(entryDates[0])} – ${cyFmt(entryDates[entryDates.length-1])}`:'No data';
+let h=`<div style="padding:12px 0;border-bottom:1px solid var(--bdr);margin-bottom:10px"><div style="font-size:17px;font-weight:700;color:var(--coral)">Cycle & Symptom Report</div><div style="font-size:11px;color:var(--tx2);margin-top:2px">Fuel.Run · ${dateRange}</div></div>`;
+// Cycle overview
+h+=`<div class="cy-card"><div class="cy-card-t">Cycle Overview</div><div style="font-size:12px;color:var(--tx);line-height:1.8">Cycles tracked: <b>${cl.length}</b><br>Avg cycle length: <b>${avg} days</b><br>Baseline: <b>${CY_BASELINE} days</b><br>Range: <b>${cl.length>0?Math.min(...cl.map(c=>c.length))+'–'+Math.max(...cl.map(c=>c.length))+' days':'—'}</b>${pred?'<br>Next predicted: <b>'+cyFmt(pred.nextPeriod)+'</b>':''}</div></div>`;
+// Cycle lengths table
+h+=`<div class="cy-card"><div class="cy-card-t">Cycle Lengths (last 12)</div><table class="cy-tbl"><thead><tr><th class="cy-th">Start</th><th class="cy-th">Length</th><th class="cy-th">Δ</th></tr></thead><tbody>`;
+cl.slice(-12).forEach(c=>{const delta=c.length-CY_BASELINE;h+=`<tr><td class="cy-td">${cyFmt(c.start)}</td><td class="cy-td">${c.length}d</td><td class="cy-td" style="color:${Math.abs(delta)>5?'var(--coral)':'var(--tx2)'}">${delta>0?'+':''}${delta}</td></tr>`});
+h+=`</tbody></table></div>`;
+// Symptom frequency
+const totals={nightSweats:0,hotFlashes:0,palpitations:0,brainFog:0,jointPain:0,headache:0,ruminating:0};const cnt=entryDates.length||1;
+entryDates.forEach(d=>{const e=cyEntries[d];if(e.nightSweats!=='none')totals.nightSweats++;if(e.hotFlashes)totals.hotFlashes++;if(e.palpitations)totals.palpitations++;if(e.brainFog!=='none')totals.brainFog++;if(e.jointPain!=='none')totals.jointPain++;if(e.headache!=='none')totals.headache++;if(e.ruminating)totals.ruminating++});
+h+=`<div class="cy-card"><div class="cy-card-t">Symptom Frequency</div><table class="cy-tbl"><thead><tr><th class="cy-th">Symptom</th><th class="cy-th">Frequency</th></tr></thead><tbody>`;
+Object.entries(totals).filter(([,v])=>v>0).forEach(([k,v])=>{h+=`<tr><td class="cy-td">${k.replace(/([A-Z])/g,' $1')}</td><td class="cy-td">${v}/${cnt} days (${Math.round(v/cnt*100)}%)</td></tr>`});
+h+=`</tbody></table></div>`;
+// Avg scores
+const fields=['irritability','anxiety','energy','fatigue','sleepQuality','patience','socialMotivation'];const sums={};const counts={};
+fields.forEach(f=>{sums[f]=0;counts[f]=0});entryDates.forEach(d=>{const e=cyEntries[d];fields.forEach(f=>{if(e[f]!=null){sums[f]+=e[f];counts[f]++}})});
+h+=`<div class="cy-card"><div class="cy-card-t">Average Daily Scores</div><table class="cy-tbl"><thead><tr><th class="cy-th">Metric</th><th class="cy-th">Avg</th></tr></thead><tbody>`;
+fields.forEach(f=>{h+=`<tr><td class="cy-td">${f.replace(/([A-Z])/g,' $1')}</td><td class="cy-td">${counts[f]?(sums[f]/counts[f]).toFixed(1):'—'}/10</td></tr>`});
+h+=`</tbody></table></div>`;
+// Current meds
+h+=`<div class="cy-card"><div class="cy-card-t">Current Medications</div><div style="font-size:12px;color:var(--tx)">Lexapro — 20 mg<br>CBD/Delta 8</div></div>`;
+// Med history
+h+=`<div class="cy-card"><div class="cy-card-t">Medication History</div><table class="cy-tbl"><thead><tr><th class="cy-th">Date</th><th class="cy-th">Med</th><th class="cy-th">Notes</th></tr></thead><tbody>`;
+CY_MED_HISTORY.forEach(m=>{h+=`<tr><td class="cy-td">${cyFmt(m.date)}</td><td class="cy-td">${m.med}${m.dose?' '+m.dose:''}</td><td class="cy-td" style="font-size:10px;color:var(--tx2)">${m.notes}</td></tr>`});
+h+=`</tbody></table></div>`;
+// Print button
+h+=`<button class="cy-save" style="background:var(--tx)" onclick="cyPrintReport()">Print / Export PDF</button>`;
+document.getElementById('cycleContent').innerHTML=h;
+}
+
+function cyPrintReport(){const el=document.getElementById('cycleContent');const w=window.open('','_blank');if(w){w.document.write('<html><head><title>Cycle Report</title><style>body{font-family:system-ui;padding:24px;max-width:700px;margin:0 auto;font-size:13px;color:#333}h1{font-size:18px;color:#D85A30}table{width:100%;border-collapse:collapse;margin:8px 0}th,td{text-align:left;padding:4px 8px;border-bottom:1px solid #eee}th{font-weight:600;font-size:11px;text-transform:uppercase;color:#888}.cy-save,.cy-toggle,.cy-tab{display:none}</style></head><body>'+el.innerHTML+'</body></html>');w.document.close();w.print()}}
+
+// ===== INSIGHTS CYCLE =====
+function renderInsightsCycle(){
+const el=document.getElementById('insightCycleContent');if(!el)return;
+if(insightTab==='trends')renderInsightTrends(el);
+else if(insightTab==='heat')renderInsightHeatmap(el);
+}
+
+function renderInsightTrends(el){
+const cl=getCycleLengths();
+let h=`<div class="cy-card"><div class="cy-card-t">Cycle Length Trend</div>`;
+if(cl.length>1){
+h+=`<div style="display:flex;gap:2px;align-items:flex-end;height:120px;margin-bottom:8px">`;
+const mx=Math.max(...cl.map(c=>c.length));
+cl.slice(-20).forEach((c,i)=>{
+const pct=Math.round(c.length/mx*100);
+const isIrreg=Math.abs(c.length-CY_BASELINE)>5;
+h+=`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%"><div style="font-size:8px;color:var(--tx2);margin-bottom:2px">${c.length}</div><div style="width:100%;max-width:16px;height:${pct}%;background:${isIrreg?'var(--coral)':'rgba(216,90,48,.25)'};border-radius:3px 3px 0 0"></div></div>`;
+});
+h+=`</div><div style="font-size:10px;color:var(--tx3);text-align:center">Last ${Math.min(20,cl.length)} cycles</div>`;
+// Rolling averages
+if(cl.length>=3){const last3=cl.slice(-3);const avg3=Math.round(last3.reduce((s,c)=>s+c.length,0)/3*10)/10;
+const last6=cl.slice(-6);const avg6=Math.round(last6.reduce((s,c)=>s+c.length,0)/last6.length*10)/10;
+h+=`<div style="display:flex;gap:12px;margin-top:8px;font-size:12px"><span style="color:var(--coral);font-weight:600">3-cycle avg: ${avg3}d</span><span style="color:var(--purp);font-weight:600">6-cycle avg: ${avg6}d</span><span style="color:var(--tx2)">Baseline: ${CY_BASELINE}d</span></div>`}
+}else{h+=`<div style="text-align:center;color:var(--tx3);font-size:12px;padding:20px">Log 2+ cycles to see trends</div>`}
+// Irregularity flags
+const irreg=cl.filter(c=>Math.abs(c.length-CY_BASELINE)>5);
+if(irreg.length>0){h+=`<div style="margin-top:10px;border-top:.5px solid var(--bdr);padding-top:8px"><div style="font-size:11px;font-weight:600;color:var(--coral);margin-bottom:4px">⚠ Irregularity flags</div>`;
+irreg.slice(-5).forEach(c=>{h+=`<div style="font-size:11px;color:var(--coral);margin-bottom:2px">● ${cyFmt(c.start)}: ${c.length}d (${c.length>CY_BASELINE?'+':''}${c.length-CY_BASELINE})</div>`});h+=`</div>`}
+h+=`</div>`;el.innerHTML=h;
+}
+
+function renderInsightHeatmap(el){
+const sorted=[...cyPeriodStarts].sort();const avg=getAvgCycleLength();
+const symptoms=['irritability','anxiety','energy','fatigue','sleepQuality','patience','socialMotivation'];
+const grid={};symptoms.forEach(s=>grid[s]={});
+for(let i=0;i<sorted.length;i++){const start=sorted[i];const end=sorted[i+1]||cyAddDays(start,avg);
+for(let d=0;d<cyDiffDays(start,end);d++){const date=cyAddDays(start,d);const e=cyEntries[date];if(e){symptoms.forEach(s=>{if(!grid[s][d+1])grid[s][d+1]=[];grid[s][d+1].push(e[s]||0)})}}}
+const result={};symptoms.forEach(s=>{result[s]={};Object.keys(grid[s]).forEach(cd=>{const vals=grid[s][cd];result[s][cd]=Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*10)/10})});
+let h=`<div class="cy-card"><div class="cy-card-t">Symptom Intensity by Cycle Day</div><div style="font-size:10px;color:var(--tx3);margin-bottom:10px">Averaged across cycles. Darker = more intense.</div>`;
+const hasData=Object.values(result).some(days=>Object.keys(days).length>0);
+if(hasData){Object.entries(result).forEach(([symptom,days])=>{h+=`<div style="margin-bottom:8px"><div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:3px;text-transform:capitalize">${symptom.replace(/([A-Z])/g,' $1')}</div><div class="cy-heat-row">`;
+for(let cd=1;cd<=Math.min(avg,35);cd++){const val=days[cd];const intensity=val?val/10:0;const isInverse=['energy','sleepQuality','patience','socialMotivation'].includes(symptom);const adj=isInverse?1-intensity:intensity;
+h+=`<div class="cy-heat-cell" style="background:${val!=null?`rgba(216,90,48,${adj*0.8+0.05})`:'#f5f5f0'}" title="Day ${cd}: ${val||'—'}">${cd}</div>`}
+h+=`</div></div>`})}
+else{h+=`<div style="text-align:center;color:var(--tx3);font-size:12px;padding:20px">Log symptoms across multiple cycles to see the heatmap</div>`}
+h+=`</div>`;el.innerHTML=h;
+}
+
 init();
-</script>
-</body>
-</html>
+
+</script></body></html>
