@@ -2343,7 +2343,7 @@ function getCycleLengths(){const sorted=[...cyPeriodStarts].sort();return sorted
 function getAvgCycleLength(){const cl=getCycleLengths();if(cl.length===0)return CY_BASELINE;const recent=cl.slice(-6);return Math.round(recent.reduce((s,c)=>s+c.length,0)/recent.length)}
 function getCyclePredictions(){const last=cyPeriodStarts.length>0?[...cyPeriodStarts].sort().pop():null;if(!last)return null;const avg=getAvgCycleLength();return{nextPeriod:cyAddDays(last,avg),ovDay:cyAddDays(last,avg-14),fertileStart:cyAddDays(last,avg-19),fertileEnd:cyAddDays(last,avg-13),lastStart:last,avg}}
 function getCurrentCycleDay(forDate){const pred=getCyclePredictions();if(!pred)return null;const d=cyDiffDays(pred.lastStart,forDate||cySelectedDate||todayStr());return d>=0?d+1:null}
-function getCurrentPhase(forDate){const cd=getCurrentCycleDay(forDate);const avg=getAvgCycleLength();if(!cd)return null;if(cd<=5)return'menstrual';if(cd<=avg-16)return'follicular';if(cd<=avg-12)return'ovulation';return'luteal'}
+function getCurrentPhase(forDate){const cd=getCurrentCycleDay(forDate);const avg=getAvgCycleLength();if(!cd)return null;const pDur=getPeriodDuration();if(cd<=pDur)return'menstrual';if(cd<=avg-16)return'follicular';if(cd<=avg-12)return'ovulation';return'luteal'}
 async function saveCycleData(){
 await dbSet('cyEntries',cyEntries);
 await dbSet('cyPeriodStarts',cyPeriodStarts);
