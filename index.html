@@ -2478,7 +2478,7 @@ h+=`<div class="cy-card"><div class="cy-card-t">Night Sweats</div>${cyPills(CY_N
 if(e.nightSweats!=='none')h+=`<div class="cy-label">Location</div>${cyChecks(CY_SWEAT_LOC,e.sweatLocations||[],'sweatLocations')}`;
 h+=`</div>`;
 // Sleep
-h+=`<div class="cy-card"><div class="cy-card-t">Sleep</div><div class="cy-label">Quality: ${e.sleepQuality}/5</div>${cySlider(e.sleepQuality,1,5,'sleepQuality',true)}<div class="cy-label">Times woken: ${e.timesWoken}</div>${cySlider(e.timesWoken,0,10,'timesWoken',false)}</div>`;
+h+=`<div class="cy-card"><div class="cy-card-t">Sleep</div><div class="cy-label">Quality: ${e.sleepQuality}/5</div>${cySlider(e.sleepQuality,1,5,'sleepQuality',true)}<div class="cy-label">Times woken: ${e.timesWoken}</div>${cySlider(e.timesWoken,0,10,'timesWoken',false)}<div class="cy-label">Wake up time</div>${cyPills(['early','normal','late'],e.wakeUpTime||'normal','wakeUpTime')}</div>`;
 // Cognitive
 h+=`<div class="cy-card"><div class="cy-card-t">Cognitive</div><div class="cy-label">Brain fog</div>${cyPills(CY_BFOG,e.brainFog,'brainFog')}<button class="cy-toggle${e.wordRetrieval?' on':''}" onclick="cyToggleBool('wordRetrieval');renderCycle()">${e.wordRetrieval?'✓ ':''}Word retrieval difficulty</button>`;
 if(e.wordRetrieval)h+=`<input class="cy-mini" placeholder="Notes..." value="${e.wordRetrievalNotes||''}" onchange="cySetNotes('wordRetrievalNotes',this.value)">`;
