@@ -2311,7 +2311,9 @@ const CY_MED_HISTORY=[
 {date:'2025-12-04',med:'Lexapro',dose:'5 mg',action:'started',notes:'Started low dose. No side effects.'},
 {date:'2025-12-17',med:'Lexapro',dose:'10 mg',action:'increased',notes:'Great for 5-6 weeks. Gradual decline.'},
 {date:'2026-02-15',med:'CBD/Delta 8',dose:'',action:'started',notes:'Started mid-February.'},
-{date:'2026-04-28',med:'Lexapro',dose:'20 mg',action:'increased',notes:'Doubled dose per therapist. No side effects yet.'}
+{date:'2026-04-28',med:'Lexapro',dose:'20 mg',action:'increased',notes:'Doubled dose per therapist. No side effects yet.'},
+{date:'2026-05-15',med:'Lexapro',dose:'10 mg',action:'decreased',notes:'Reduced from 20 mg to 10 mg.'},
+{date:'2026-05-15',med:'Effexor',dose:'37.5 mg',action:'started',notes:'Added Effexor 37.5 mg.'}
 ];
 
 let cyEntries={};
@@ -2511,7 +2513,7 @@ h+=`</div>`;
 h+=`<div class="cy-card"><div class="cy-card-t">Notes</div><textarea class="cy-mini" placeholder="Anything else..." rows="3" style="resize:vertical" onchange="cySetNotes('moodNotes',this.value)">${e.moodNotes||''}</textarea></div>`;
 // Med history (collapsible)
 h+=`<div class="cy-card"><div class="cy-card-t">Medication History</div><button class="cy-toggle" onclick="document.getElementById('cyMedTimeline').style.display=document.getElementById('cyMedTimeline').style.display==='none'?'block':'none'">▸ Show timeline</button><div id="cyMedTimeline" style="display:none;margin-top:8px">`;
-const acColors={started:'var(--acc)',increased:'var(--purp)'};
+const acColors={started:'var(--acc)',increased:'var(--purp)',decreased:'var(--amber)'};
 CY_MED_HISTORY.forEach((m,i)=>{h+=`<div class="cy-med-row"><div class="cy-med-dot"><div style="width:8px;height:8px;border-radius:4px;background:${acColors[m.action]||'var(--tx2)'}"></div>${i<CY_MED_HISTORY.length-1?'<div class="cy-med-line"></div>':''}</div><div class="cy-med-content"><div style="font-size:10px;color:var(--tx2);font-weight:600">${cyFmt(m.date)}</div><div style="font-size:12px;font-weight:600">${m.med}${m.dose?' — '+m.dose:''}</div><div style="font-size:10px;color:var(--tx2);line-height:1.3">${m.notes}</div></div></div>`});
 h+=`</div></div>`;
 // Auto-save indicator
@@ -2579,7 +2581,7 @@ h+=`<div class="cy-card"><div class="cy-card-t">Average Daily Scores</div><table
 fields.forEach(f=>{h+=`<tr><td class="cy-td">${f.replace(/([A-Z])/g,' $1')}</td><td class="cy-td">${counts[f]?(sums[f]/counts[f]).toFixed(1):'—'}/10</td></tr>`});
 h+=`</tbody></table></div>`;
 // Current meds
-h+=`<div class="cy-card"><div class="cy-card-t">Current Medications</div><div style="font-size:12px;color:var(--tx)">Lexapro — 20 mg<br>CBD/Delta 8</div></div>`;
+h+=`<div class="cy-card"><div class="cy-card-t">Current Medications</div><div style="font-size:12px;color:var(--tx)">Lexapro — 10 mg<br>Effexor — 37.5 mg<br>CBD/Delta 8</div></div>`;
 // Med history
 h+=`<div class="cy-card"><div class="cy-card-t">Medication History</div><table class="cy-tbl"><thead><tr><th class="cy-th">Date</th><th class="cy-th">Med</th><th class="cy-th">Notes</th></tr></thead><tbody>`;
 CY_MED_HISTORY.forEach(m=>{h+=`<tr><td class="cy-td">${cyFmt(m.date)}</td><td class="cy-td">${m.med}${m.dose?' '+m.dose:''}</td><td class="cy-td" style="font-size:10px;color:var(--tx2)">${m.notes}</td></tr>`});
