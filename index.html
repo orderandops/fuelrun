@@ -2294,7 +2294,7 @@ const CY_BASELINE=27;
 const CY_FLOW=['none','light','moderate','heavy'];
 const CY_CRAMP=['none','mild','moderate','severe','debilitating'];
 const CY_NSWEATS=['none','mild/damp','moderate/wet','severe/soaked'];
-const CY_SWEAT_LOC=['under breasts','back','neck','chest','generalized'];
+const CY_SWEAT_LOC=['under breasts','back','neck','chest','butt/groin','generalized'];
 const CY_BFOG=['none','mild','moderate','severe'];
 const CY_EREACT=['normal','heightened','significantly heightened'];
 const CY_JOINT_LOC=['knees','lower back','hands','other'];
@@ -2334,6 +2334,7 @@ const b=cyDefaultEntry();
 if(!cyEntries['2026-05-05'])cyEntries['2026-05-05']={...b,nightSweats:'severe/soaked',sweatLocations:['chest'],sleepQuality:2,timesWoken:1,moodNotes:'Woke up soaking from night sweats.'};
 if(!cyEntries['2026-05-08'])cyEntries['2026-05-08']={...b,isPeriodStart:true,flow:'moderate',ruminating:true,ruminatingNotes:'Morning rumination — first time in months.',moodNotes:'Period started. Rumination episode.'};
 if(!cyEntries['2026-05-09'])cyEntries['2026-05-09']={...b,nightSweats:'mild/damp',sweatLocations:['chest']};
+if(!cyEntries['2026-05-18'])cyEntries['2026-05-18']={...b,nightSweats:'severe/soaked',sweatLocations:['chest','butt/groin','generalized'],moodNotes:'Significant night sweat episode — cycle day 11. Generalized core and butt/groin sweating. Unusual pattern — typically moderate under breasts/back toward end of cycle, mild during period. This mid-cycle severe episode is new.'};
 }
 
 function cyFmt(d){const p=d.split('-').map(Number);return new Date(p[0],p[1]-1,p[2]).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
@@ -2626,18 +2627,37 @@ h+=`</div>`;el.innerHTML=h;
 
 function renderInsightHeatmap(el){
 const sorted=[...cyPeriodStarts].sort();const avg=getAvgCycleLength();
-const symptoms=['irritability','anxiety','energy','fatigue','sleepQuality','patience','socialMotivation'];
+const nsMap={'none':0,'mild/damp':3,'moderate/wet':6,'severe/soaked':10};
+const symptoms=['nightSweats','irritability','anxiety','energy','fatigue','sleepQuality','patience','socialMotivation'];
 const grid={};symptoms.forEach(s=>grid[s]={});
 for(let i=0;i<sorted.length;i++){const start=sorted[i];const end=sorted[i+1]||cyAddDays(start,avg);
-for(let d=0;d<cyDiffDays(start,end);d++){const date=cyAddDays(start,d);const e=cyEntries[date];if(e){symptoms.forEach(s=>{if(!grid[s][d+1])grid[s][d+1]=[];grid[s][d+1].push(e[s]||0)})}}}
+for(let d=0;d<cyDiffDays(start,end);d++){const date=cyAddDays(start,d);const e=cyEntries[date];if(e){symptoms.forEach(s=>{if(!grid[s][d+1])grid[s][d+1]=[];
+if(s==='nightSweats'){grid[s][d+1].push(nsMap[e[s]]||0)}
+else{grid[s][d+1].push(e[s]||0)}})}}}
 const result={};symptoms.forEach(s=>{result[s]={};Object.keys(grid[s]).forEach(cd=>{const vals=grid[s][cd];result[s][cd]=Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*10)/10})});
 let h=`<div class="cy-card"><div class="cy-card-t">Symptom Intensity by Cycle Day</div><div style="font-size:10px;color:var(--tx3);margin-bottom:10px">Averaged across cycles. Darker = more intense.</div>`;
 const hasData=Object.values(result).some(days=>Object.keys(days).length>0);
-if(hasData){Object.entries(result).forEach(([symptom,days])=>{h+=`<div style="margin-bottom:8px"><div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:3px;text-transform:capitalize">${symptom.replace(/([A-Z])/g,' $1')}</div><div class="cy-heat-row">`;
+if(hasData){
+const labels={nightSweats:'Night Sweats',irritability:'Irritability',anxiety:'Anxiety',energy:'Energy',fatigue:'Fatigue',sleepQuality:'Sleep Quality',patience:'Patience',socialMotivation:'Social Motivation'};
+Object.entries(result).forEach(([symptom,days])=>{h+=`<div style="margin-bottom:8px"><div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:3px">${labels[symptom]||symptom}</div><div class="cy-heat-row">`;
 for(let cd=1;cd<=Math.min(avg,35);cd++){const val=days[cd];const intensity=val?val/10:0;const isInverse=['energy','sleepQuality','patience','socialMotivation'].includes(symptom);const adj=isInverse?1-intensity:intensity;
 h+=`<div class="cy-heat-cell" style="background:${val!=null?`rgba(216,90,48,${adj*0.8+0.05})`:'#f5f5f0'}" title="Day ${cd}: ${val||'—'}">${cd}</div>`}
 h+=`</div></div>`})}
 else{h+=`<div style="text-align:center;color:var(--tx3);font-size:12px;padding:20px">Log symptoms across multiple cycles to see the heatmap</div>`}
+// Night sweat pattern summary
+const nsEntries=Object.entries(cyEntries).filter(([,e])=>e.nightSweats&&e.nightSweats!=='none');
+if(nsEntries.length>0){
+h+=`<div class="cy-card"><div class="cy-card-t">Night Sweat Pattern Notes</div>`;
+h+=`<div style="font-size:12px;color:var(--tx);line-height:1.6;margin-bottom:8px"><b>Typical pattern:</b> Moderate sweating under breasts and back toward end of cycle (luteal/premenstrual). Mild sweating occasionally during period.</div>`;
+h+=`<div style="font-size:12px;color:var(--tx);line-height:1.6;margin-bottom:8px"><b>Atypical episodes:</b></div>`;
+h+=`<table class="cy-tbl"><thead><tr><th class="cy-th">Date</th><th class="cy-th">Day</th><th class="cy-th">Severity</th><th class="cy-th">Location</th></tr></thead><tbody>`;
+nsEntries.sort((a,b)=>a[0].localeCompare(b[0])).forEach(([date,e])=>{
+// Find cycle day for this date
+let cDay='—';
+for(let si=sorted.length-1;si>=0;si--){const diff=cyDiffDays(sorted[si],date);if(diff>=0){cDay=diff+1;break}}
+h+=`<tr><td class="cy-td">${cyFmt(date)}</td><td class="cy-td">${cDay}</td><td class="cy-td" style="color:${e.nightSweats==='severe/soaked'?'var(--coral)':e.nightSweats==='moderate/wet'?'var(--amber)':'var(--tx2)'}">${e.nightSweats}</td><td class="cy-td" style="font-size:10px">${(e.sweatLocations||[]).join(', ')||'—'}</td></tr>`});
+h+=`</tbody></table></div>`;
+}
 h+=`</div>`;el.innerHTML=h;
 }
 
