@@ -2644,20 +2644,6 @@ for(let cd=1;cd<=Math.min(avg,35);cd++){const val=days[cd];const intensity=val?v
 h+=`<div class="cy-heat-cell" style="background:${val!=null?`rgba(216,90,48,${adj*0.8+0.05})`:'#f5f5f0'}" title="Day ${cd}: ${val||'—'}">${cd}</div>`}
 h+=`</div></div>`})}
 else{h+=`<div style="text-align:center;color:var(--tx3);font-size:12px;padding:20px">Log symptoms across multiple cycles to see the heatmap</div>`}
-// Night sweat pattern summary
-const nsEntries=Object.entries(cyEntries).filter(([,e])=>e.nightSweats&&e.nightSweats!=='none');
-if(nsEntries.length>0){
-h+=`<div class="cy-card"><div class="cy-card-t">Night Sweat Pattern Notes</div>`;
-h+=`<div style="font-size:12px;color:var(--tx);line-height:1.6;margin-bottom:8px"><b>Typical pattern:</b> Moderate sweating under breasts and back toward end of cycle (luteal/premenstrual). Mild sweating occasionally during period.</div>`;
-h+=`<div style="font-size:12px;color:var(--tx);line-height:1.6;margin-bottom:8px"><b>Atypical episodes:</b></div>`;
-h+=`<table class="cy-tbl"><thead><tr><th class="cy-th">Date</th><th class="cy-th">Day</th><th class="cy-th">Severity</th><th class="cy-th">Location</th></tr></thead><tbody>`;
-nsEntries.sort((a,b)=>a[0].localeCompare(b[0])).forEach(([date,e])=>{
-// Find cycle day for this date
-let cDay='—';
-for(let si=sorted.length-1;si>=0;si--){const diff=cyDiffDays(sorted[si],date);if(diff>=0){cDay=diff+1;break}}
-h+=`<tr><td class="cy-td">${cyFmt(date)}</td><td class="cy-td">${cDay}</td><td class="cy-td" style="color:${e.nightSweats==='severe/soaked'?'var(--coral)':e.nightSweats==='moderate/wet'?'var(--amber)':'var(--tx2)'}">${e.nightSweats}</td><td class="cy-td" style="font-size:10px">${(e.sweatLocations||[]).join(', ')||'—'}</td></tr>`});
-h+=`</tbody></table></div>`;
-}
 h+=`</div>`;el.innerHTML=h;
 }
 
