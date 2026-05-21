@@ -22,8 +22,8 @@
 --pink:#D4537E;--pinkL:#FBEAF0;
 --f:Sora,sans-serif;--r:10px
 }
-html,body{font-family:var(--f);color:var(--tx);background:var(--bg);-webkit-tap-highlight-color:transparent;overflow-x:hidden}
-.app{max-width:430px;margin:0 auto;min-height:100vh;padding-bottom:62px}
+html,body{font-family:var(--f);color:var(--tx);background:var(--bg);-webkit-tap-highlight-color:transparent;overflow-x:hidden;touch-action:manipulation}
+.app{max-width:430px;margin:0 auto;min-height:100vh;padding-bottom:68px}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
 
 /* Header */
@@ -32,10 +32,10 @@ html,body{font-family:var(--f);color:var(--tx);background:var(--bg);-webkit-tap-
 .hdr-dt{font-size:13px;color:var(--tx2)}
 
 /* Nav */
-.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--cd);border-top:.5px solid var(--bdr);display:flex;z-index:90;padding:4px 0 max(4px,env(safe-area-inset-bottom))}
-.nav-i{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;border:none;background:none;font-family:var(--f);font-size:10px;cursor:pointer;font-weight:500;color:var(--tx3)}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--cd);border-top:.5px solid var(--bdr);display:flex;z-index:90;padding:2px 0 max(6px,env(safe-area-inset-bottom));gap:0}
+.nav-i{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 0;border:none;background:none;font-family:var(--f);font-size:9px;cursor:pointer;font-weight:500;color:var(--tx3);min-width:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .nav-i.on{font-weight:600}
-.nav-i svg{width:22px;height:22px}
+.nav-i svg{width:20px;height:20px}
 
 /* Pages */
 .pg{display:none;padding:12px 14px}.pg.on{display:block}
@@ -67,7 +67,7 @@ html,body{font-family:var(--f);color:var(--tx);background:var(--bg);-webkit-tap-
 .btn-o{background:transparent;border:1px solid var(--bdr);color:var(--tx)}
 
 /* Inputs */
-.inp{border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;font-family:var(--f);font-size:15px;width:100%;background:var(--cd)}
+.inp{border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;font-family:var(--f);font-size:14px;width:100%;background:var(--cd);max-width:100%;box-sizing:border-box}
 .inp-sm{width:52px;text-align:center;padding:6px 4px;font-size:14px}
 
 /* Modal overlay */
@@ -149,18 +149,18 @@ canvas{display:block;width:100%;border-radius:var(--r)}
 
 /* Cycle Tracker */
 .cy-tabs{display:flex;gap:4px;margin-bottom:10px}
-.cy-tab{flex:1;padding:8px;border:1px solid var(--bdr);background:var(--cd);border-radius:8px;font-size:12px;cursor:pointer;font-family:var(--f);font-weight:500;color:var(--tx2);text-align:center}
+.cy-tab{flex:1;padding:10px 4px;border:1px solid var(--bdr);background:var(--cd);border-radius:8px;font-size:12px;cursor:pointer;font-family:var(--f);font-weight:500;color:var(--tx2);text-align:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .cy-tab.on{background:var(--coral);color:#fff;border-color:var(--coral)}
 .cy-card{background:var(--cd);border:.5px solid var(--bdr);border-radius:var(--r);padding:12px;margin-bottom:8px}
 .cy-card-t{font-size:12px;font-weight:700;color:var(--coral);margin-bottom:8px}
 .cy-label{font-size:11px;color:var(--tx2);font-weight:500;margin-bottom:4px;margin-top:8px}
 .cy-pills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
-.cy-pill{border:1px solid var(--bdr);background:var(--cd);border-radius:16px;padding:5px 11px;font-size:11px;cursor:pointer;color:var(--tx2);font-family:var(--f);transition:all .15s}
+.cy-pill{border:1px solid var(--bdr);background:var(--cd);border-radius:16px;padding:5px 11px;font-size:11px;cursor:pointer;color:var(--tx2);font-family:var(--f);transition:all .15s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .cy-pill.on{background:var(--coral);color:#fff;border-color:var(--coral)}
 .cy-check{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
-.cy-chk{border:1px solid var(--bdr);background:var(--cd);border-radius:6px;padding:5px 9px;font-size:10px;cursor:pointer;color:var(--tx2);font-family:var(--f)}
+.cy-chk{border:1px solid var(--bdr);background:var(--cd);border-radius:6px;padding:5px 9px;font-size:10px;cursor:pointer;color:var(--tx2);font-family:var(--f);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .cy-chk.on{background:var(--accL);border-color:var(--acc);color:var(--accD)}
-.cy-toggle{display:block;width:100%;text-align:left;border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;font-size:12px;cursor:pointer;margin-bottom:5px;font-family:var(--f);background:transparent;color:var(--tx2)}
+.cy-toggle{display:block;width:100%;text-align:left;border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;font-size:12px;cursor:pointer;margin-bottom:5px;font-family:var(--f);background:transparent;color:var(--tx2);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .cy-toggle.on{background:rgba(216,90,48,.08);border-color:rgba(216,90,48,.3);color:var(--coral)}
 .cy-slider{width:100%;accent-color:var(--coral);height:4px;cursor:pointer;margin-bottom:6px}
 .cy-slider-g{accent-color:var(--acc)}
@@ -2471,7 +2471,7 @@ h+=`<div id="cyDatePick" style="display:none;text-align:center;margin-bottom:8px
 if(phase&&cd){const pc={menstrual:'rgba(216,90,48,.1)',follicular:'rgba(29,158,117,.1)',ovulation:'rgba(127,119,221,.1)',luteal:'rgba(239,159,39,.1)'};h+=`<div class="cy-phase" style="background:${pc[phase]}"><span style="font-size:12px;font-weight:600;color:var(--tx2)">${CY_PHASES[phase]}</span><span style="font-size:11px;color:var(--tx2)">Day ${cd}</span></div>`}
 // Period
 h+=`<div class="cy-card"><div class="cy-card-t">Period</div>`;
-h+=`<div style="display:flex;gap:8px;margin-bottom:8px"><div style="flex:1"><div class="cy-label" style="margin-top:0">First day</div><input type="date" class="inp" value="${cyPeriodStarts.length>0?[...cyPeriodStarts].sort().pop():''}" onchange="cySetPeriodStart(this.value)" style="font-size:13px;border-color:rgba(216,90,48,.3);background:rgba(216,90,48,.04)"></div><div style="flex:1"><div class="cy-label" style="margin-top:0">Last day</div><input type="date" class="inp" value="${cyGetPeriodEnd()}" onchange="cySetPeriodEnd(this.value)" style="font-size:13px;border-color:rgba(216,90,48,.3);background:rgba(216,90,48,.04)"></div></div>`;
+h+=`<div style="display:flex;gap:6px;margin-bottom:8px"><div style="flex:1;min-width:0"><div class="cy-label" style="margin-top:0">First day</div><input type="date" class="inp" value="${cyPeriodStarts.length>0?[...cyPeriodStarts].sort().pop():''}" onchange="cySetPeriodStart(this.value)" style="font-size:12px;padding:6px 4px;border-color:rgba(216,90,48,.3);background:rgba(216,90,48,.04)"></div><div style="flex:1;min-width:0"><div class="cy-label" style="margin-top:0">Last day</div><input type="date" class="inp" value="${cyGetPeriodEnd()}" onchange="cySetPeriodEnd(this.value)" style="font-size:12px;padding:6px 4px;border-color:rgba(216,90,48,.3);background:rgba(216,90,48,.04)"></div></div>`;
 if(pred)h+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(29,158,117,.06);border-radius:8px;margin-bottom:6px"><div style="width:8px;height:8px;border-radius:4px;background:var(--acc)"></div><span style="font-size:12px;color:var(--tx2)">Predicted next period: <b>${cyFmt(pred.nextPeriod)}</b></span></div>`;
 h+=`<div class="cy-label">Flow intensity</div>${cyPills(CY_FLOW,e.flow,'flow')}`;
 h+=`<div class="cy-label">Cramping</div>${cyPills(CY_CRAMP,e.cramps,'cramps')}`;
