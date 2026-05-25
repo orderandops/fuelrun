@@ -454,8 +454,8 @@ Insights
 
 <script>
 // ===== CONFIG =====
-const USER={wt:128.5,goalWt:125,ht:170.18,age:40,sex:'F',marathonDate:'2026-11-14',marathonGoal:'3:45:00'};
-const WEEK1_START=new Date(2026,3,20); // Apr 20 2026
+const USER={wt:128.5,goalWt:125,ht:170.18,age:40,sex:'F',marathonDate:'2026-11-14',marathonGoal:'4:00:00'};
+const WEEK1_START=new Date(2026,4,26); // May 26 2026
 const DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const ACTIVITY_TYPES=['Easy run','Long run','Tempo','Intervals','HIIT','Hike','Bike','Mtn bike','Kayak','Swim','Walk','Yoga','Other'];
 const ACT_COLORS={'Easy run':'var(--acc)','Long run':'var(--coral)','Tempo':'var(--acc)','Intervals':'var(--acc)','HIIT':'var(--purp)','Hike':'var(--amber)','Bike':'var(--blue)','Mtn bike':'var(--blue)','Kayak':'var(--accD)','Swim':'var(--blue)','Walk':'var(--acc)','Yoga':'var(--pink)','Other':'var(--tx2)'};
@@ -621,165 +621,75 @@ function parseDate(s){const p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2])}
 // ===== TRAINING PLAN =====
 function buildPlan(){
 plan=[];
-const hiitRot=[15,20,15];
 
-// ===== PRE-TRAINING WEEK: Apr 13-19 (current week, all rest) =====
-const preStart=new Date(2026,3,13);
-const preDays=[];
-for(let d=0;d<7;d++){
-const dt=addDays(preStart,d);
-preDays.push({dow:DOW[d],date:dt,dateStr:dateStr(dt),activities:[],actuals:null,edited:false});
-}
-plan.push({week:0,start:preStart,days:preDays,totalMi:0,phase:'PRE'});
-
-// ===== BASE TRAINING: W1-W11 (Apr 20 - Jul 5) =====
-// Rest: Mon,Thu. HIIT 3x: Tue,Wed,Fri. Long run: Sun (no HIIT). Sat: easy (no HIIT).
-const baseMi=[12,13,15,11,18,19,21,15,24,25,27]; // W4,W8 are deloads
-const basePhase=['BUILD','BUILD','BUILD','DELOAD','BUILD','BUILD','BUILD','DELOAD','BUILD','BUILD','BUILD'];
-
-for(let w=0;w<11;w++){
-const wkStart=addDays(WEEK1_START,w*7);
-const weekMi=baseMi[w];
-const longMi=Math.round(weekMi*0.3*10)/10;
-const rem=weekMi-longMi;
-const wType=w%2===0?'Tempo':'Intervals';
-const speedMi=Math.round(rem*0.28*10)/10;
-const satMi=Math.round(rem*0.22*10)/10;
-const easyMi=Math.round((rem-speedMi-satMi)/2*10)/10;
-const h1=hiitRot[w%3],h2=hiitRot[(w+1)%3],h3=hiitRot[(w+2)%3];
-
-const days=[];
-for(let d=0;d<7;d++){
-const dt=addDays(wkStart,d);
-const ds=dateStr(dt);
-let activities=[];
-if(d===0||d===3){
-// Rest
-}else if(d===1){
-// Tue: easy + HIIT
-activities.push({type:'Easy run',detail:`${easyMi} mi`,miles:easyMi,time:0});
-activities.push({type:'HIIT',detail:`${h1} min`,miles:0,time:h1});
-}else if(d===2){
-// Wed: speed work + HIIT
-activities.push({type:wType,detail:`${speedMi} mi`,miles:speedMi,time:0});
-activities.push({type:'HIIT',detail:`${h2} min`,miles:0,time:h2});
-}else if(d===4){
-// Fri: easy + HIIT
-activities.push({type:'Easy run',detail:`${easyMi} mi`,miles:easyMi,time:0});
-activities.push({type:'HIIT',detail:`${h3} min`,miles:0,time:h3});
-}else if(d===5){
-// Sat: easy (no HIIT)
-activities.push({type:'Easy run',detail:`${satMi} mi`,miles:satMi,time:0});
-}else if(d===6){
-// Sun: long run (no HIIT)
-activities.push({type:'Long run',detail:`${longMi} mi`,miles:longMi,time:0});
-}
-days.push({dow:DOW[d],date:dt,dateStr:ds,activities,actuals:null,edited:false});
-}
-plan.push({week:w+1,start:wkStart,days,totalMi:weekMi,phase:basePhase[w]});
-}
-
-// ===== REST WEEK: W12 (Jul 6-12) =====
-const restStart=addDays(WEEK1_START,11*7);
-const restDays=[];
-for(let d=0;d<7;d++){
-const dt=addDays(restStart,d);
-restDays.push({dow:DOW[d],date:dt,dateStr:dateStr(dt),activities:[],actuals:null,edited:false});
-}
-plan.push({week:12,start:restStart,days:restDays,totalMi:0,phase:'REST'});
-
-// ===== MARATHON TRAINING: displayed as W1-W18, stored as plan index 12-29 =====
-// Rest: Mon,Thu. HIIT 3x: Tue,Wed,Fri. Long run: Sun (no HIIT). Sat: easy (no HIIT).
-// Wed = speed work (tempo/intervals alternate). Max long=18, max weekly=45. Race Sat Nov 14.
-const mStart=new Date(2026,6,13); // Jul 13
-const mTargets=[
-{mi:28,long:10,phase:'BUILD'},   // M-W1
-{mi:31,long:11,phase:'BUILD'},   // M-W2
-{mi:34,long:13,phase:'BUILD'},   // M-W3
-{mi:26,long:9,phase:'DELOAD'},   // M-W4
-{mi:38,long:15,phase:'BUILD'},   // M-W5
-{mi:41,long:16,phase:'BUILD'},   // M-W6
-{mi:43,long:17,phase:'BUILD'},   // M-W7
-{mi:33,long:12,phase:'DELOAD'},  // M-W8
-{mi:0,long:0,phase:'REST'},      // M-W9 rest week
-{mi:43,long:17,phase:'PEAK'},    // M-W10
-{mi:45,long:18,phase:'PEAK'},    // M-W11
-{mi:42,long:16,phase:'PEAK'},    // M-W12
-{mi:33,long:12,phase:'DELOAD'},  // M-W13
-{mi:44,long:18,phase:'PEAK'},    // M-W14
-{mi:45,long:17,phase:'PEAK'},    // M-W15
-{mi:34,long:13,phase:'TAPER'},   // M-W16
-{mi:22,long:8,phase:'TAPER'},    // M-W17
-{mi:6,long:0,phase:'RACE'},      // M-W18
+// 25-week marathon plan: May 26 - Nov 14, 2026
+// Mon=Rest, Tue=Easy+HIIT, Wed=Treadmill speed, Thu=Rest, Fri=Easy+HIIT, Sat=Easy+shortHIIT, Sun=Long
+// Two full rest weeks (W6, W19), two deload weeks (W12, W16)
+const weeks=[
+{w:1,mi:[0,2,2,0,2,2,3],hiit:[0,15,0,0,15,10,0],speed:'tempo',phase:'BASE',protein:80},
+{w:2,mi:[0,2.5,2.5,0,2.5,2,4],hiit:[0,15,0,0,15,10,0],speed:'intervals',phase:'BASE',protein:80},
+{w:3,mi:[0,3,3,0,3,2.5,5],hiit:[0,15,0,0,15,10,0],speed:'tempo',phase:'BASE',protein:85},
+{w:4,mi:[0,3,3,0,3,3,6],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'BASE',protein:85},
+{w:5,mi:[0,3.5,3.5,0,3.5,3,7],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'BASE',protein:90},
+{w:6,mi:[0,0,0,0,0,0,0],hiit:[0,0,0,0,0,0,0],speed:null,phase:'REST',protein:90},
+{w:7,mi:[0,3,3,0,3,3,7],hiit:[0,15,0,0,15,10,0],speed:'tempo',phase:'BUILD',protein:90},
+{w:8,mi:[0,3.5,4,0,3.5,3,8],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'BUILD',protein:95},
+{w:9,mi:[0,4,4,0,4,3,10],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'BUILD',protein:95},
+{w:10,mi:[0,4,4.5,0,4,3,11],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'BUILD',protein:100},
+{w:11,mi:[0,4,5,0,4,3.5,12],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'BUILD',protein:100},
+{w:12,mi:[0,3,3,0,3,2,8],hiit:[0,15,0,0,15,10,0],speed:'intervals',phase:'DELOAD',protein:100},
+{w:13,mi:[0,4.5,5,0,4.5,3.5,14],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'PEAK',protein:105},
+{w:14,mi:[0,4.5,5,0,4.5,4,15],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'PEAK',protein:105},
+{w:15,mi:[0,5,5.5,0,5,4,16],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'PEAK',protein:110},
+{w:16,mi:[0,3.5,3.5,0,3.5,2.5,10],hiit:[0,15,0,0,15,10,0],speed:'intervals',phase:'DELOAD',protein:110},
+{w:17,mi:[0,5,5.5,0,5,4,17],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'PEAK',protein:110},
+{w:18,mi:[0,5,6,0,5,4,18],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'PEAK',protein:115},
+{w:19,mi:[0,0,0,0,0,0,0],hiit:[0,0,0,0,0,0,0],speed:null,phase:'REST',protein:115},
+{w:20,mi:[0,4,5,0,4,3,16],hiit:[0,15,0,0,15,10,0],speed:'tempo',phase:'PEAK',protein:115},
+{w:21,mi:[0,5,6,0,5,4,18],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'PEAK',protein:120},
+{w:22,mi:[0,4,4,0,4,3,12],hiit:[0,15,0,0,15,10,0],speed:'tempo',phase:'TAPER',protein:120},
+{w:23,mi:[0,3,3,0,3,2,8],hiit:[0,15,0,0,15,10,0],speed:'intervals',phase:'TAPER',protein:120},
+{w:24,mi:[0,2,2,0,2,0,4],hiit:[0,10,0,0,10,0,0],speed:'tempo',phase:'TAPER',protein:120},
+{w:25,mi:[0,2,0,0,0,26.2,0],hiit:[0,0,0,0,0,0,0],speed:null,phase:'RACE',protein:120},
 ];
 
-for(let m=0;m<mTargets.length;m++){
-const wkStart=addDays(mStart,m*7);
-const t=mTargets[m];
-const mWeekNum=m+1; // Marathon week 1-18
+const speedTypes={tempo:'Tempo',intervals:'Intervals'};
 
-// Rest week
-if(t.phase==='REST'){
-const rd=[];
-for(let d=0;d<7;d++){
-const dt=addDays(wkStart,d);
-rd.push({dow:DOW[d],date:dt,dateStr:dateStr(dt),activities:[],actuals:null,edited:false});
-}
-plan.push({week:mWeekNum,start:wkStart,days:rd,totalMi:0,phase:'REST',isMarathon:true});
-continue;
-}
-
-// Race week: easy Tue/Wed+HIIT, rest Thu, shakeout Fri, RACE Sat, rest Sun
-if(t.phase==='RACE'){
-const rd=[];
-for(let d=0;d<7;d++){
-const dt=addDays(wkStart,d);
-let activities=[];
-if(d===1){activities.push({type:'Easy run',detail:'2 mi',miles:2,time:0});activities.push({type:'HIIT',detail:'10 min',miles:0,time:10});}
-else if(d===2){activities.push({type:'Easy run',detail:'2 mi',miles:2,time:0});activities.push({type:'HIIT',detail:'10 min',miles:0,time:10});}
-else if(d===4){activities.push({type:'Easy run',detail:'2 mi (shakeout)',miles:2,time:0});}
-else if(d===5){activities.push({type:'Long run',detail:'Marathon! 26.2 mi',miles:26.2,time:0});}
-rd.push({dow:DOW[d],date:dt,dateStr:dateStr(dt),activities,actuals:null,edited:false});
-}
-plan.push({week:mWeekNum,start:wkStart,days:rd,totalMi:6,phase:'RACE',isMarathon:true});
-continue;
-}
-
-// Normal marathon training week
-const weekMi=t.mi;
-const longMi=t.long;
-const rem=weekMi-longMi;
-const wType=m%2===0?'Tempo':'Intervals';
-const speedMi=Math.round(rem*0.24*10)/10;
-const satMi=Math.round(rem*0.21*10)/10;
-const easyMi=Math.round((rem-speedMi-satMi)/2*10)/10;
-const h1=hiitRot[m%3],h2=hiitRot[(m+1)%3],h3=hiitRot[(m+2)%3];
-
+weeks.forEach(wk=>{
+const wkStart=addDays(WEEK1_START,(wk.w-1)*7);
 const days=[];
+const totalMi=Math.round(wk.mi.reduce((s,m)=>s+m,0)*10)/10;
+
 for(let d=0;d<7;d++){
 const dt=addDays(wkStart,d);
 const ds=dateStr(dt);
 let activities=[];
-if(d===0||d===3){
-// Rest
-}else if(d===1){
-activities.push({type:'Easy run',detail:`${easyMi} mi`,miles:easyMi,time:0});
-activities.push({type:'HIIT',detail:`${h1} min`,miles:0,time:h1});
-}else if(d===2){
-activities.push({type:wType,detail:`${speedMi} mi`,miles:speedMi,time:0});
-activities.push({type:'HIIT',detail:`${h2} min`,miles:0,time:h2});
-}else if(d===4){
-activities.push({type:'Easy run',detail:`${easyMi} mi`,miles:easyMi,time:0});
-activities.push({type:'HIIT',detail:`${h3} min`,miles:0,time:h3});
-}else if(d===5){
-activities.push({type:'Easy run',detail:`${satMi} mi`,miles:satMi,time:0});
+
+if(wk.phase==='REST'){
+// Full rest week
+}else if(wk.phase==='RACE'){
+if(d===1&&wk.mi[d]>0){activities.push({type:'Easy run',detail:wk.mi[d]+' mi (shakeout)',miles:wk.mi[d],time:0})}
+else if(d===5&&wk.mi[d]>0){activities.push({type:'Long run',detail:'Marathon! '+wk.mi[d]+' mi',miles:wk.mi[d],time:0})}
+}else{
+const mi=wk.mi[d];
+const hiit=wk.hiit[d];
+if(mi>0){
+if(d===2&&wk.speed){
+activities.push({type:speedTypes[wk.speed],detail:mi+' mi (treadmill)',miles:mi,time:0});
 }else if(d===6){
-activities.push({type:'Long run',detail:`${longMi} mi`,miles:longMi,time:0});
+activities.push({type:'Long run',detail:mi+' mi',miles:mi,time:0});
+}else{
+activities.push({type:'Easy run',detail:mi+' mi',miles:mi,time:0});
+}
+}
+if(hiit>0){
+activities.push({type:'HIIT',detail:hiit+' min',miles:0,time:hiit});
+}
 }
 days.push({dow:DOW[d],date:dt,dateStr:ds,activities,actuals:null,edited:false});
 }
-plan.push({week:mWeekNum,start:wkStart,days,totalMi:weekMi,phase:t.phase,isMarathon:true});
-}
+plan.push({week:wk.w,start:wkStart,days,totalMi,phase:wk.phase,protein:wk.protein});
+});
 }
 
 // ===== NUTRITION CALC (Mifflin-St Jeor) =====
@@ -810,16 +720,22 @@ if(hasHIIT)mult+=0.05;
 return mult;
 }
 
+function getWeekProteinTarget(){
+const ts=todayStr();
+for(const wk of plan){for(const d of wk.days){if(d.dateStr===ts)return wk.protein||80}}
+return 80;
+}
+
 function calcDayTargets(activities){
 const bmr=calcBMR();
 const mult=getActivityMultiplier(activities);
 const tdee=Math.round(bmr*mult);
-const cals=tdee-100; // gentle deficit
-const proteinG=Math.round(USER.wt); // bodyweight in grams
+const cals=tdee-100;
+const proteinG=getWeekProteinTarget();
 const proteinCal=proteinG*4;
 const isHard=activities&&activities.some(a=>['Long run','Tempo','Intervals'].includes(a.type)||(a.miles&&a.miles>=6));
 const carbPct=isHard?0.50:0.45;
-const carbCal=Math.round((cals-proteinCal)*carbPct/(1-0));
+const carbCal=Math.round((cals-proteinCal)*carbPct);
 const carbG=Math.round(carbCal/4);
 const fatCal=cals-proteinCal-carbCal;
 const fatG=Math.max(30,Math.round(fatCal/9));
@@ -858,9 +774,11 @@ const todayD=findToday();
 if(todayD){
 const pills=todayD.activities.map(a=>`<span class="pill" style="background:${ACT_BGS[a.type]||'#eee'};color:${ACT_COLORS[a.type]||'var(--tx)'}">${a.type}: ${a.detail}</span>`).join('');
 const done=todayD.actuals;
+const todayWk=getCurrentWeek();
+const todayPaces=todayD.activities.filter(a=>a.type!=='HIIT').map(a=>renderPaceBar(a.type,todayWk?todayWk.phase:'BASE',a.miles||0)).join('');
 document.getElementById('todayPlan').innerHTML=done?
 `<div style="display:flex;align-items:center;gap:6px;color:var(--acc)"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--acc)" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l2.5 2.5L16 9"/></svg><span style="font-size:14px;font-weight:600">Completed!</span></div>`:
-`<div style="display:flex;flex-wrap:wrap;gap:4px">${pills||'<span style="color:var(--tx3);font-size:13px">Rest day</span>'}</div>`;
+`<div style="display:flex;flex-wrap:wrap;gap:4px">${pills||'<span style="color:var(--tx3);font-size:13px">Rest day</span>'}</div>${todayPaces}`;
 }else{
 document.getElementById('todayPlan').innerHTML='<span style="color:var(--tx3);font-size:13px">Rest day</span>';
 }
@@ -938,17 +856,81 @@ for(let i=0;i<plan.length;i++){for(const d of plan[i].days){if(d.dateStr===ts)re
 return 0;
 }
 
+// ===== PACE ENGINE =====
+function getPaceGuidance(actType, phase, miles, dayOfWeek){
+if(!actType)return null;
+const p=phase||'BASE';
+const paces={
+'Easy run':{pace:'10:30–11:30/mi',effort:'conversational',mph:null},
+'Walk':{pace:'15:00–18:00/mi',effort:'easy stroll',mph:null},
+'Long run':{pace:'10:00–10:45/mi',effort:'easy effort',mph:null,mpNote:miles>=14?'Last 2-3 mi: pick up to 9:15–9:30 (marathon pace)':null},
+'Tempo':{
+BASE:{pace:'9:00–9:15/mi',mph:'6.5–6.7'},
+BUILD:{pace:'8:55–9:10/mi',mph:'6.5–6.7'},
+PEAK:{pace:'8:45–9:00/mi',mph:'6.7–6.9'},
+DELOAD:{pace:'9:00–9:15/mi',mph:'6.5–6.7'},
+TAPER:{pace:'9:00–9:15/mi',mph:'6.5–6.7'},
+REST:{pace:'9:00–9:15/mi',mph:'6.5–6.7'},
+RACE:{pace:'9:00–9:15/mi',mph:'6.5–6.7'}
+},
+'Intervals':{
+BASE:{pace:'8:20–8:30/mi work · 11:00 recovery',mph:'7.1–7.2 / 5.5',struct:'4-6 × 400m, 400m recovery'},
+BUILD:{pace:'8:10–8:25/mi work · 11:00 recovery',mph:'7.2–7.3 / 5.5',struct:'4-5 × 800m, 400m recovery'},
+PEAK:{pace:'8:00–8:15/mi work · 11:00 recovery',mph:'7.3–7.5 / 5.5',struct:'3-4 × 1 mi, 800m recovery'},
+DELOAD:{pace:'8:15–8:30/mi work · 11:00 recovery',mph:'7.1–7.3 / 5.5',struct:'4 × 400m, 400m recovery'},
+TAPER:{pace:'8:15–8:30/mi work · 11:00 recovery',mph:'7.1–7.3 / 5.5',struct:'3 × 400m, 400m recovery'},
+REST:{pace:'8:20–8:30/mi work · 11:00 recovery',mph:'7.1–7.2 / 5.5',struct:'4 × 400m, 400m recovery'},
+RACE:{pace:'8:20–8:30/mi work · 11:00 recovery',mph:'7.1–7.2 / 5.5',struct:'3 × 400m, 400m recovery'}
+},
+'Hike':{pace:'20:00–25:00/mi',effort:'enjoy the trail',mph:null},
+'Bike':{pace:null,effort:'moderate effort',mph:null},
+'Mtn bike':{pace:null,effort:'moderate effort',mph:null},
+'Kayak':{pace:null,effort:'steady',mph:null},
+'Swim':{pace:null,effort:'steady',mph:null},
+};
+const entry=paces[actType];
+if(!entry)return null;
+// Tempo and Intervals have phase-dependent paces
+if(actType==='Tempo'){
+const phaseData=entry[p]||entry['BASE'];
+return{pace:phaseData.pace,effort:'comfortably hard',mph:phaseData.mph,mpNote:null,struct:null,isTreadmill:true};
+}
+if(actType==='Intervals'){
+const phaseData=entry[p]||entry['BASE'];
+return{pace:phaseData.pace,effort:'hard intervals',mph:phaseData.mph,mpNote:null,struct:phaseData.struct,isTreadmill:true};
+}
+if(actType==='Long run'){
+return{pace:entry.pace,effort:entry.effort,mph:null,mpNote:entry.mpNote||(miles>=14?'Last 2-3 mi: pick up to 9:15–9:30 (marathon pace)':null),struct:null,isTreadmill:false};
+}
+if(entry.pace||entry.effort){
+return{pace:entry.pace,effort:entry.effort,mph:entry.mph,mpNote:null,struct:null,isTreadmill:false};
+}
+return null;
+}
+
+function renderPaceBar(actType,phase,miles){
+const pg=getPaceGuidance(actType,phase,miles);
+if(!pg)return'';
+let h='<div style="margin-top:6px;padding:5px 8px;background:#f5f5f0;border-radius:5px;font-size:10px;color:var(--tx2)">';
+if(pg.pace)h+=`<span style="font-size:11px">⏱ ${pg.pace}</span>`;
+else if(pg.effort)h+=`<span style="font-size:11px">${pg.effort}</span>`;
+if(pg.mph)h+=`<div style="margin-top:2px;font-size:10px;color:var(--acc)">Treadmill: ${pg.mph} mph</div>`;
+if(pg.struct)h+=`<div style="margin-top:2px;font-size:10px;color:var(--purp)">${pg.struct}</div>`;
+if(pg.mpNote)h+=`<div style="margin-top:2px;font-size:10px;color:var(--coral)">${pg.mpNote}</div>`;
+h+='</div>';
+return h;
+}
+
 // ===== TRAINING PAGE =====
 function renderTraining(){
 const wk=plan[curWeek];
 if(!wk)return;
 
 let prefix;
-if(wk.phase==='PRE')prefix='Pre-training';
-else if(wk.isMarathon)prefix='Marathon W';
-else if(wk.week===12)prefix='Rest week';
-else prefix='Base W';
-const label=wk.phase==='PRE'?'Pre-training':wk.week===12&&!wk.isMarathon?'Rest week':`${prefix}${wk.week}`;
+if(wk.phase==='REST')prefix='Rest Week';
+else if(wk.phase==='RACE')prefix='Race Week';
+else prefix='W';
+const label=wk.phase==='REST'||wk.phase==='RACE'?prefix:`${prefix}${wk.week} · ${wk.phase}`;
 document.getElementById('wkLabel').textContent=`${label} · ${fmtDate(wk.start)} – ${fmtDate(addDays(wk.start,6))}`;
 
 // Stats
@@ -978,13 +960,19 @@ html+=`<div class="t-top">
 ${!hasDone&&!isRest?`<button class="btn btn-g" style="font-size:12px;padding:5px 14px" onclick="saveLog(${curWeek},${i})">Save</button>`:''}
 </div></div>`;
 
-// Activity pills
+// Activity pills + pace guidance
 if(!isRest){
 html+=`<div class="t-pills">`;
 d.activities.forEach(a=>{
 html+=`<span class="pill" style="background:${ACT_BGS[a.type]||'#eee'};color:${ACT_COLORS[a.type]||'var(--tx)'}">${a.type}: ${a.detail}</span>`;
 });
 html+=`</div>`;
+// Pace bars for each activity
+d.activities.forEach(a=>{
+if(a.type!=='HIIT'){
+html+=renderPaceBar(a.type,wk.phase,a.miles||0);
+}
+});
 }else{
 html+=`<div style="font-size:13px;color:var(--tx3);margin-top:4px">Rest day</div>`;
 }
@@ -1124,13 +1112,15 @@ const wk=plan[wi];const d=wk.days[di];
 document.getElementById('editModalTitle').textContent=`Edit — ${d.dow} ${d.date.getMonth()+1}/${d.date.getDate()}`;
 let html='';
 d.activities.forEach((a,ai)=>{
+const pg=getPaceGuidance(a.type,wk.phase,a.miles||0);
 html+=`<div style="border:.5px solid var(--bdr);border-radius:8px;padding:10px;margin-bottom:8px;position:relative" id="editAct-${ai}">
 <button style="position:absolute;top:6px;right:8px;background:none;border:none;cursor:pointer;color:var(--coral);font-size:14px" onclick="removeEditAct(${ai})">✕</button>
 <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
-<select class="inp" id="editType-${ai}" style="flex:1;min-width:100px">
+<select class="inp" id="editType-${ai}" style="flex:1;min-width:100px" onchange="updateEditPace(${ai},'${wk.phase}')">
 ${ACTIVITY_TYPES.map(t=>`<option${t===a.type?' selected':''}>${t}</option>`).join('')}
 </select>
 </div>
+<div id="editPace-${ai}" style="margin-bottom:6px">${pg?`<div style="padding:5px 8px;background:#f5f5f0;border-radius:5px;font-size:10px;color:var(--tx2)">${pg.pace||pg.effort||''}${pg.mph?' · Treadmill: '+pg.mph+' mph':''}${pg.struct?' · '+pg.struct:''}</div>`:''}</div>
 <input class="inp" id="editDetail-${ai}" value="${a.detail}" placeholder="Details" style="margin-bottom:6px">
 <div style="display:flex;gap:6px">
 <div style="flex:1"><label style="font-size:11px;color:var(--tx2)">Miles</label><input class="inp" id="editMi-${ai}" type="number" value="${a.miles||0}" step="0.1" inputmode="decimal"></div>
@@ -1142,22 +1132,35 @@ html+=`<button class="btn btn-g" style="width:100%" onclick="saveEdit(${wi},${di
 
 document.getElementById('editModalBody').innerHTML=html;
 document.getElementById('editModalBody').dataset.count=d.activities.length;
+document.getElementById('editModalBody').dataset.phase=wk.phase;
 openModal('editModal');
+}
+
+function updateEditPace(ai,phase){
+const typeEl=document.getElementById('editType-'+ai);
+const miEl=document.getElementById('editMi-'+ai);
+const paceEl=document.getElementById('editPace-'+ai);
+if(!typeEl||!paceEl)return;
+const pg=getPaceGuidance(typeEl.value,phase,parseFloat(miEl?.value||0));
+if(pg){paceEl.innerHTML=`<div style="padding:5px 8px;background:#f5f5f0;border-radius:5px;font-size:10px;color:var(--tx2)">${pg.pace||pg.effort||''}${pg.mph?' · Treadmill: '+pg.mph+' mph':''}${pg.struct?' · '+pg.struct:''}</div>`}
+else{paceEl.innerHTML=''}
 }
 
 function addEditAct(){
 const body=document.getElementById('editModalBody');
 const cnt=parseInt(body.dataset.count);
+const phase=body.dataset.phase||'BASE';
 const div=document.createElement('div');
 div.id=`editAct-${cnt}`;
 div.style.cssText='border:.5px solid var(--bdr);border-radius:8px;padding:10px;margin-bottom:8px;position:relative';
 div.innerHTML=`
 <button style="position:absolute;top:6px;right:8px;background:none;border:none;cursor:pointer;color:var(--coral);font-size:14px" onclick="removeEditAct(${cnt})">✕</button>
 <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
-<select class="inp" id="editType-${cnt}" style="flex:1;min-width:100px">
+<select class="inp" id="editType-${cnt}" style="flex:1;min-width:100px" onchange="updateEditPace(${cnt},'${phase}')">
 ${ACTIVITY_TYPES.map(t=>`<option>${t}</option>`).join('')}
 </select>
 </div>
+<div id="editPace-${cnt}" style="margin-bottom:6px"></div>
 <input class="inp" id="editDetail-${cnt}" placeholder="Details" style="margin-bottom:6px">
 <div style="display:flex;gap:6px">
 <div style="flex:1"><label style="font-size:11px;color:var(--tx2)">Miles</label><input class="inp" id="editMi-${cnt}" type="number" value="0" step="0.1" inputmode="decimal"></div>
@@ -1244,12 +1247,9 @@ if(!calWk)return;
 
 // Week label
 let wkPrefix;
-if(calWk.phase==='PRE')wkPrefix='Pre-training';
-else if(calWk.isMarathon){
-if(calWk.phase==='REST')wkPrefix='Rest week';
-else wkPrefix='Marathon W'+calWk.week;
-}else if(calWk.week===12)wkPrefix='Rest week';
-else wkPrefix='Base W'+calWk.week;
+if(calWk.phase==='REST')wkPrefix='Rest Week';
+else if(calWk.phase==='RACE')wkPrefix='Race Week';
+else wkPrefix='W'+calWk.week+' · '+calWk.phase;
 document.getElementById('nutrWkLabel').textContent=`${wkPrefix} · ${fmtDate(calWk.start)} – ${fmtDate(addDays(calWk.start,6))}`;
 
 // Auto-select today if viewing current week and no day selected, otherwise select first day of viewed week
