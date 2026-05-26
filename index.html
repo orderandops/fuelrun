@@ -2327,7 +2327,7 @@ let cyPeriodStarts=[
 ];
 let cySelectedDate=null;let cyTab='log';let insightTab='prog';let cyMonthOffset=0;
 
-function cyDefaultEntry(){return{flow:'none',cramps:'none',nightSweats:'none',sweatLocations:[],sleepQuality:3,timesWoken:0,brainFog:'none',wordRetrieval:false,wordRetrievalNotes:'',irritability:5,patience:5,socialMotivation:5,ruminating:false,ruminatingNotes:'',anxiety:5,emotionalReactivity:'normal',jointPain:'none',jointLocations:[],palpitations:false,palpitationContext:[],hotFlashes:false,hotFlashSeverity:'mild',hotFlashDuration:'',energy:5,fatigue:1,recovery:'normal',headache:'none',libido:'normal',moodNotes:'',isPeriodStart:false,isPeriodEnd:false}}
+function cyDefaultEntry(){return{flow:'none',cramps:'none',nightSweats:'none',sweatLocations:[],sleepQuality:3,timesWoken:0,brainFog:'none',wordRetrieval:false,wordRetrievalNotes:'',irritability:5,patience:5,socialMotivation:5,ruminating:false,ruminatingNotes:'',anxiety:5,emotionalReactivity:'normal',jointPain:'none',jointLocations:[],palpitations:false,palpitationContext:[],hotFlashes:false,hotFlashSeverity:'mild',hotFlashDuration:'',energy:5,fatigue:1,recovery:'normal',headache:'none',thermalDysregulation:'none',moodNotes:'',isPeriodStart:false,isPeriodEnd:false}}
 
 function initCycleData(){
 const b=cyDefaultEntry();
@@ -2508,7 +2508,7 @@ h+=`<button class="cy-toggle${e.hotFlashes?' on':''}" onclick="cyToggleBool('hot
 if(e.hotFlashes){h+=cyPills(['mild','moderate','severe'],e.hotFlashSeverity,'hotFlashSeverity');h+=`<input class="cy-mini" placeholder="Duration (e.g. 5 min)" value="${e.hotFlashDuration||''}" onchange="cySetNotes('hotFlashDuration',this.value)">`}
 h+=`<div class="cy-label">Exercise recovery</div>${cyPills(CY_RECOVERY,e.recovery,'recovery')}`;
 h+=`<div class="cy-label">Headache</div>${cyPills(CY_HEADACHE,e.headache,'headache')}`;
-h+=`<div class="cy-label">Libido</div>${cyPills(CY_LIBIDO,e.libido,'libido')}`;
+h+=`<div class="cy-label">Thermal dysregulation</div>${cyPills(['none','mild','moderate','severe'],e.thermalDysregulation||'none','thermalDysregulation')}`;
 h+=`</div>`;
 // Notes
 h+=`<div class="cy-card"><div class="cy-card-t">Notes</div><textarea class="cy-mini" placeholder="Anything else..." rows="3" style="resize:vertical" onchange="cySetNotes('moodNotes',this.value)">${e.moodNotes||''}</textarea></div>`;
@@ -2628,17 +2628,19 @@ h+=`</div>`;el.innerHTML=h;
 function renderInsightHeatmap(el){
 const sorted=[...cyPeriodStarts].sort();const avg=getAvgCycleLength();
 const nsMap={'none':0,'mild/damp':3,'moderate/wet':6,'severe/soaked':10};
-const symptoms=['nightSweats','irritability','anxiety','energy','fatigue','sleepQuality','patience','socialMotivation'];
+const tdMap={'none':0,'mild':3,'moderate':6,'severe':10};
+const symptoms=['nightSweats','thermalDysregulation','irritability','anxiety','energy','fatigue','sleepQuality','patience','socialMotivation'];
 const grid={};symptoms.forEach(s=>grid[s]={});
 for(let i=0;i<sorted.length;i++){const start=sorted[i];const end=sorted[i+1]||cyAddDays(start,avg);
 for(let d=0;d<cyDiffDays(start,end);d++){const date=cyAddDays(start,d);const e=cyEntries[date];if(e){symptoms.forEach(s=>{if(!grid[s][d+1])grid[s][d+1]=[];
 if(s==='nightSweats'){grid[s][d+1].push(nsMap[e[s]]||0)}
+else if(s==='thermalDysregulation'){grid[s][d+1].push(tdMap[e[s]]||0)}
 else{grid[s][d+1].push(e[s]||0)}})}}}
 const result={};symptoms.forEach(s=>{result[s]={};Object.keys(grid[s]).forEach(cd=>{const vals=grid[s][cd];result[s][cd]=Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*10)/10})});
 let h=`<div class="cy-card"><div class="cy-card-t">Symptom Intensity by Cycle Day</div><div style="font-size:10px;color:var(--tx3);margin-bottom:10px">Averaged across cycles. Darker = more intense.</div>`;
 const hasData=Object.values(result).some(days=>Object.keys(days).length>0);
 if(hasData){
-const labels={nightSweats:'Night Sweats',irritability:'Irritability',anxiety:'Anxiety',energy:'Energy',fatigue:'Fatigue',sleepQuality:'Sleep Quality',patience:'Patience',socialMotivation:'Social Motivation'};
+const labels={nightSweats:'Night Sweats',thermalDysregulation:'Thermal Dysregulation',irritability:'Irritability',anxiety:'Anxiety',energy:'Energy',fatigue:'Fatigue',sleepQuality:'Sleep Quality',patience:'Patience',socialMotivation:'Social Motivation'};
 Object.entries(result).forEach(([symptom,days])=>{h+=`<div style="margin-bottom:8px"><div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:3px">${labels[symptom]||symptom}</div><div class="cy-heat-row">`;
 for(let cd=1;cd<=Math.min(avg,35);cd++){const val=days[cd];const intensity=val?val/10:0;const isInverse=['energy','sleepQuality','patience','socialMotivation'].includes(symptom);const adj=isInverse?1-intensity:intensity;
 h+=`<div class="cy-heat-cell" style="background:${val!=null?`rgba(216,90,48,${adj*0.8+0.05})`:'#f5f5f0'}" title="Day ${cd}: ${val||'—'}">${cd}</div>`}
