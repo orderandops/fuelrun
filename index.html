@@ -455,7 +455,7 @@ Insights
 <script>
 // ===== CONFIG =====
 const USER={wt:128.5,goalWt:125,ht:170.18,age:40,sex:'F',marathonDate:'2026-11-14',marathonGoal:'4:00:00'};
-const WEEK1_START=new Date(2026,4,25); // Mon May 25 2026 — week starts Monday
+const WEEK1_START=new Date(2026,5,8); // Mon Jun 8 2026 — week starts Monday
 const DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const ACTIVITY_TYPES=['Easy run','Long run','Tempo','Intervals','HIIT','Hike','Bike','Mtn bike','Kayak','Swim','Walk','Yoga','Other'];
 const ACT_COLORS={'Easy run':'var(--acc)','Long run':'var(--coral)','Tempo':'var(--acc)','Intervals':'var(--acc)','HIIT':'var(--purp)','Hike':'var(--amber)','Bike':'var(--blue)','Mtn bike':'var(--blue)','Kayak':'var(--accD)','Swim':'var(--blue)','Walk':'var(--acc)','Yoga':'var(--pink)','Other':'var(--tx2)'};
@@ -633,24 +633,22 @@ const weeks=[
 {w:5,mi:[0,3.5,3.5,0,3.5,3,7],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'BASE',protein:90},
 {w:6,mi:[0,0,0,0,0,0,0],hiit:[0,0,0,0,0,0,0],speed:null,phase:'REST',protein:90},
 {w:7,mi:[0,3,3,0,3,3,7],hiit:[0,15,0,0,15,10,0],speed:'tempo',phase:'BUILD',protein:90},
-{w:8,mi:[0,3.5,4,0,3.5,3,8],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'BUILD',protein:95},
+{w:8,mi:[0,3.5,4,0,3.5,3,9],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'BUILD',protein:95},
 {w:9,mi:[0,4,4,0,4,3,10],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'BUILD',protein:95},
-{w:10,mi:[0,4,4.5,0,4,3,11],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'BUILD',protein:100},
-{w:11,mi:[0,4,5,0,4,3.5,12],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'BUILD',protein:100},
-{w:12,mi:[0,3,3,0,3,2,8],hiit:[0,15,0,0,15,10,0],speed:'intervals',phase:'DELOAD',protein:100},
-{w:13,mi:[0,4.5,5,0,4.5,3.5,14],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'PEAK',protein:105},
-{w:14,mi:[0,4.5,5,0,4.5,4,15],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'PEAK',protein:105},
-{w:15,mi:[0,5,5.5,0,5,4,16],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'PEAK',protein:110},
-{w:16,mi:[0,3.5,3.5,0,3.5,2.5,10],hiit:[0,15,0,0,15,10,0],speed:'intervals',phase:'DELOAD',protein:110},
-{w:17,mi:[0,5,5.5,0,5,4,17],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'PEAK',protein:110},
-{w:18,mi:[0,5,6,0,5,4,18],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'PEAK',protein:115},
-{w:19,mi:[0,0,0,0,0,0,0],hiit:[0,0,0,0,0,0,0],speed:null,phase:'REST',protein:115},
-{w:20,mi:[0,4,5,0,4,3,16],hiit:[0,15,0,0,15,10,0],speed:'tempo',phase:'PEAK',protein:115},
-{w:21,mi:[0,5,6,0,5,4,18],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'PEAK',protein:120},
-{w:22,mi:[0,4,4,0,4,3,12],hiit:[0,15,0,0,15,10,0],speed:'tempo',phase:'TAPER',protein:120},
-{w:23,mi:[0,3,3,0,3,2,8],hiit:[0,15,0,0,15,10,0],speed:'intervals',phase:'TAPER',protein:120},
-{w:24,mi:[0,2,2,0,2,0,4],hiit:[0,10,0,0,10,0,0],speed:'tempo',phase:'TAPER',protein:120},
-{w:25,mi:[0,2,0,0,0,26.2,0],hiit:[0,0,0,0,0,0,0],speed:null,phase:'RACE',protein:120},
+{w:10,mi:[0,4,4.5,0,4,3,12],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'BUILD',protein:100},
+{w:11,mi:[0,3,3,0,3,2,8],hiit:[0,15,0,0,15,10,0],speed:'tempo',phase:'DELOAD',protein:100},
+{w:12,mi:[0,4.5,5,0,4.5,3.5,14],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'PEAK',protein:105},
+{w:13,mi:[0,4.5,5,0,4.5,4,15],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'PEAK',protein:105},
+{w:14,mi:[0,5,5.5,0,5,4,16],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'PEAK',protein:110},
+{w:15,mi:[0,5,5.5,0,5,4,17],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'PEAK',protein:110},
+{w:16,mi:[0,0,0,0,0,0,0],hiit:[0,0,0,0,0,0,0],speed:null,phase:'REST',protein:110},
+{w:17,mi:[0,4.5,5,0,4.5,3.5,17],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'PEAK',protein:115},
+{w:18,mi:[0,5,6,0,5,4,18],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'PEAK',protein:115},
+{w:19,mi:[0,3.5,3.5,0,3.5,2.5,10],hiit:[0,15,0,0,15,10,0],speed:'intervals',phase:'DELOAD',protein:115},
+{w:20,mi:[0,4,4,0,4,3,12],hiit:[0,15,0,0,15,10,0],speed:'tempo',phase:'TAPER',protein:120},
+{w:21,mi:[0,3,3,0,3,2,8],hiit:[0,15,0,0,15,10,0],speed:'intervals',phase:'TAPER',protein:120},
+{w:22,mi:[0,2,2,0,2,0,4],hiit:[0,10,0,0,10,0,0],speed:'tempo',phase:'TAPER',protein:120},
+{w:23,mi:[0,2,0,0,0,26.2,0],hiit:[0,0,0,0,0,0,0],speed:null,phase:'RACE',protein:120},
 ];
 
 const speedTypes={tempo:'Tempo',intervals:'Intervals'};
@@ -2318,7 +2316,8 @@ const CY_MED_HISTORY=[
 {date:'2026-05-15',med:'Iron',dose:'65 mg 2x/week',action:'started',notes:'Prescribed for low iron stores.'},
 {date:'2026-05-29',med:'Estradiol patch',dose:'.0375 mg',action:'started',notes:'Transdermal patch. HRT initiated.'},
 {date:'2026-05-29',med:'Micronized progesterone',dose:'100 mg',action:'started',notes:'HRT initiated.'},
-{date:'2026-05-31',med:'Lexapro',dose:'20 mg',action:'stopped',notes:'Discontinued completely. Continuing Effexor only.'}
+{date:'2026-05-31',med:'Lexapro',dose:'20 mg',action:'stopped',notes:'Discontinued completely. Continuing Effexor only.'},
+{date:'2026-06-08',med:'Micronized progesterone',dose:'200 mg',action:'increased',notes:'Increased from 100 mg to 200 mg daily.'}
 ];
 
 let cyEntries={};
@@ -2588,7 +2587,7 @@ h+=`<div class="cy-card"><div class="cy-card-t">Average Daily Scores</div><table
 fields.forEach(f=>{h+=`<tr><td class="cy-td">${f.replace(/([A-Z])/g,' $1')}</td><td class="cy-td">${counts[f]?(sums[f]/counts[f]).toFixed(1):'—'}/10</td></tr>`});
 h+=`</tbody></table></div>`;
 // Current meds
-h+=`<div class="cy-card"><div class="cy-card-t">Current Medications</div><div style="font-size:12px;color:var(--tx)">Effexor — 37.5 mg daily<br>Estradiol transdermal patch — .0375 mg (started 5/29/26)<br>Micronized progesterone — 100 mg (started 5/29/26)<br>Vitamin D3 — 5,000 IU daily<br>Iron — 65 mg twice weekly<br>CBD/Delta 8</div></div>`;
+h+=`<div class="cy-card"><div class="cy-card-t">Current Medications</div><div style="font-size:12px;color:var(--tx)">Effexor — 37.5 mg daily<br>Estradiol transdermal patch — .0375 mg (started 5/29/26)<br>Micronized progesterone — 200 mg daily (increased 6/8/26)<br>Vitamin D3 — 5,000 IU daily<br>Iron — 65 mg twice weekly<br>CBD/Delta 8</div></div>`;
 // Med history
 h+=`<div class="cy-card"><div class="cy-card-t">Medication History</div><table class="cy-tbl"><thead><tr><th class="cy-th">Date</th><th class="cy-th">Med</th><th class="cy-th">Notes</th></tr></thead><tbody>`;
 CY_MED_HISTORY.forEach(m=>{h+=`<tr><td class="cy-td">${cyFmt(m.date)}</td><td class="cy-td">${m.med}${m.dose?' '+m.dose:''}</td><td class="cy-td" style="font-size:10px;color:var(--tx2)">${m.notes}</td></tr>`});
