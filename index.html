@@ -2318,7 +2318,9 @@ const CY_MED_HISTORY=[
 {date:'2026-05-31',med:'Lexapro',dose:'20 mg',action:'note',notes:'Brief discontinuation attempt (~3-4 days). Major emotional crash. Resumed 20 mg immediately.'},
 {date:'2026-06-08',med:'Micronized progesterone',dose:'200 mg',action:'increased',notes:'Increased from 100 mg to 200 mg daily.'},
 {date:'2026-06-11',med:'Effexor',dose:'37.5 mg',action:'decreased',notes:'Began every-other-day tapering. First skip day June 11.'},
-{date:'2026-06-13',med:'General',dose:'',action:'note',notes:'Patient reports feeling good. Mood improved, more patient and compassionate. Not at honeymoon-phase level but feeling better overall.'}
+{date:'2026-06-13',med:'General',dose:'',action:'note',notes:'Patient reports feeling good. Mood improved, more patient and compassionate. Not at honeymoon-phase level but feeling better overall.'},
+{date:'2026-06-21',med:'Effexor',dose:'37.5 mg',action:'stopped',notes:'Last dose. Completed taper.'},
+{date:'2026-06-22',med:'Lexapro',dose:'20 mg',action:'note',notes:'Continuing Lexapro 20 mg only. Effexor fully discontinued.'}
 ];
 
 let cyEntries={};
@@ -2588,7 +2590,7 @@ h+=`<div class="cy-card"><div class="cy-card-t">Average Daily Scores</div><table
 fields.forEach(f=>{h+=`<tr><td class="cy-td">${f.replace(/([A-Z])/g,' $1')}</td><td class="cy-td">${counts[f]?(sums[f]/counts[f]).toFixed(1):'—'}/10</td></tr>`});
 h+=`</tbody></table></div>`;
 // Current meds
-h+=`<div class="cy-card"><div class="cy-card-t">Current Medications</div><div style="font-size:12px;color:var(--tx)">Lexapro — 20 mg daily<br>Effexor — 37.5 mg every other day (tapering since 6/11/26)<br>Estradiol transdermal patch — .0375 mg (started 5/29/26)<br>Micronized progesterone — 200 mg daily (increased 6/8/26)<br>Vitamin D3 — 5,000 IU daily<br>Iron — 65 mg twice weekly<br>CBD/Delta 8</div></div>`;
+h+=`<div class="cy-card"><div class="cy-card-t">Current Medications</div><div style="font-size:12px;color:var(--tx)">Lexapro — 20 mg daily<br>Estradiol transdermal patch — .0375 mg (started 5/29/26)<br>Micronized progesterone — 200 mg daily (increased 6/8/26)<br>Vitamin D3 — 5,000 IU daily<br>Iron — 65 mg twice weekly<br>CBD/Delta 8</div></div>`;
 // Med history
 h+=`<div class="cy-card"><div class="cy-card-t">Medication History</div><table class="cy-tbl"><thead><tr><th class="cy-th">Date</th><th class="cy-th">Med</th><th class="cy-th">Notes</th></tr></thead><tbody>`;
 CY_MED_HISTORY.forEach(m=>{h+=`<tr><td class="cy-td">${cyFmt(m.date)}</td><td class="cy-td">${m.med}${m.dose?' '+m.dose:''}</td><td class="cy-td" style="font-size:10px;color:var(--tx2)">${m.notes}</td></tr>`});
