@@ -457,11 +457,11 @@ Insights
 const USER={wt:128.5,goalWt:125,ht:170.18,age:40,sex:'F',marathonDate:'2026-11-14',marathonGoal:'4:00:00'};
 const WEEK1_START=new Date(2026,5,8); // Mon Jun 8 2026 — week starts Monday
 const DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-const ACTIVITY_TYPES=['Easy run','Long run','Tempo','Intervals','HIIT','Hike','Bike','Mtn bike','Kayak','Swim','Walk','Yoga','Other'];
-const ACT_COLORS={'Easy run':'var(--acc)','Long run':'var(--coral)','Tempo':'var(--acc)','Intervals':'var(--acc)','HIIT':'var(--purp)','Hike':'var(--amber)','Bike':'var(--blue)','Mtn bike':'var(--blue)','Kayak':'var(--accD)','Swim':'var(--blue)','Walk':'var(--acc)','Yoga':'var(--pink)','Other':'var(--tx2)'};
-const ACT_BGS={'Easy run':'var(--accL)','Long run':'var(--coralL)','Tempo':'var(--accL)','Intervals':'var(--accL)','HIIT':'var(--purpL)','Hike':'var(--amberL)','Bike':'var(--blueL)','Mtn bike':'var(--blueL)','Kayak':'var(--accL)','Swim':'var(--blueL)','Walk':'var(--accL)','Yoga':'var(--pinkL)','Other':'#eee'};
+const ACTIVITY_TYPES=['Easy run','Long run','Tempo','Intervals','Strength','HIIT','Hike','Bike','Mtn bike','Kayak','Swim','Walk','Yoga','Other'];
+const ACT_COLORS={'Easy run':'var(--acc)','Long run':'var(--coral)','Tempo':'var(--acc)','Intervals':'var(--acc)','Strength':'var(--purp)','HIIT':'var(--purp)','Hike':'var(--amber)','Bike':'var(--blue)','Mtn bike':'var(--blue)','Kayak':'var(--accD)','Swim':'var(--blue)','Walk':'var(--acc)','Yoga':'var(--pink)','Other':'var(--tx2)'};
+const ACT_BGS={'Easy run':'var(--accL)','Long run':'var(--coralL)','Tempo':'var(--accL)','Intervals':'var(--accL)','Strength':'var(--purpL)','HIIT':'var(--purpL)','Hike':'var(--amberL)','Bike':'var(--blueL)','Mtn bike':'var(--blueL)','Kayak':'var(--accL)','Swim':'var(--blueL)','Walk':'var(--accL)','Yoga':'var(--pinkL)','Other':'#eee'};
 const MILE_ACTS=['Easy run','Long run','Tempo','Intervals','Hike','Bike','Mtn bike','Walk'];
-const TIME_ONLY=['HIIT','Kayak','Swim','Yoga','Other'];
+const TIME_ONLY=['Strength','HIIT','Kayak','Swim','Yoga','Other'];
 const QUICK_CHIPS=['Banana','Egg','Chicken','Rice','Oatmeal','Greek yogurt','Apple','Protein shake','Sweet potato','Peanut butter'];
 
 // ===== STATE =====
@@ -680,8 +680,16 @@ activities.push({type:'Long run',detail:mi+' mi',miles:mi,time:0});
 activities.push({type:'Easy run',detail:mi+' mi',miles:mi,time:0});
 }
 }
-if(hiit>0){
-activities.push({type:'HIIT',detail:hiit+' min',miles:0,time:hiit});
+// Strength sessions: Tue=A, Fri=B, Sat=C. Skip on REST and RACE weeks. Reduced in TAPER.
+if(hiit>0&&wk.phase!=='REST'&&wk.phase!=='RACE'){
+let session=null;
+if(d===1)session='A';
+else if(d===4)session='B';
+else if(d===5)session='C';
+if(session){
+const dur=wk.phase==='TAPER'?15:wk.phase==='DELOAD'?20:25;
+activities.push({type:'Strength',detail:'Full Body '+session+' · '+dur+' min',miles:0,time:dur});
+}
 }
 }
 days.push({dow:DOW[d],date:dt,dateStr:ds,activities,actuals:null,edited:false});
@@ -700,8 +708,10 @@ function getActivityMultiplier(activities){
 if(!activities||activities.length===0)return 1.35; // rest
 let mult=1.35;
 let hasHIIT=false;
+let hasStrength=false;
 activities.forEach(a=>{
 if(a.type==='HIIT')hasHIIT=true;
+else if(a.type==='Strength')hasStrength=true;
 else if(['Easy run','Walk'].includes(a.type)){
 if(a.miles&&a.miles<4)mult=Math.max(mult,1.45);
 else if(a.miles&&a.miles<8)mult=Math.max(mult,1.50);
@@ -715,6 +725,7 @@ mult=Math.max(mult,1.50);
 }
 });
 if(hasHIIT)mult+=0.05;
+if(hasStrength)mult+=0.05;
 return mult;
 }
 
@@ -785,14 +796,14 @@ document.getElementById('todayPlan').innerHTML='<span style="color:var(--tx3);fo
 const wk=getCurrentWeek();
 if(wk){
 const planMi=Math.round(wk.days.reduce((s,d)=>s+d.activities.reduce((t,a)=>t+(a.miles||0),0),0)*10)/10;
-const hiitPlan=wk.days.reduce((s,d)=>s+d.activities.filter(a=>a.type==='HIIT').reduce((t,a)=>t+(a.time||0),0),0);
+const strengthPlan=wk.days.reduce((s,d)=>s+d.activities.filter(a=>a.type==='Strength').length,0);
 const actMi=wk.days.reduce((s,d)=>s+(d.actuals?d.actuals.reduce((t,a)=>t+(a.miles||0),0):0),0);
-const actHiit=wk.days.reduce((s,d)=>s+(d.actuals?d.actuals.filter(a=>a.type==='HIIT').reduce((t,a)=>t+(a.m||0)+(a.h||0)*60,0):0),0);
+const actStrength=wk.days.reduce((s,d)=>s+(d.actuals?d.actuals.filter(a=>a.type==='Strength').length:0),0);
 const miPct=planMi>0?Math.min(100,Math.round(actMi/planMi*100)):0;
-const hiitPct=hiitPlan>0?Math.min(100,Math.round(actHiit/hiitPlan*100)):0;
+const strengthPct=strengthPlan>0?Math.min(100,Math.round(actStrength/strengthPlan*100)):0;
 document.getElementById('weekSummary').innerHTML=`
 <div class="trk"><div class="trk-label"><span style="color:var(--acc)">Miles</span><span>${actMi} / ${planMi} mi</span></div><div class="trk-bar"><div class="trk-fill" style="width:${miPct}%;background:var(--acc)"></div></div></div>
-<div class="trk"><div class="trk-label"><span style="color:var(--purp)">HIIT</span><span>${actHiit} / ${hiitPlan} min</span></div><div class="trk-bar"><div class="trk-fill" style="width:${hiitPct}%;background:var(--purp)"></div></div></div>`;
+<div class="trk"><div class="trk-label"><span style="color:var(--purp)">Strength</span><span>${actStrength} / ${strengthPlan} sessions</span></div><div class="trk-bar"><div class="trk-fill" style="width:${strengthPct}%;background:var(--purp)"></div></div></div>`;
 }
 
 // Nutrition summary (always today's data)
@@ -885,6 +896,7 @@ RACE:{pace:'8:20–8:30/mi work · 11:00 recovery',mph:'7.1–7.2 / 5.5',struct:
 'Mtn bike':{pace:null,effort:'moderate effort',mph:null},
 'Kayak':{pace:null,effort:'steady',mph:null},
 'Swim':{pace:null,effort:'steady',mph:null},
+'Strength':{pace:null,effort:'6-8 reps, 1-2 in reserve',mph:null},
 };
 const entry=paces[actType];
 if(!entry)return null;
@@ -934,12 +946,12 @@ document.getElementById('wkLabel').textContent=`${label} · ${fmtDate(wk.start)}
 // Stats
 const planMi=Math.round(wk.days.reduce((s,d)=>s+d.activities.reduce((t,a)=>t+(a.miles||0),0),0)*10)/10;
 const actMi=Math.round(wk.days.reduce((s,d)=>s+(d.actuals?d.actuals.reduce((t,a)=>t+(a.miles||0),0):0),0)*10)/10;
-const hiitMin=wk.days.reduce((s,d)=>s+d.activities.filter(a=>a.type==='HIIT').reduce((t,a)=>t+(a.time||0),0),0);
+const strengthCount=wk.days.reduce((s,d)=>s+d.activities.filter(a=>a.type==='Strength').length,0);
 const restDays=wk.days.filter(d=>d.activities.length===0).length;
 document.getElementById('wkStats').innerHTML=`
 <div class="wk-stat"><div class="wk-sv" style="color:var(--acc)">${planMi}</div><div class="wk-sl">Plan mi</div></div>
 <div class="wk-stat"><div class="wk-sv" style="color:var(--blue)">${actMi}</div><div class="wk-sl">Actual mi</div></div>
-<div class="wk-stat"><div class="wk-sv" style="color:var(--purp)">${hiitMin}</div><div class="wk-sl">HIIT min</div></div>
+<div class="wk-stat"><div class="wk-sv" style="color:var(--purp)">${strengthCount}</div><div class="wk-sl">Strength</div></div>
 <div class="wk-stat"><div class="wk-sv">${restDays}</div><div class="wk-sl">Rest</div></div>`;
 
 // Cards
