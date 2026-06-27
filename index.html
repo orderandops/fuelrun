@@ -2332,7 +2332,9 @@ const CY_MED_HISTORY=[
 {date:'2026-06-11',med:'Effexor',dose:'37.5 mg',action:'decreased',notes:'Began every-other-day tapering. First skip day June 11.'},
 {date:'2026-06-13',med:'General',dose:'',action:'note',notes:'Patient reports feeling good. Mood improved, more patient and compassionate. Not at honeymoon-phase level but feeling better overall.'},
 {date:'2026-06-21',med:'Effexor',dose:'37.5 mg',action:'stopped',notes:'Last dose. Completed taper.'},
-{date:'2026-06-22',med:'Lexapro',dose:'20 mg',action:'note',notes:'Continuing Lexapro 20 mg only. Effexor fully discontinued.'}
+{date:'2026-06-22',med:'Lexapro',dose:'20 mg',action:'note',notes:'Continuing Lexapro 20 mg only. Effexor fully discontinued.'},
+{date:'2026-06-25',med:'Effexor withdrawal',dose:'',action:'note',notes:'Days 4-6 off Effexor (6/25-6/27). Severe emotional crash, uncontrollable crying, self-attacking ruminating thoughts, transient passive suicidal ideation (no intent/plan), food refusal. Required Ativan. Pattern matches 5/31 Lexapro discontinuation episode — both medication-transition triggered, resolved 48-72hrs, no SI outside med changes. Improving by 6/27.'},
+{date:'2026-06-26',med:'Estradiol patch',dose:'.05 mg',action:'increased',notes:'Increased from .0375 mg to .05 mg.'}
 ];
 
 let cyEntries={};
@@ -2602,7 +2604,7 @@ h+=`<div class="cy-card"><div class="cy-card-t">Average Daily Scores</div><table
 fields.forEach(f=>{h+=`<tr><td class="cy-td">${f.replace(/([A-Z])/g,' $1')}</td><td class="cy-td">${counts[f]?(sums[f]/counts[f]).toFixed(1):'—'}/10</td></tr>`});
 h+=`</tbody></table></div>`;
 // Current meds
-h+=`<div class="cy-card"><div class="cy-card-t">Current Medications</div><div style="font-size:12px;color:var(--tx)">Lexapro — 20 mg daily<br>Estradiol transdermal patch — .0375 mg (started 5/29/26)<br>Micronized progesterone — 200 mg daily (increased 6/8/26)<br>Vitamin D3 — 5,000 IU daily<br>Iron — 65 mg twice weekly<br>CBD/Delta 8</div></div>`;
+h+=`<div class="cy-card"><div class="cy-card-t">Current Medications</div><div style="font-size:12px;color:var(--tx)">Lexapro — 20 mg daily<br>Estradiol transdermal patch — .05 mg (increased 6/26/26)<br>Micronized progesterone — 200 mg daily (increased 6/8/26)<br>Vitamin D3 — 5,000 IU daily<br>Iron — 65 mg twice weekly<br>CBD/Delta 8</div></div>`;
 // Med history
 h+=`<div class="cy-card"><div class="cy-card-t">Medication History</div><table class="cy-tbl"><thead><tr><th class="cy-th">Date</th><th class="cy-th">Med</th><th class="cy-th">Notes</th></tr></thead><tbody>`;
 CY_MED_HISTORY.forEach(m=>{h+=`<tr><td class="cy-td">${cyFmt(m.date)}</td><td class="cy-td">${m.med}${m.dose?' '+m.dose:''}</td><td class="cy-td" style="font-size:10px;color:var(--tx2)">${m.notes}</td></tr>`});
