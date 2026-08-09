@@ -622,9 +622,9 @@ function parseDate(s){const p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2])}
 function buildPlan(){
 plan=[];
 
-// 25-week marathon plan: May 26 - Nov 14, 2026
-// Mon=Rest, Tue=Easy+HIIT, Wed=Treadmill speed, Thu=Rest, Fri=Easy+HIIT, Sat=Easy+shortHIIT, Sun=Long
-// Two full rest weeks (W6, W19), two deload weeks (W12, W16)
+// 23-week marathon plan: Jun 8 - Nov 14, 2026
+// Mon=Rest, Tue=Easy+Strength A, Wed=Treadmill speed, Thu=Rest, Fri=Easy+Strength B, Sat=Easy+Strength C, Sun=Long
+// One full rest week (W9); three peak long runs at 16/17/18 mi (W15/W17/W19)
 const weeks=[
 {w:1,mi:[0,2,2,0,2,2,3],hiit:[0,15,0,0,15,10,0],speed:'tempo',phase:'BASE',protein:80},
 {w:2,mi:[0,2.5,2.5,0,2.5,2,4],hiit:[0,15,0,0,15,10,0],speed:'intervals',phase:'BASE',protein:80},
@@ -634,20 +634,20 @@ const weeks=[
 {w:6,mi:[0,0,0,0,0,0,0],hiit:[0,0,0,0,0,0,0],speed:null,phase:'REST',protein:90},
 {w:7,mi:[0,3,3,0,3,3,7],hiit:[0,15,0,0,15,10,0],speed:'tempo',phase:'BUILD',protein:90},
 {w:8,mi:[0,3.5,4,0,3.5,3,9],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'BUILD',protein:95},
-{w:9,mi:[0,4,4,0,4,3,10],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'BUILD',protein:95},
-{w:10,mi:[0,4,4.5,0,4,3,12],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'BUILD',protein:100},
-{w:11,mi:[0,3,3,0,3,2,8],hiit:[0,15,0,0,15,10,0],speed:'tempo',phase:'DELOAD',protein:100},
-{w:12,mi:[0,4.5,5,0,4.5,3.5,14],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'PEAK',protein:105},
-{w:13,mi:[0,4.5,5,0,4.5,4,15],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'PEAK',protein:105},
-{w:14,mi:[0,5,5.5,0,5,4,16],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'PEAK',protein:110},
-{w:15,mi:[0,5,5.5,0,5,4,17],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'PEAK',protein:110},
-{w:16,mi:[0,0,0,0,0,0,0],hiit:[0,0,0,0,0,0,0],speed:null,phase:'REST',protein:110},
-{w:17,mi:[0,4.5,5,0,4.5,3.5,17],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'PEAK',protein:115},
-{w:18,mi:[0,5,6,0,5,4,18],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'PEAK',protein:115},
-{w:19,mi:[0,3.5,3.5,0,3.5,2.5,10],hiit:[0,15,0,0,15,10,0],speed:'intervals',phase:'DELOAD',protein:115},
-{w:20,mi:[0,4,4,0,4,3,12],hiit:[0,15,0,0,15,10,0],speed:'tempo',phase:'TAPER',protein:120},
-{w:21,mi:[0,3,3,0,3,2,8],hiit:[0,15,0,0,15,10,0],speed:'intervals',phase:'TAPER',protein:120},
-{w:22,mi:[0,2,2,0,2,0,4],hiit:[0,10,0,0,10,0,0],speed:'tempo',phase:'TAPER',protein:120},
+{w:9,mi:[0,0,0,0,0,0,0],hiit:[0,0,0,0,0,0,0],speed:null,phase:'REST',protein:95},
+{w:10,mi:[0,3,3,0,3,3,8],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'REBOOT',protein:95},
+{w:11,mi:[0,3.5,3.5,0,3.5,3,10],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'BUILD',protein:100},
+{w:12,mi:[0,4,4,0,4,3,12],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'BUILD',protein:100},
+{w:13,mi:[0,3,3,0,3,2,8],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'CUTBACK',protein:100},
+{w:14,mi:[0,4,4,0,4,3,14],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'BUILD',protein:105},
+{w:15,mi:[0,4.5,4.5,0,4.5,3.5,16],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'PEAK',protein:110},
+{w:16,mi:[0,3.5,3.5,0,3.5,3,11],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'CUTBACK',protein:105},
+{w:17,mi:[0,4.5,5,0,4.5,3.5,17],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'PEAK',protein:110},
+{w:18,mi:[0,4,4,0,4,3,12],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'STEP-DOWN',protein:110},
+{w:19,mi:[0,4.5,5,0,4.5,3.5,18],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'PEAK',protein:115},
+{w:20,mi:[0,4,4,0,4,3,13],hiit:[0,15,0,0,15,10,0],speed:'tempo',phase:'TAPER',protein:120},
+{w:21,mi:[0,3,3,0,3,2,9],hiit:[0,15,0,0,15,10,0],speed:'intervals',phase:'TAPER',protein:120},
+{w:22,mi:[0,2,2,0,2,0,5],hiit:[0,10,0,0,10,0,0],speed:'tempo',phase:'TAPER',protein:120},
 {w:23,mi:[0,2,0,0,0,26.2,0],hiit:[0,0,0,0,0,0,0],speed:null,phase:'RACE',protein:120},
 ];
 
