@@ -2459,7 +2459,11 @@ if(t){t.textContent='Save failed — try again';t.style.display='block';setTimeo
 renderHomeCycle();
 }
 
-function cySetPeriodStart(dateVal){if(!dateVal)return;cyPeriodStarts=[...cyPeriodStarts.filter(d=>d!==dateVal),dateVal].sort();saveCycleData();renderCycle()}
+function cySetPeriodStart(dateVal){if(!dateVal)return;const sorted=[...cyPeriodStarts].sort();const last=sorted.length?sorted[sorted.length-1]:null;
+// If the new date is near the most recent start, treat it as a correction to that start (this is what lets you backdate). Otherwise it's a brand-new cycle, so add it.
+if(last&&Math.abs(cyDiffDays(last,dateVal))<=14){cyPeriodStarts=[...cyPeriodStarts.filter(d=>d!==last&&d!==dateVal),dateVal].sort();if(last!==dateVal&&cyPeriodEnds[last]){cyPeriodEnds[dateVal]=cyPeriodEnds[last];delete cyPeriodEnds[last];savePeriodEnds()}}
+else{cyPeriodStarts=[...cyPeriodStarts.filter(d=>d!==dateVal),dateVal].sort()}
+saveCycleData();renderCycle()}
 
 // Period end date: stored as a separate cloud-synced object keyed by period start
 let cyPeriodEnds={};
