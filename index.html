@@ -410,7 +410,7 @@ Insights
 <input class="inp" id="manC" placeholder="Carbs" type="number" inputmode="decimal">
 <input class="inp" id="manF" placeholder="Fat" type="number" inputmode="decimal">
 </div>
-<select class="inp" id="manMeal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snacks</option></select>
+<select class="inp" id="manMeal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snacks</option><option>Run Fuel</option></select>
 <button class="btn btn-g" style="width:100%" onclick="logManual()">Log</button>
 </div>
 </div>
@@ -454,7 +454,9 @@ Insights
 
 <script>
 // ===== CONFIG =====
-const USER={wt:128.5,goalWt:125,ht:170.18,age:40,sex:'F',marathonDate:'2026-11-14',marathonGoal:'4:00:00'};
+const USER={wt:128.5,goalWt:128,ht:170.18,age:40,sex:'F',marathonDate:'2026-11-14',marathonGoal:'4:00:00',bodyFat:0.25,proteinG:130,eaRampStart:'2026-09-07'};
+const MEAL_SLOTS=['Breakfast','Lunch','Dinner','Snacks','Run Fuel'];
+function emptyMeals(){const o={};MEAL_SLOTS.forEach(s=>o[s]=[]);return o}
 const WEEK1_START=new Date(2026,5,8); // Mon Jun 8 2026 — week starts Monday
 const DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const ACTIVITY_TYPES=['Easy run','Long run','Tempo','Intervals','Strength','HIIT','Hike','Bike','Mtn bike','Kayak','Swim','Walk','Yoga','Other'];
@@ -467,7 +469,7 @@ const QUICK_CHIPS=['Banana','Egg','2% milk','Red grapefruit','Strawberries','Pro
 // ===== STATE =====
 let plan=[];
 let curWeek=0;
-let meals={Breakfast:[],Lunch:[],Dinner:[],Snacks:[]};
+let meals=emptyMeals();
 let weightHist=[];
 let raceGoals=[];
 let currentMealSlot='Breakfast';
@@ -534,7 +536,7 @@ await cloudSet(k,v);
 
 function mealHasFood(m){
 if(!m||typeof m!=='object')return false;
-return ['Breakfast','Lunch','Dinner','Snacks'].some(s=>Array.isArray(m[s])&&m[s].length>0);
+return MEAL_SLOTS.some(s=>Array.isArray(m[s])&&m[s].length>0);
 }
 
 async function loadData(){
@@ -556,7 +558,7 @@ vals.push(undefined);
 }
 }
 const[m,w,rg,gw,pe,pa,ce,cps]=vals;
-if(m)meals=m; else meals={Breakfast:[],Lunch:[],Dinner:[],Snacks:[]};
+if(m)meals=m; else meals=emptyMeals();
 if(w)weightHist=w;
 if(rg)raceGoals=rg;
 if(gw)USER.goalWt=gw;
@@ -597,7 +599,7 @@ function getActiveDay(){return selectedNutrDay||todayStr()}
 async function saveMeals(){await dbSet('meals_'+getActiveDay(),meals)}
 async function loadMealsForDay(ds){
 const m=await cloudGet('meals_'+ds)||await localGet('meals_'+ds);
-if(m)meals=m; else meals={Breakfast:[],Lunch:[],Dinner:[],Snacks:[]};
+if(m)meals=m; else meals=emptyMeals();
 }
 async function selectNutrDay(ds){
 selectedNutrDay=ds;
@@ -740,21 +742,150 @@ for(const wk of plan){for(const d of wk.days){if(d.dateStr===ts)return wk.protei
 return 80;
 }
 
-function calcDayTargets(activities){
-const bmr=calcBMR();
-const mult=getActivityMultiplier(activities);
-const tdee=Math.round(bmr*mult);
-const cals=tdee-100;
-const proteinG=getWeekProteinTarget();
+// Estimated exercise energy cost in kcal (net of resting metabolism)
+function calcExerciseKcal(activities){
+if(!activities||!activities.length)return 0;
+let kcal=0;
+activities.forEach(a=>{
+const mins=(a.h||0)*60+(a.m||0)+(a.s||0)/60;
+if(['Easy run','Long run','Tempo','Intervals'].includes(a.type)){
+if(a.miles)kcal+=a.miles*0.63*USER.wt;
+else kcal+=mins*9;
+}else if(a.type==='Strength'){
+kcal+=(mins||45)*5;
+}else if(a.type==='HIIT'){
+kcal+=(mins||30)*9;
+}else if(['Bike','Mtn bike','Swim','Kayak','Hike'].includes(a.type)){
+kcal+=(mins||45)*7;
+}else if(a.type==='Walk'){
+if(a.miles)kcal+=a.miles*0.30*USER.wt;
+else kcal+=(mins||30)*3.5;
+}
+});
+return Math.round(kcal);
+}
+
+// Energy availability target, ramped up from the current under-fuelled baseline
+function getEATarget(dateStr){
+const start=parseDate(USER.eaRampStart);
+const d=parseDate(dateStr||todayStr());
+const wksIn=Math.floor((d-start)/(7*86400000));
+if(wksIn<=0)return 41;
+if(wksIn===1)return 43;
+return 45;
+}
+
+function fatFreeMassKg(){return USER.wt*0.453592*(1-USER.bodyFat)}
+
+function calcDayTargets(activities,dateStr){
+const ffm=fatFreeMassKg();
+const exKcal=calcExerciseKcal(activities);
+const isLong=activities&&activities.some(a=>a.type==='Long run');
+// Long runs always get fully fuelled — no ramp, no shortfall on the key sessions
+const ea=isLong?45:getEATarget(dateStr);
+const cals=Math.round(ea*ffm+exKcal);
+const proteinG=USER.proteinG;
 const proteinCal=proteinG*4;
-const isHard=activities&&activities.some(a=>['Long run','Tempo','Intervals'].includes(a.type)||(a.miles&&a.miles>=6));
-const carbPct=isHard?0.50:0.45;
-const carbCal=Math.round((cals-proteinCal)*carbPct);
-const carbG=Math.round(carbCal/4);
-const fatCal=cals-proteinCal-carbCal;
-const fatG=Math.max(30,Math.round(fatCal/9));
-const adjCals=proteinCal+carbG*4+fatG*9;
-return{cals:adjCals,protein:proteinG,carbs:carbG,fat:fatG};
+const fatG=Math.max(60,Math.min(85,Math.round(cals*0.22/9)));
+const fatCal=fatG*9;
+let carbG=Math.round((cals-proteinCal-fatCal)/4);
+const wtKg=USER.wt*0.453592;
+// Carbohydrate adequacy floor — glycogen resynthesis still happens on rest days
+const carbFloor=Math.round((ea>=45?4.0:3.5)*wtKg);
+const carbCap=Math.round(8*wtKg);
+if(carbG<carbFloor)carbG=carbFloor;
+if(carbG>carbCap)carbG=carbCap;
+const adjCals=proteinCal+carbG*4+fatCal;
+return{cals:adjCals,protein:proteinG,carbs:carbG,fat:fatG,exKcal,ea};
+}
+
+// Prefer what she actually did over what was planned
+function effectiveActivities(d){
+if(!d)return[];
+if(d.actuals&&d.actuals.length)return d.actuals;
+return d.activities||[];
+}
+
+// ===== LONG RUN FUELLING ENGINE =====
+// Gut-training ramp: g/hr target by date, held at 55 through the Nov race
+const FUEL_RAMP=[
+{from:'2026-09-01',gph:50},
+{from:'2026-09-21',gph:52},
+{from:'2026-10-05',gph:55},
+];
+function fuelGphTarget(dateStr){
+let g=50;
+FUEL_RAMP.forEach(r=>{if(dateStr>=r.from)g=r.gph});
+return g;
+}
+const LR_PACE=11; // min/mi, used only when no time is logged
+function estRunMinutes(act){
+const mins=(act.h||0)*60+(act.m||0)+(act.s||0)/60;
+if(mins>0)return mins;
+return (act.miles||0)*LR_PACE;
+}
+function findLongRun(d){
+const acts=effectiveActivities(d);
+return acts.find(a=>a.type==='Long run'&&(a.miles||0)>=8)||null;
+}
+// Generates the 30-minute feed schedule for a long run day
+function buildFuelPlan(d){
+const lr=findLongRun(d);
+if(!lr)return null;
+const mins=estRunMinutes(lr);
+const hrs=mins/60;
+const gph=fuelGphTarget(d.dateStr);
+const totalC=Math.round(gph*hrs);
+// Feed marks every 30 min, first at 0:30, last no later than 30 min before the finish
+const marks=[];
+for(let t=30;t<=mins-15;t+=30)marks.push(t);
+if(!marks.length)marks.push(Math.round(mins/2));
+// Drink fills whatever the solid doesn't cover; solids rotate for palatability
+const perFeed=totalC/marks.length;
+let drinkTotal=0;
+const pace=(lr.miles&&mins)?mins/lr.miles:LR_PACE;
+const rows=marks.map((t,i)=>{
+const useGel=(i%3===2);
+const solidC=useGel?24:20;
+const solidName=useGel?'Huma gel':'1 pack fruit snacks';
+let drinkC=Math.round(perFeed-solidC);
+if(drinkC<4)drinkC=4;
+if(drinkC>18)drinkC=18;
+drinkTotal+=drinkC;
+const oz=Math.max(4,Math.round(drinkC/1.5));
+const mile=Math.round(t/pace*10)/10;
+return{t,label:`${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`,mile,
+what:`${oz} oz mix + ${solidName}`,carbs:drinkC+solidC,oz};
+});
+// Flasks sized by carbohydrate, then volume divided evenly across feeds
+const FLASK_ML=500, FLASK_OZ=16.9;
+const flasks=Math.max(1,Math.ceil(drinkTotal/30));
+const perFlaskC=Math.round(drinkTotal/flasks);
+const mixOz=flasks*FLASK_OZ;
+const ozPerFeed=Math.round(mixOz/rows.length*10)/10;
+rows.forEach(r=>r.oz=ozPerFeed);
+rows.forEach(r=>{r.what=r.what.replace(/^[\d.]+ oz mix/,`${ozPerFeed} oz mix`)});
+// Honey is 82% carb by weight, maple 67% — split the carbs evenly between them
+const honeyG=Math.round(perFlaskC/2/0.82);
+const mapleG=Math.round(perFlaskC/2/0.67);
+const sugarG=perFlaskC;
+const plainWater=Math.max(0,Math.round(hrs*20-mixOz));
+return{lr,mins,hrs,gph,totalC:rows.reduce((s,r)=>s+r.carbs,0),rows,flasks,plainWater,
+perFlaskC,honeyG,mapleG,sugarG,mixOz:Math.round(mixOz),
+preC:40,preLabel:'2 packs fruit snacks'};
+}
+// Night-before targets scale with tomorrow's distance
+function buildNightBefore(d){
+// d is the night-before day; look at tomorrow
+const tomorrow=dateStr(addDays(parseDate(d.dateStr),1));
+let tD=null;
+for(const wk of plan){const x=wk.days.find(y=>y.dateStr===tomorrow);if(x){tD=x;break}}
+if(!tD)return null;
+const lr=findLongRun(tD);
+if(!lr)return null;
+const mi=lr.miles||0;
+const dinnerC=Math.round(120+(mi-12)*10);
+return{miles:mi,dinnerC:Math.max(120,dinnerC),dinnerP:35,nightC:40,nightP:30,tomorrow};
 }
 
 // ===== RENDER FUNCTIONS =====
@@ -812,8 +943,8 @@ document.getElementById('weekSummary').innerHTML=`
 }
 
 // Nutrition summary (always today's data)
-const todayActs=todayD?todayD.activities:[];
-const homeTgt=calcDayTargets(todayActs);
+const todayActs=effectiveActivities(todayD);
+const homeTgt=calcDayTargets(todayActs,todayStr());
 // If we're viewing a different day on nutrition tab, we need today's meals from storage
 let homeEaten;
 if(getActiveDay()===todayStr()){
@@ -849,9 +980,12 @@ document.getElementById('homeWeight').innerHTML=`
 }
 
 function mealTotal(){
-let cals=0,protein=0,carbs=0,fat=0;
-Object.values(meals).forEach(items=>items.forEach(i=>{cals+=i.cal||0;protein+=i.p||0;carbs+=i.c||0;fat+=i.f||0}));
-return{cals:Math.round(cals),protein:Math.round(protein),carbs:Math.round(carbs),fat:Math.round(fat)};
+let cals=0,protein=0,carbs=0,fat=0,mealCarbs=0,fuelCarbs=0;
+MEAL_SLOTS.forEach(slot=>{(meals[slot]||[]).forEach(i=>{
+cals+=i.cal||0;protein+=i.p||0;carbs+=i.c||0;fat+=i.f||0;
+if(slot==='Run Fuel')fuelCarbs+=i.c||0; else mealCarbs+=i.c||0;
+})});
+return{cals:Math.round(cals),protein:Math.round(protein),carbs:Math.round(carbs),fat:Math.round(fat),mealCarbs:Math.round(mealCarbs),fuelCarbs:Math.round(fuelCarbs)};
 }
 
 function findToday(){
@@ -1279,14 +1413,15 @@ selectedNutrDay=calWk.days[0].dateStr;
 // Weekly calorie row — tappable days
 let calHtml='';let total=0;
 calWk.days.forEach(d=>{
-const tgt=calcDayTargets(d.activities);
+const tgt=calcDayTargets(effectiveActivities(d),d.dateStr);
 total+=tgt.cals;
 const isToday=d.dateStr===today;
 const isSelected=d.dateStr===getActiveDay();
 let cls='cal-day';
 if(isSelected)cls+=' selected';
 else if(isToday)cls+=' today';
-calHtml+=`<div class="${cls}" onclick="selectNutrDay('${d.dateStr}')"><div class="cal-n">${d.dow.slice(0,2)}</div><div class="cal-v">${tgt.cals}</div></div>`;
+const flag=(d.actuals&&d.actuals.length)?'<div style="font-size:9px;opacity:.6">actual</div>':'';
+calHtml+=`<div class="${cls}" onclick="selectNutrDay('${d.dateStr}')"><div class="cal-n">${d.dow.slice(0,2)}</div><div class="cal-v">${tgt.cals}</div>${flag}</div>`;
 });
 document.getElementById('calRow').innerHTML=calHtml;
 document.getElementById('calAvg').textContent=`Avg: ${Math.round(total/7)} · Total: ${total}`;
@@ -1302,20 +1437,26 @@ const isViewingToday=selDay===today;
 document.getElementById('nutrDayLabel').textContent=`Daily targets — ${dayName} ${dayDate}${isViewingToday?' (today)':''}`;
 
 // Targets for selected day
-const tgt=calcDayTargets(selDayData?selDayData.activities:[]);
+const tgt=calcDayTargets(effectiveActivities(selDayData),selDay);
 const eaten=mealTotal();
 const remCal=Math.max(0,tgt.cals-eaten.cals);
 const calPct=tgt.cals>0?Math.min(100,Math.round(eaten.cals/tgt.cals*100)):0;
 const pPct=tgt.protein>0?Math.min(100,Math.round(eaten.protein/tgt.protein*100)):0;
-const cPct=tgt.carbs>0?Math.min(100,Math.round(eaten.carbs/tgt.carbs*100)):0;
+const cPct=tgt.carbs>0?Math.min(100,Math.round(eaten.mealCarbs/tgt.carbs*100)):0;
+const rfPct=tgt.carbs>0?Math.min(100-cPct,Math.round(eaten.fuelCarbs/tgt.carbs*100)):0;
 const fPct=tgt.fat>0?Math.min(100,Math.round(eaten.fat/tgt.fat*100)):0;
+const carbLabel=eaten.fuelCarbs>0?`${eaten.mealCarbs}+${eaten.fuelCarbs}/${tgt.carbs}g`:`${eaten.carbs}/${tgt.carbs}g`;
 
 document.getElementById('nutrTargets').innerHTML=`
 <div class="trk" style="margin-bottom:8px"><div class="trk-label"><span>Calories</span><span>${eaten.cals} / ${tgt.cals} (${remCal} remaining)</span></div><div class="trk-bar" style="height:8px"><div class="trk-fill" style="width:${calPct}%;background:var(--acc)"></div></div></div>
 <div style="display:flex;gap:8px">
 <div class="trk" style="flex:1"><div class="trk-label"><span style="color:var(--purp)">Protein</span><span>${eaten.protein}/${tgt.protein}g</span></div><div class="trk-bar"><div class="trk-fill" style="width:${pPct}%;background:var(--purp)"></div></div></div>
-<div class="trk" style="flex:1"><div class="trk-label"><span style="color:var(--amber)">Carbs</span><span>${eaten.carbs}/${tgt.carbs}g</span></div><div class="trk-bar"><div class="trk-fill" style="width:${cPct}%;background:var(--amber)"></div></div></div>
+<div class="trk" style="flex:1"><div class="trk-label"><span style="color:var(--amber)">Carbs</span><span>${carbLabel}</span></div><div class="trk-bar" style="display:flex"><div style="width:${cPct}%;background:var(--amber);height:100%"></div><div style="width:${rfPct}%;background:var(--acc);height:100%"></div></div></div>
 <div class="trk" style="flex:1"><div class="trk-label"><span style="color:var(--pink)">Fat</span><span>${eaten.fat}/${tgt.fat}g</span></div><div class="trk-bar"><div class="trk-fill" style="width:${fPct}%;background:var(--pink)"></div></div></div>
+</div>
+<div style="margin-top:6px;font-size:11px;color:var(--tx2);display:flex;justify-content:space-between">
+<span>${eaten.fuelCarbs>0?`<span style="color:var(--acc)">■</span> ${eaten.fuelCarbs}g from run fuel`:'&nbsp;'}</span>
+<span>Training cost ~${tgt.exKcal} kcal · EA target ${tgt.ea}</span>
 </div>`;
 
 // Quick chips
@@ -1323,11 +1464,18 @@ document.getElementById('quickChips').innerHTML=QUICK_CHIPS.map(c=>`<button clas
 
 // Meal sections
 let mhtml='';
-['Breakfast','Lunch','Dinner','Snacks'].forEach(slot=>{
+MEAL_SLOTS.forEach(slot=>{
 const items=meals[slot]||[];
 const slotCal=items.reduce((s,i)=>s+(i.cal||0),0);
-mhtml+=`<div class="cd meal-sec">
-<div class="meal-hdr"><span>${slot}</span><span>${Math.round(slotCal)} cal</span></div>`;
+let hdrRight=`${Math.round(slotCal)} cal`;
+if(slot==='Run Fuel'){
+const slotC=items.reduce((s,i)=>s+(i.c||0),0);
+const acts=effectiveActivities(selDayData);
+let mins=0;acts.forEach(a=>{if(['Easy run','Long run','Tempo','Intervals'].includes(a.type))mins+=(a.h||0)*60+(a.m||0)+(a.s||0)/60});
+hdrRight=mins>0?`${Math.round(slotC)}g carbs · ${Math.round(slotC/(mins/60))} g/hr`:`${Math.round(slotC)}g carbs`;
+}
+mhtml+=`<div class="cd meal-sec"${slot==='Run Fuel'?' style="border-left:3px solid var(--acc)"':''}>
+<div class="meal-hdr"><span>${slot}</span><span>${hdrRight}</span></div>`;
 items.forEach((item,idx)=>{
 const itemJson=JSON.stringify({slot,idx,name:item.name,cal:item.cal,p:item.p,c:item.c,f:item.f,serving:item.serving}).replace(/'/g,"\\'");
 mhtml+=`<div class="meal-item" style="cursor:pointer" onclick='editMealItem(${itemJson})'>
@@ -1348,7 +1496,68 @@ mhtml+=`<div style="margin-top:4px;margin-bottom:8px">
 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accD)" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
 Copy meals to another day
 </button></div>`;
-document.getElementById('mealSections').innerHTML=mhtml;
+// ===== Night Before + Fuel Plan cards =====
+let cardHtml='';
+const nb=selDayData?buildNightBefore(selDayData):null;
+if(nb){
+const logged=mealTotal();
+cardHtml+=`<div class="cd" style="background:var(--purpL);border-color:var(--purp)">
+<div class="meal-hdr" style="border-color:var(--purp)"><span style="color:#4A42B8">Night Before — ${nb.miles} mi tomorrow</span><span style="color:#4A42B8">${logged.carbs}/${nb.dinnerC+nb.nightC}g</span></div>
+<div style="font-size:11px;color:var(--tx2);padding:8px 0;line-height:1.45">Liver glycogen drains overnight and you can't top it off at 5am — load it tonight instead.</div>
+<div style="display:flex;gap:6px;margin-bottom:8px">
+<div style="flex:1;background:var(--cd);border-radius:8px;padding:7px 4px;text-align:center"><div style="font-size:14px;font-weight:700">${nb.dinnerC}g</div><div style="font-size:9px;color:var(--tx2);text-transform:uppercase">dinner carbs</div></div>
+<div style="flex:1;background:var(--cd);border-radius:8px;padding:7px 4px;text-align:center"><div style="font-size:14px;font-weight:700">${nb.dinnerP}g</div><div style="font-size:9px;color:var(--tx2);text-transform:uppercase">dinner protein</div></div>
+<div style="flex:1;background:var(--cd);border-radius:8px;padding:7px 4px;text-align:center"><div style="font-size:14px;font-weight:700">${nb.nightC}/${nb.nightP}</div><div style="font-size:9px;color:var(--tx2);text-transform:uppercase">bedtime c/p</div></div>
+</div>
+<div style="font-size:11px;color:var(--tx2);background:var(--coralL);border-left:2px solid var(--coral);padding:8px 10px;border-radius:0 6px 6px 0;line-height:1.45">Low fat and fiber tonight. <strong>Skip the Metamucil</strong> — resume tomorrow night. Set your flasks and fuel out before bed.</div>
+</div>`;
+}
+const fp=selDayData?buildFuelPlan(selDayData):null;
+if(fp){
+const rf=(meals['Run Fuel']||[]).reduce((s,i)=>s+(i.c||0),0);
+const pct=Math.min(100,Math.round(rf/fp.totalC*100));
+cardHtml+=`<div class="cd" style="background:var(--accL);border-color:var(--acc)">
+<div class="meal-hdr" style="border-color:var(--acc)"><span style="color:var(--accD)">Fuel Plan — ${fp.lr.miles} mi</span><span style="color:var(--accD)">${fp.gph} g/hr target</span></div>
+<div style="font-size:11px;color:var(--accD);padding:6px 0">${Math.floor(fp.mins/60)}:${String(Math.round(fp.mins%60)).padStart(2,'0')} est · ${fp.flasks} flask${fp.flasks>1?'s':''} of mix (${fp.mixOz} oz) + ~${fp.plainWater} oz plain water in the bladder</div>
+<div style="background:var(--cd);border-radius:8px;padding:8px 10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
+<div><div style="font-size:12px;font-weight:600">−0:20 &nbsp; ${fp.preLabel}</div><div style="font-size:10px;color:var(--tx2)">Replaces the pre-run meal</div></div>
+<div style="font-size:13px;font-weight:700;color:var(--amber)">${fp.preC}g</div></div>`;
+fp.rows.forEach((r,i)=>{
+cardHtml+=`<div style="background:var(--cd);border-radius:8px;padding:8px 10px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="logFuelFeed(${i})">
+<div style="display:flex;gap:9px;align-items:center;min-width:0">
+<div style="width:19px;height:19px;border-radius:6px;border:1.5px solid var(--bdr);flex-shrink:0"></div>
+<div style="min-width:0"><div style="font-size:12px;font-weight:600">${r.label} &nbsp; ${r.what}</div><div style="font-size:10px;color:var(--tx2)">~mile ${r.mile}</div></div>
+</div>
+<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:700;color:var(--amber)">${r.carbs}g</div><div style="font-size:9px;color:var(--blue)">${r.oz} oz</div></div></div>`;
+});
+cardHtml+=`<div class="trk-bar" style="margin-top:8px"><div class="trk-fill" style="width:${pct}%;background:var(--acc)"></div></div>
+<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--tx2);margin-top:5px">
+<span><strong style="color:var(--acc)">${Math.round(rf)}g</strong> logged / ${fp.totalC}g planned</span>
+<span>${fp.hrs>0?Math.round(rf/fp.hrs):0} g/hr actual</span></div>
+<div style="background:var(--cd);border-radius:8px;padding:9px 10px;margin-top:8px">
+<div style="font-size:11px;font-weight:700;color:var(--accD);margin-bottom:5px">MIX FOR TOMORROW — each 500ml flask = ${fp.perFlaskC}g carbs</div>
+<div style="display:flex;gap:6px;margin-bottom:6px">
+<div style="flex:1;background:var(--bg);border-radius:6px;padding:6px 4px;text-align:center"><div style="font-size:14px;font-weight:700">${fp.honeyG}g</div><div style="font-size:9px;color:var(--tx2)">HONEY</div></div>
+<div style="flex:1;background:var(--bg);border-radius:6px;padding:6px 4px;text-align:center"><div style="font-size:14px;font-weight:700">${fp.mapleG}g</div><div style="font-size:9px;color:var(--tx2)">MAPLE</div></div>
+<div style="flex:1;background:var(--bg);border-radius:6px;padding:6px 4px;text-align:center"><div style="font-size:14px;font-weight:700">0.7g</div><div style="font-size:9px;color:var(--tx2)">SALT</div></div>
+</div>
+<div style="font-size:10px;color:var(--tx2);line-height:1.45">Fill to 500ml. Batch for ${fp.flasks}: <strong>${fp.honeyG*fp.flasks}g honey + ${fp.mapleG*fp.flasks}g maple + ${Math.round(0.7*fp.flasks*10)/10}g salt</strong> in ${fp.flasks*500}ml.<br>Sugar instead: ${fp.sugarG}g per flask. Dissolve honey in warm water first.<br><strong>Rinse with plain water after each feed.</strong></div>
+</div>
+</div>`;
+window._fuelPlanRows=fp.rows;
+}else{window._fuelPlanRows=null}
+document.getElementById('mealSections').innerHTML=cardHtml+mhtml;
+}
+
+async function logFuelFeed(i){
+const rows=window._fuelPlanRows;
+if(!rows||!rows[i])return;
+const r=rows[i];
+if(!meals['Run Fuel'])meals['Run Fuel']=[];
+meals['Run Fuel'].push({name:`${r.label} — ${r.what}`,cal:Math.round(r.carbs*4),p:0,c:r.carbs,f:0,serving:'1 feed'});
+await saveMeals();
+renderNutrition();
+renderHome();
 }
 
 function setMealSlot(slot){currentMealSlot=slot;document.getElementById('foodSearch').focus()}
@@ -1416,9 +1625,9 @@ async function confirmCopyMeals(){
 const targetDate=document.getElementById('copyTargetDate')?.value;
 if(!targetDate){return}
 // Load existing meals on target day
-const existing=await cloudGet('meals_'+targetDate)||await localGet('meals_'+targetDate)||{Breakfast:[],Lunch:[],Dinner:[],Snacks:[]};
+const existing=await cloudGet('meals_'+targetDate)||await localGet('meals_'+targetDate)||emptyMeals();
 // Append current meals to target day
-['Breakfast','Lunch','Dinner','Snacks'].forEach(slot=>{
+MEAL_SLOTS.forEach(slot=>{
 if(!existing[slot])existing[slot]=[];
 (meals[slot]||[]).forEach(item=>{existing[slot].push({...item})});
 });
@@ -1434,6 +1643,15 @@ document.getElementById('foodSearch').addEventListener('keydown',e=>{if(e.key===
 
 // Common whole foods database — USDA data, per serving
 const CF=[
+// Run fuel — DIY mixes and race fuel
+{n:'DIY Fuel Mix (1 flask, 500ml)',cal:120,p:0,c:30,f:0,s:'1 flask (18g honey + 22g maple + 0.7g salt)',k:['diy','fuel','mix','flask','honey maple','drink mix','bottle']},
+{n:'DIY Fuel Mix — honey only (1 flask)',cal:120,p:0,c:30,f:0,s:'1 flask (37g honey)',k:['diy','fuel','honey','flask']},
+{n:'DIY Fuel Mix — maple only (1 flask)',cal:120,p:0,c:30,f:0,s:'1 flask (45g maple syrup)',k:['diy','fuel','maple','flask']},
+{n:'DIY Fuel Mix — table sugar (1 flask)',cal:120,p:0,c:30,f:0,s:'1 flask (30g sugar)',k:['diy','fuel','sugar','flask']},
+{n:'Honey',cal:64,p:0.1,c:17,f:0,s:'1 tbsp (21g)',k:['honey']},
+{n:'Maple syrup',cal:52,p:0,c:13,f:0,s:'1 tbsp (20g)',k:['maple','syrup']},
+{n:'Huma Chia Energy Gel',cal:100,p:0.5,c:24,f:0,s:'1 pouch (42g)',k:['huma','gel','chia']},
+{n:'Fruit snacks (1 pack)',cal:80,p:0,c:20,f:0,s:'1 pouch',k:['fruit snack','gummies','gummy','welch']},
 // Fruits
 {n:'Apple (medium)',cal:95,p:0.5,c:25,f:0.3,s:'1 medium (182g)',k:['apple']},
 {n:'Banana (medium)',cal:105,p:1.3,c:27,f:0.4,s:'1 medium (118g)',k:['banana']},
@@ -1661,6 +1879,7 @@ const html=`
 <option${currentMealSlot==='Lunch'?' selected':''}>Lunch</option>
 <option${currentMealSlot==='Dinner'?' selected':''}>Dinner</option>
 <option${currentMealSlot==='Snacks'?' selected':''}>Snacks</option>
+<option${currentMealSlot==='Run Fuel'?' selected':''}>Run Fuel</option>
 </select>
 <button class="btn btn-g" style="width:100%" onclick="confirmFood()">Log food</button>`;
 document.getElementById('foodModalBody').innerHTML=html;
