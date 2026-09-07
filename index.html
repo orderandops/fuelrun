@@ -532,6 +532,11 @@ localSet(k,v);
 await cloudSet(k,v);
 }
 
+function mealHasFood(m){
+if(!m||typeof m!=='object')return false;
+return ['Breakfast','Lunch','Dinner','Snacks'].some(s=>Array.isArray(m[s])&&m[s].length>0);
+}
+
 async function loadData(){
 const keys=['meals_'+todayStr(),'weightHist','raceGoals','goalWeight','planEdits','planActuals','cyEntries','cyPeriodStarts'];
 const cloudVals=await cloudGetMulti(keys);
@@ -2273,10 +2278,30 @@ try{
 const data={};
 const keys=['weightHist','raceGoals','goalWeight','planEdits','planActuals','cyEntries','cyPeriodStarts'];
 for(const k of keys){const v=await cloudGet(k);if(v!==undefined)data[k]=v}
-// Get today's meals
-const mKey='meals_'+todayStr();
-const mv=await cloudGet(mKey);
-if(mv)data[mKey]=mv;
+// Get meal history across the full training block
+const MEAL_EXPORT_START='2026-06-09';
+const mealKeys=[];
+{
+const cur=new Date(MEAL_EXPORT_START+'T00:00:00');
+const end=new Date(todayStr()+'T00:00:00');
+while(cur<=end){
+mealKeys.push('meals_'+`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`);
+cur.setDate(cur.getDate()+1);
+}
+}
+const msgEl=document.getElementById('dataMsg');
+let daysFound=0;
+for(let i=0;i<mealKeys.length;i+=30){
+const chunk=mealKeys.slice(i,i+30);
+const vals=await cloudGetMulti(chunk);
+for(let j=0;j<chunk.length;j++){
+let v=vals[j];
+if(v===undefined)v=await localGet(chunk[j]);
+if(mealHasFood(v)){data[chunk[j]]=v;daysFound++}
+}
+if(msgEl){msgEl.style.color='var(--acc)';msgEl.textContent=`Exporting… ${Math.min(i+30,mealKeys.length)}/${mealKeys.length} days`}
+}
+data._exportMeta={rangeStart:MEAL_EXPORT_START,rangeEnd:todayStr(),daysScanned:mealKeys.length,daysWithFood:daysFound};
 const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
 const url=URL.createObjectURL(blob);
 const a=document.createElement('a');
@@ -2285,7 +2310,7 @@ a.download=`fuelrun-backup-${todayStr()}.json`;
 a.click();
 URL.revokeObjectURL(url);
 const el=document.getElementById('dataMsg');
-if(el){el.style.color='var(--acc)';el.textContent='Backup exported!';}
+if(el){el.style.color='var(--acc)';el.textContent=`Backup exported! ${daysFound} logged day${daysFound===1?'':'s'} of food included.`;}
 }catch(e){
 const el=document.getElementById('dataMsg');
 if(el){el.style.color='var(--coral)';el.textContent='Export failed: '+e.message;}
