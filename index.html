@@ -1462,9 +1462,47 @@ document.getElementById('nutrTargets').innerHTML=`
 // Quick chips
 document.getElementById('quickChips').innerHTML=QUICK_CHIPS.map(c=>`<button class="chip" onclick="searchFoodQuery('${c}')">${c}</button>`).join('');
 
+// Fuel plan is built first so it can be slotted in above Run Fuel
+const fp=selDayData?buildFuelPlan(selDayData):null;
+let fpHtml='';
+if(fp){
+const rf=(meals['Run Fuel']||[]).reduce((s,i)=>s+(i.c||0),0);
+const pct=Math.min(100,Math.round(rf/fp.totalC*100));
+fpHtml+=`<div class="cd" style="background:var(--accL);border-color:var(--acc)">
+<div class="meal-hdr" style="border-color:var(--acc)"><span style="color:var(--accD)">Fuel Plan — ${fp.lr.miles} mi</span><span style="color:var(--accD)">${fp.gph} g/hr target</span></div>
+<div style="font-size:11px;color:var(--accD);padding:6px 0">${Math.floor(fp.mins/60)}:${String(Math.round(fp.mins%60)).padStart(2,'0')} est · ${fp.flasks} flask${fp.flasks>1?'s':''} of mix (${fp.mixOz} oz) + ~${fp.plainWater} oz plain water in the bladder</div>
+<div style="background:var(--cd);border-radius:8px;padding:8px 10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
+<div><div style="font-size:12px;font-weight:600">−0:20 &nbsp; ${fp.preLabel}</div><div style="font-size:10px;color:var(--tx2)">Replaces the pre-run meal</div></div>
+<div style="font-size:13px;font-weight:700;color:var(--amber)">${fp.preC}g</div></div>`;
+fp.rows.forEach((r,i)=>{
+fpHtml+=`<div style="background:var(--cd);border-radius:8px;padding:8px 10px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="logFuelFeed(${i})">
+<div style="display:flex;gap:9px;align-items:center;min-width:0">
+<div style="width:19px;height:19px;border-radius:6px;border:1.5px solid var(--bdr);flex-shrink:0"></div>
+<div style="min-width:0"><div style="font-size:12px;font-weight:600">${r.label} &nbsp; ${r.what}</div><div style="font-size:10px;color:var(--tx2)">~mile ${r.mile}</div></div>
+</div>
+<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:700;color:var(--amber)">${r.carbs}g</div><div style="font-size:9px;color:var(--blue)">${r.oz} oz</div></div></div>`;
+});
+fpHtml+=`<div class="trk-bar" style="margin-top:8px"><div class="trk-fill" style="width:${pct}%;background:var(--acc)"></div></div>
+<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--tx2);margin-top:5px">
+<span><strong style="color:var(--acc)">${Math.round(rf)}g</strong> logged / ${fp.totalC}g planned</span>
+<span>${fp.hrs>0?Math.round(rf/fp.hrs):0} g/hr actual</span></div>
+<div style="background:var(--cd);border-radius:8px;padding:9px 10px;margin-top:8px">
+<div style="font-size:11px;font-weight:700;color:var(--accD);margin-bottom:5px">MIX FOR TODAY — each 500ml flask = ${fp.perFlaskC}g carbs</div>
+<div style="display:flex;gap:6px;margin-bottom:6px">
+<div style="flex:1;background:var(--bg);border-radius:6px;padding:6px 4px;text-align:center"><div style="font-size:14px;font-weight:700">${fp.honeyG}g</div><div style="font-size:9px;color:var(--tx2)">HONEY</div></div>
+<div style="flex:1;background:var(--bg);border-radius:6px;padding:6px 4px;text-align:center"><div style="font-size:14px;font-weight:700">${fp.mapleG}g</div><div style="font-size:9px;color:var(--tx2)">MAPLE</div></div>
+<div style="flex:1;background:var(--bg);border-radius:6px;padding:6px 4px;text-align:center"><div style="font-size:14px;font-weight:700">0.7g</div><div style="font-size:9px;color:var(--tx2)">SALT</div></div>
+</div>
+<div style="font-size:10px;color:var(--tx2);line-height:1.45">Fill to 500ml. Batch for ${fp.flasks}: <strong>${fp.honeyG*fp.flasks}g honey + ${fp.mapleG*fp.flasks}g maple + ${Math.round(0.7*fp.flasks*10)/10}g salt</strong> in ${fp.flasks*500}ml.<br>Sugar instead: ${fp.sugarG}g per flask.<br><strong>Rinse with plain water after each feed.</strong></div>
+</div>
+</div>`;
+window._fuelPlanRows=fp.rows;
+}else{window._fuelPlanRows=null}
+
 // Meal sections
 let mhtml='';
 MEAL_SLOTS.forEach(slot=>{
+if(slot==='Run Fuel')mhtml+=fpHtml;
 const items=meals[slot]||[];
 const slotCal=items.reduce((s,i)=>s+(i.cal||0),0);
 let hdrRight=`${Math.round(slotCal)} cal`;
@@ -1499,6 +1537,15 @@ Copy meals to another day
 // ===== Night Before + Fuel Plan cards =====
 let cardHtml='';
 const nb=selDayData?buildNightBefore(selDayData):null;
+let nbFuel=null;
+if(nb){
+for(const wk of plan){const x=wk.days.find(y=>y.dateStr===nb.tomorrow);if(x){
+const tp=buildFuelPlan(x);
+if(tp)nbFuel={flasks:tp.flasks,perFlaskC:tp.perFlaskC,honeyG:tp.honeyG,mapleG:tp.mapleG,
+gels:tp.rows.filter(r=>r.what.includes('gel')).length,
+snacks:tp.rows.filter(r=>r.what.includes('fruit snacks')).length+2};
+break}}
+}
 if(nb){
 const logged=mealTotal();
 cardHtml+=`<div class="cd" style="background:var(--purpL);border-color:var(--purp)">
@@ -1509,43 +1556,18 @@ cardHtml+=`<div class="cd" style="background:var(--purpL);border-color:var(--pur
 <div style="flex:1;background:var(--cd);border-radius:8px;padding:7px 4px;text-align:center"><div style="font-size:14px;font-weight:700">${nb.dinnerP}g</div><div style="font-size:9px;color:var(--tx2);text-transform:uppercase">dinner protein</div></div>
 <div style="flex:1;background:var(--cd);border-radius:8px;padding:7px 4px;text-align:center"><div style="font-size:14px;font-weight:700">${nb.nightC}/${nb.nightP}</div><div style="font-size:9px;color:var(--tx2);text-transform:uppercase">bedtime c/p</div></div>
 </div>
-<div style="font-size:11px;color:var(--tx2);background:var(--coralL);border-left:2px solid var(--coral);padding:8px 10px;border-radius:0 6px 6px 0;line-height:1.45">Low fat and fiber tonight. <strong>Skip the Metamucil</strong> — resume tomorrow night. Set your flasks and fuel out before bed.</div>
+<div style="font-size:11px;color:var(--tx2);background:var(--coralL);border-left:2px solid var(--coral);padding:8px 10px;border-radius:0 6px 6px 0;line-height:1.45">Low fat and fiber tonight. <strong>Skip the Metamucil</strong> — resume tomorrow night.</div>${nbFuel?`
+<div style="background:var(--cd);border-radius:8px;padding:9px 10px;margin-top:8px">
+<div style="font-size:11px;font-weight:700;color:#4A42B8;margin-bottom:5px">MIX FOR TOMORROW — ${nbFuel.flasks} × 500ml flask, ${nbFuel.perFlaskC}g carbs each</div>
+<div style="display:flex;gap:6px;margin-bottom:6px">
+<div style="flex:1;background:var(--bg);border-radius:6px;padding:6px 4px;text-align:center"><div style="font-size:14px;font-weight:700">${nbFuel.honeyG*nbFuel.flasks}g</div><div style="font-size:9px;color:var(--tx2)">HONEY</div></div>
+<div style="flex:1;background:var(--bg);border-radius:6px;padding:6px 4px;text-align:center"><div style="font-size:14px;font-weight:700">${nbFuel.mapleG*nbFuel.flasks}g</div><div style="font-size:9px;color:var(--tx2)">MAPLE</div></div>
+<div style="flex:1;background:var(--bg);border-radius:6px;padding:6px 4px;text-align:center"><div style="font-size:14px;font-weight:700">${Math.round(0.7*nbFuel.flasks*10)/10}g</div><div style="font-size:9px;color:var(--tx2)">SALT</div></div>
+</div>
+<div style="font-size:10px;color:var(--tx2);line-height:1.45">Total batch for ${nbFuel.flasks*500}ml. Dissolve honey in warm water first.<br>Also set out: ${nbFuel.snacks} packs fruit snacks, ${nbFuel.gels} gel${nbFuel.gels===1?'':'s'}, bladder filled with plain water.</div>
+</div>`:''}
 </div>`;
 }
-const fp=selDayData?buildFuelPlan(selDayData):null;
-if(fp){
-const rf=(meals['Run Fuel']||[]).reduce((s,i)=>s+(i.c||0),0);
-const pct=Math.min(100,Math.round(rf/fp.totalC*100));
-cardHtml+=`<div class="cd" style="background:var(--accL);border-color:var(--acc)">
-<div class="meal-hdr" style="border-color:var(--acc)"><span style="color:var(--accD)">Fuel Plan — ${fp.lr.miles} mi</span><span style="color:var(--accD)">${fp.gph} g/hr target</span></div>
-<div style="font-size:11px;color:var(--accD);padding:6px 0">${Math.floor(fp.mins/60)}:${String(Math.round(fp.mins%60)).padStart(2,'0')} est · ${fp.flasks} flask${fp.flasks>1?'s':''} of mix (${fp.mixOz} oz) + ~${fp.plainWater} oz plain water in the bladder</div>
-<div style="background:var(--cd);border-radius:8px;padding:8px 10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
-<div><div style="font-size:12px;font-weight:600">−0:20 &nbsp; ${fp.preLabel}</div><div style="font-size:10px;color:var(--tx2)">Replaces the pre-run meal</div></div>
-<div style="font-size:13px;font-weight:700;color:var(--amber)">${fp.preC}g</div></div>`;
-fp.rows.forEach((r,i)=>{
-cardHtml+=`<div style="background:var(--cd);border-radius:8px;padding:8px 10px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="logFuelFeed(${i})">
-<div style="display:flex;gap:9px;align-items:center;min-width:0">
-<div style="width:19px;height:19px;border-radius:6px;border:1.5px solid var(--bdr);flex-shrink:0"></div>
-<div style="min-width:0"><div style="font-size:12px;font-weight:600">${r.label} &nbsp; ${r.what}</div><div style="font-size:10px;color:var(--tx2)">~mile ${r.mile}</div></div>
-</div>
-<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:700;color:var(--amber)">${r.carbs}g</div><div style="font-size:9px;color:var(--blue)">${r.oz} oz</div></div></div>`;
-});
-cardHtml+=`<div class="trk-bar" style="margin-top:8px"><div class="trk-fill" style="width:${pct}%;background:var(--acc)"></div></div>
-<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--tx2);margin-top:5px">
-<span><strong style="color:var(--acc)">${Math.round(rf)}g</strong> logged / ${fp.totalC}g planned</span>
-<span>${fp.hrs>0?Math.round(rf/fp.hrs):0} g/hr actual</span></div>
-<div style="background:var(--cd);border-radius:8px;padding:9px 10px;margin-top:8px">
-<div style="font-size:11px;font-weight:700;color:var(--accD);margin-bottom:5px">MIX FOR TOMORROW — each 500ml flask = ${fp.perFlaskC}g carbs</div>
-<div style="display:flex;gap:6px;margin-bottom:6px">
-<div style="flex:1;background:var(--bg);border-radius:6px;padding:6px 4px;text-align:center"><div style="font-size:14px;font-weight:700">${fp.honeyG}g</div><div style="font-size:9px;color:var(--tx2)">HONEY</div></div>
-<div style="flex:1;background:var(--bg);border-radius:6px;padding:6px 4px;text-align:center"><div style="font-size:14px;font-weight:700">${fp.mapleG}g</div><div style="font-size:9px;color:var(--tx2)">MAPLE</div></div>
-<div style="flex:1;background:var(--bg);border-radius:6px;padding:6px 4px;text-align:center"><div style="font-size:14px;font-weight:700">0.7g</div><div style="font-size:9px;color:var(--tx2)">SALT</div></div>
-</div>
-<div style="font-size:10px;color:var(--tx2);line-height:1.45">Fill to 500ml. Batch for ${fp.flasks}: <strong>${fp.honeyG*fp.flasks}g honey + ${fp.mapleG*fp.flasks}g maple + ${Math.round(0.7*fp.flasks*10)/10}g salt</strong> in ${fp.flasks*500}ml.<br>Sugar instead: ${fp.sugarG}g per flask. Dissolve honey in warm water first.<br><strong>Rinse with plain water after each feed.</strong></div>
-</div>
-</div>`;
-window._fuelPlanRows=fp.rows;
-}else{window._fuelPlanRows=null}
 document.getElementById('mealSections').innerHTML=cardHtml+mhtml;
 }
 
