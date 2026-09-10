@@ -410,7 +410,7 @@ Insights
 <input class="inp" id="manC" placeholder="Carbs" type="number" inputmode="decimal">
 <input class="inp" id="manF" placeholder="Fat" type="number" inputmode="decimal">
 </div>
-<select class="inp" id="manMeal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snacks</option><option>Run Fuel</option></select>
+<select class="inp" id="manMeal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Bedtime</option><option>Run Fuel</option><option>Snacks</option></select>
 <button class="btn btn-g" style="width:100%" onclick="logManual()">Log</button>
 </div>
 </div>
@@ -454,8 +454,33 @@ Insights
 
 <script>
 // ===== CONFIG =====
-const USER={wt:128.5,goalWt:128,ht:170.18,age:40,sex:'F',marathonDate:'2026-11-14',marathonGoal:'4:00:00',bodyFat:0.25,proteinG:130,eaRampStart:'2026-09-07'};
-const MEAL_SLOTS=['Breakfast','Lunch','Dinner','Snacks','Run Fuel'];
+const USER={wt:129.4,goalWt:128,ht:170.18,age:40,sex:'F',marathonDate:'2026-11-14',marathonGoal:'4:00:00',bodyFat:0.25,proteinG:130,eaRampStart:'2026-09-07'};
+const MEAL_SLOTS=['Breakfast','Lunch','Dinner','Bedtime','Snacks','Run Fuel'];
+const ANCHOR_SLOTS=['Breakfast','Lunch','Dinner','Bedtime'];
+// Per-anchor share of the day's macros. Snacks/Run Fuel are handled separately.
+const MEAL_SPLIT={
+Breakfast:{p:0.28,c:0.26,f:0.22},
+Lunch:    {p:0.27,c:0.28,f:0.28},
+Dinner:   {p:0.27,c:0.33,f:0.34},
+Bedtime:  {p:0.18,c:0.13,f:0.16}};
+const MEAL_SPLIT_LR={
+Breakfast:{p:0.31,c:0.33,f:0.22},
+Lunch:    {p:0.27,c:0.33,f:0.28},
+Dinner:   {p:0.27,c:0.27,f:0.34},
+Bedtime:  {p:0.15,c:0.07,f:0.16}};
+// Targets for one meal slot on the selected day
+function mealTargets(tgt,slot,fp){
+if(slot==='Snacks')return null;
+if(slot==='Run Fuel')return fp?{cals:Math.round(fp.totalC*4),p:0,c:fp.totalC,f:0}:null;
+const sp=(fp?MEAL_SPLIT_LR:MEAL_SPLIT)[slot];
+if(!sp)return null;
+// On long run days the pre-run and in-run carbs come out before the meals split
+const carbPool=fp?Math.max(0,tgt.carbs-fp.totalC-fp.preC):tgt.carbs;
+const p=Math.round(tgt.protein*sp.p);
+const c=Math.round(carbPool*sp.c);
+const f=Math.round(tgt.fat*sp.f);
+return{cals:p*4+c*4+f*9,p,c,f};
+}
 function emptyMeals(){const o={};MEAL_SLOTS.forEach(s=>o[s]=[]);return o}
 const WEEK1_START=new Date(2026,5,8); // Mon Jun 8 2026 — week starts Monday
 const DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -818,7 +843,7 @@ let g=50;
 FUEL_RAMP.forEach(r=>{if(dateStr>=r.from)g=r.gph});
 return g;
 }
-const LR_PACE=11; // min/mi, used only when no time is logged
+const LR_PACE=10.6; // min/mi — her actual long-run pace, used when no time is logged
 function estRunMinutes(act){
 const mins=(act.h||0)*60+(act.m||0)+(act.s||0)/60;
 if(mins>0)return mins;
@@ -1505,15 +1530,32 @@ MEAL_SLOTS.forEach(slot=>{
 if(slot==='Run Fuel')mhtml+=fpHtml;
 const items=meals[slot]||[];
 const slotCal=items.reduce((s,i)=>s+(i.cal||0),0);
-let hdrRight=`${Math.round(slotCal)} cal`;
+const mt=mealTargets(tgt,slot,fp);
+let hdrRight=mt?`${Math.round(slotCal)} / ${mt.cals} cal`:`${Math.round(slotCal)} cal`;
 if(slot==='Run Fuel'){
 const slotC=items.reduce((s,i)=>s+(i.c||0),0);
 const acts=effectiveActivities(selDayData);
 let mins=0;acts.forEach(a=>{if(['Easy run','Long run','Tempo','Intervals'].includes(a.type))mins+=(a.h||0)*60+(a.m||0)+(a.s||0)/60});
 hdrRight=mins>0?`${Math.round(slotC)}g carbs · ${Math.round(slotC/(mins/60))} g/hr`:`${Math.round(slotC)}g carbs`;
 }
-mhtml+=`<div class="cd meal-sec"${slot==='Run Fuel'?' style="border-left:3px solid var(--acc)"':''}>
-<div class="meal-hdr"><span>${slot}</span><span>${hdrRight}</span></div>`;
+const isSnack=(slot==='Snacks');
+if(isSnack&&!items.length){
+// Collapsed: a quiet one-line entry point, always present
+mhtml+=`<div style="margin-bottom:8px"><button style="display:flex;align-items:center;gap:7px;background:none;border:1px dashed var(--bdr);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--tx2);cursor:pointer;width:100%;text-align:left;font-family:var(--f)" onclick="setMealSlot('Snacks')">
+<span style="color:var(--tx3);font-size:14px;line-height:1">+</span> Add unplanned snack</button></div>`;
+return;
+}
+mhtml+=`<div class="cd meal-sec"${slot==='Run Fuel'?' style="border-left:3px solid var(--acc)"':isSnack?' style="border-left:3px solid var(--coral)"':''}>
+<div class="meal-hdr"><span>${isSnack?'Snacks — unplanned':slot}</span><span>${hdrRight}</span></div>`;
+if(mt&&slot!=='Run Fuel'){
+const sp=items.reduce((a,i)=>({p:a.p+(i.p||0),c:a.c+(i.c||0),f:a.f+(i.f||0)}),{p:0,c:0,f:0});
+const dot=(v,t)=>v>=t*0.9?'var(--acc)':'var(--tx3)';
+mhtml+=`<div style="display:flex;gap:12px;font-size:11px;padding:6px 0 3px;color:var(--tx2)">
+<span style="color:${dot(sp.p,mt.p)}">Protein ${Math.round(sp.p)}/${mt.p}g</span>
+<span style="color:${dot(sp.c,mt.c)}">Carbs ${Math.round(sp.c)}/${mt.c}g</span>
+<span style="color:${dot(sp.f,mt.f)}">Fat ${Math.round(sp.f)}/${mt.f}g</span></div>`;
+}
+if(isSnack)mhtml+=`<div style="font-size:10px;color:var(--coral);padding:3px 0 2px">Outside your four anchors — move these into a meal if you can.</div>`;
 items.forEach((item,idx)=>{
 const itemJson=JSON.stringify({slot,idx,name:item.name,cal:item.cal,p:item.p,c:item.c,f:item.f,serving:item.serving}).replace(/'/g,"\\'");
 mhtml+=`<div class="meal-item" style="cursor:pointer" onclick='editMealItem(${itemJson})'>
@@ -1636,7 +1678,22 @@ if(!target)return;
 const targetDate=parseDate(target);
 const targetLabel=targetDate.toLocaleDateString('en-US',{weekday:'long',month:'numeric',day:'numeric'});
 const el=document.getElementById('copySummary');
-if(el){el.style.display='block';el.innerHTML=`This will copy <b>${totalItems} items</b> (${Math.round(totalCal)} cal) to <b>${targetLabel}</b>. Existing meals on that day will be kept.`;}
+if(!el)return;
+// Compare what's being copied against the target day's actual targets
+let tD=null;
+for(const wk of plan){const x=wk.days.find(y=>y.dateStr===target);if(x){tD=x;break}}
+let warn='';
+if(tD){
+const tt=calcDayTargets(effectiveActivities(tD),target);
+const gap=Math.round(tt.cals-totalCal);
+const snackC=(meals['Snacks']||[]).reduce((a,i)=>a+(i.cal||0),0);
+const noBed=!(meals['Bedtime']||[]).length;
+if(gap>200)warn+=`<div style="color:var(--coral);margin-top:6px">⚠ ${targetLabel} targets <b>${tt.cals} cal</b> — this copy leaves you <b>${gap} short</b>.</div>`;
+if(snackC>0)warn+=`<div style="color:var(--coral);margin-top:4px">⚠ ${Math.round(snackC)} cal lands in unplanned Snacks.</div>`;
+if(noBed)warn+=`<div style="color:var(--coral);margin-top:4px">⚠ No Bedtime item — you'll be short the evening protein anchor.</div>`;
+}
+el.style.display='block';
+el.innerHTML=`This will copy <b>${totalItems} items</b> (${Math.round(totalCal)} cal) to <b>${targetLabel}</b>. Existing meals on that day will be kept.${warn}`;
 });
 },100);
 
@@ -1900,8 +1957,9 @@ const html=`
 <option${currentMealSlot==='Breakfast'?' selected':''}>Breakfast</option>
 <option${currentMealSlot==='Lunch'?' selected':''}>Lunch</option>
 <option${currentMealSlot==='Dinner'?' selected':''}>Dinner</option>
-<option${currentMealSlot==='Snacks'?' selected':''}>Snacks</option>
+<option${currentMealSlot==='Bedtime'?' selected':''}>Bedtime</option>
 <option${currentMealSlot==='Run Fuel'?' selected':''}>Run Fuel</option>
+<option${currentMealSlot==='Snacks'?' selected':''}>Snacks</option>
 </select>
 <button class="btn btn-g" style="width:100%" onclick="confirmFood()">Log food</button>`;
 document.getElementById('foodModalBody').innerHTML=html;
