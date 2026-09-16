@@ -455,32 +455,26 @@ Insights
 <script>
 // ===== CONFIG =====
 const USER={wt:129.4,goalWt:128,ht:170.18,age:40,sex:'F',marathonDate:'2026-11-14',marathonGoal:'4:00:00',bodyFat:0.25,proteinG:130,eaRampStart:'2026-09-07'};
-const MEAL_SLOTS=['Breakfast','Lunch','Dinner','Bedtime','Snacks','Run Fuel'];
-const ANCHOR_SLOTS=['Breakfast','Lunch','Dinner','Bedtime'];
-// Per-anchor share of the day's macros. Snacks/Run Fuel are handled separately.
-const MEAL_SPLIT={
-Breakfast:{p:0.28,c:0.26,f:0.22},
-Lunch:    {p:0.27,c:0.28,f:0.28},
-Dinner:   {p:0.27,c:0.33,f:0.34},
-Bedtime:  {p:0.18,c:0.13,f:0.16}};
-const MEAL_SPLIT_LR={
-Breakfast:{p:0.31,c:0.33,f:0.22},
-Lunch:    {p:0.27,c:0.33,f:0.28},
-Dinner:   {p:0.27,c:0.27,f:0.34},
-Bedtime:  {p:0.15,c:0.07,f:0.16}};
+const MEAL_SLOTS=['Breakfast','Lunch','Dinner','Snacks','Bedtime','Run Fuel'];
+const ANCHOR_SLOTS=['Breakfast','Lunch','Dinner'];
+// Calorie share per slot. Protein is a flat 35g at each anchor.
+const MEAL_SPLIT={Breakfast:0.32,Lunch:0.33,Dinner:0.35};
+const MEAL_SPLIT_LR={Breakfast:0.36,Lunch:0.32,Dinner:0.32};
 // Targets for one meal slot on the selected day
-function mealTargets(tgt,slot,fp){
-if(slot==='Snacks')return null;
-if(slot==='Run Fuel')return fp?{cals:Math.round(fp.totalC*4),p:0,c:fp.totalC,f:0}:null;
-const sp=(fp?MEAL_SPLIT_LR:MEAL_SPLIT)[slot];
-if(!sp)return null;
+function mealTargets(tgt,slot,fp,nb){
+if(slot==='Snacks')return null;            // deliberately untargeted
+// Bedtime, night before a long run: slow protein + carbs for liver glycogen
+if(slot==='Bedtime')return{cals:30*4+40*4+8*9,p:30,c:40,f:8};
+if(slot==='Run Fuel')return fp?{cals:Math.round(fp.totalC*4),p:0}:null;
+// Night before a long run, dinner is the carb load — spell out carbs and fat
+if(slot==='Dinner'&&nb)return{cals:nb.dinnerP*4+nb.dinnerC*4+18*9,p:nb.dinnerP,c:nb.dinnerC,f:18};
+const share=(fp?MEAL_SPLIT_LR:MEAL_SPLIT)[slot];
+if(share===undefined)return null;
 // On long run days the pre-run and in-run carbs come out before the meals split
-const carbPool=fp?Math.max(0,tgt.carbs-fp.totalC-fp.preC):tgt.carbs;
-const p=Math.round(tgt.protein*sp.p);
-const c=Math.round(carbPool*sp.c);
-const f=Math.round(tgt.fat*sp.f);
-return{cals:p*4+c*4+f*9,p,c,f};
+const pool=fp?Math.max(0,tgt.cals-(fp.totalC+fp.preC)*4):tgt.cals;
+return{cals:Math.round(pool*share),p:35};
 }
+
 function emptyMeals(){const o={};MEAL_SLOTS.forEach(s=>o[s]=[]);return o}
 const WEEK1_START=new Date(2026,5,8); // Mon Jun 8 2026 — week starts Monday
 const DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -792,12 +786,8 @@ return Math.round(kcal);
 
 // Energy availability target, ramped up from the current under-fuelled baseline
 function getEATarget(dateStr){
-const start=parseDate(USER.eaRampStart);
-const d=parseDate(dateStr||todayStr());
-const wksIn=Math.floor((d-start)/(7*86400000));
-if(wksIn<=0)return 41;
-if(wksIn===1)return 43;
-return 45;
+// Held at 38 — above the LEA line of 30, below optimal 45. A deliberate, modest deficit.
+return 38;
 }
 
 function fatFreeMassKg(){return USER.wt*0.453592*(1-USER.bodyFat)}
@@ -816,8 +806,8 @@ const fatCal=fatG*9;
 let carbG=Math.round((cals-proteinCal-fatCal)/4);
 const wtKg=USER.wt*0.453592;
 // Carbohydrate adequacy floor — glycogen resynthesis still happens on rest days
-const carbFloor=Math.round((ea>=45?4.0:3.5)*wtKg);
-const carbCap=Math.round(8*wtKg);
+const carbFloor=Math.round((exKcal>0?4.0:3.0)*wtKg);
+const carbCap=Math.round(7*wtKg);
 if(carbG<carbFloor)carbG=carbFloor;
 if(carbG>carbCap)carbG=carbCap;
 const adjCals=proteinCal+carbG*4+fatCal;
@@ -832,6 +822,7 @@ return d.activities||[];
 }
 
 // ===== LONG RUN FUELLING ENGINE =====
+const SNACK_C=17, SNACK_CAL=70, GEL_C=24;
 // Gut-training ramp: g/hr target by date, held at 55 through the Nov race
 const FUEL_RAMP=[
 {from:'2026-09-01',gph:50},
@@ -871,7 +862,7 @@ let drinkTotal=0;
 const pace=(lr.miles&&mins)?mins/lr.miles:LR_PACE;
 const rows=marks.map((t,i)=>{
 const useGel=(i%3===2);
-const solidC=useGel?24:20;
+const solidC=useGel?GEL_C:SNACK_C;
 const solidName=useGel?'Huma gel':'1 pack fruit snacks';
 let drinkC=Math.round(perFeed-solidC);
 if(drinkC<4)drinkC=4;
@@ -897,7 +888,7 @@ const sugarG=perFlaskC;
 const plainWater=Math.max(0,Math.round(hrs*20-mixOz));
 return{lr,mins,hrs,gph,totalC:rows.reduce((s,r)=>s+r.carbs,0),rows,flasks,plainWater,
 perFlaskC,honeyG,mapleG,sugarG,mixOz:Math.round(mixOz),
-preC:40,preLabel:'2 packs fruit snacks'};
+preC:SNACK_C*2,preLabel:'2 packs fruit snacks'};
 }
 // Night-before targets scale with tomorrow's distance
 function buildNightBefore(d){
@@ -1488,6 +1479,7 @@ document.getElementById('nutrTargets').innerHTML=`
 document.getElementById('quickChips').innerHTML=QUICK_CHIPS.map(c=>`<button class="chip" onclick="searchFoodQuery('${c}')">${c}</button>`).join('');
 
 // Fuel plan is built first so it can be slotted in above Run Fuel
+const nb=selDayData?buildNightBefore(selDayData):null;
 const fp=selDayData?buildFuelPlan(selDayData):null;
 let fpHtml='';
 if(fp){
@@ -1514,11 +1506,10 @@ fpHtml+=`<div class="trk-bar" style="margin-top:8px"><div class="trk-fill" style
 <div style="background:var(--cd);border-radius:8px;padding:9px 10px;margin-top:8px">
 <div style="font-size:11px;font-weight:700;color:var(--accD);margin-bottom:5px">MIX FOR TODAY — each 500ml flask = ${fp.perFlaskC}g carbs</div>
 <div style="display:flex;gap:6px;margin-bottom:6px">
-<div style="flex:1;background:var(--bg);border-radius:6px;padding:6px 4px;text-align:center"><div style="font-size:14px;font-weight:700">${fp.honeyG}g</div><div style="font-size:9px;color:var(--tx2)">HONEY</div></div>
-<div style="flex:1;background:var(--bg);border-radius:6px;padding:6px 4px;text-align:center"><div style="font-size:14px;font-weight:700">${fp.mapleG}g</div><div style="font-size:9px;color:var(--tx2)">MAPLE</div></div>
+<div style="flex:1;background:var(--bg);border-radius:6px;padding:6px 4px;text-align:center"><div style="font-size:14px;font-weight:700">${fp.sugarG}g</div><div style="font-size:9px;color:var(--tx2)">TABLE SUGAR</div></div>
 <div style="flex:1;background:var(--bg);border-radius:6px;padding:6px 4px;text-align:center"><div style="font-size:14px;font-weight:700">0.7g</div><div style="font-size:9px;color:var(--tx2)">SALT</div></div>
 </div>
-<div style="font-size:10px;color:var(--tx2);line-height:1.45">Fill to 500ml. Batch for ${fp.flasks}: <strong>${fp.honeyG*fp.flasks}g honey + ${fp.mapleG*fp.flasks}g maple + ${Math.round(0.7*fp.flasks*10)/10}g salt</strong> in ${fp.flasks*500}ml.<br>Sugar instead: ${fp.sugarG}g per flask.<br><strong>Rinse with plain water after each feed.</strong></div>
+<div style="font-size:10px;color:var(--tx2);line-height:1.45">Fill to 500ml. Batch for ${fp.flasks}: <strong>${fp.sugarG*fp.flasks}g sugar + ${Math.round(0.7*fp.flasks*10)/10}g salt</strong> in ${fp.flasks*500}ml.<br>Shake well — sugar takes ~20 seconds to dissolve.<br><strong>Rinse with plain water after each feed.</strong></div>
 </div>
 </div>`;
 window._fuelPlanRows=fp.rows;
@@ -1530,7 +1521,7 @@ MEAL_SLOTS.forEach(slot=>{
 if(slot==='Run Fuel')mhtml+=fpHtml;
 const items=meals[slot]||[];
 const slotCal=items.reduce((s,i)=>s+(i.cal||0),0);
-const mt=mealTargets(tgt,slot,fp);
+const mt=mealTargets(tgt,slot,fp,nb);
 let hdrRight=mt?`${Math.round(slotCal)} / ${mt.cals} cal`:`${Math.round(slotCal)} cal`;
 if(slot==='Run Fuel'){
 const slotC=items.reduce((s,i)=>s+(i.c||0),0);
@@ -1539,23 +1530,26 @@ let mins=0;acts.forEach(a=>{if(['Easy run','Long run','Tempo','Intervals'].inclu
 hdrRight=mins>0?`${Math.round(slotC)}g carbs · ${Math.round(slotC/(mins/60))} g/hr`:`${Math.round(slotC)}g carbs`;
 }
 const isSnack=(slot==='Snacks');
+// Bedtime only appears the night before a long run
+if(slot==='Bedtime'&&!nb&&!items.length)return;
+// Run Fuel only exists on long run days
+if(slot==='Run Fuel'&&!fp&&!items.length)return;
 if(isSnack&&!items.length){
 // Collapsed: a quiet one-line entry point, always present
 mhtml+=`<div style="margin-bottom:8px"><button style="display:flex;align-items:center;gap:7px;background:none;border:1px dashed var(--bdr);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--tx2);cursor:pointer;width:100%;text-align:left;font-family:var(--f)" onclick="setMealSlot('Snacks')">
-<span style="color:var(--tx3);font-size:14px;line-height:1">+</span> Add unplanned snack</button></div>`;
+<span style="color:var(--tx3);font-size:14px;line-height:1">+</span> Add snack</button></div>`;
 return;
 }
-mhtml+=`<div class="cd meal-sec"${slot==='Run Fuel'?' style="border-left:3px solid var(--acc)"':isSnack?' style="border-left:3px solid var(--coral)"':''}>
-<div class="meal-hdr"><span>${isSnack?'Snacks — unplanned':slot}</span><span>${hdrRight}</span></div>`;
-if(mt&&slot!=='Run Fuel'){
+mhtml+=`<div class="cd meal-sec"${slot==='Run Fuel'?' style="border-left:3px solid var(--acc)"':''}>
+<div class="meal-hdr"><span>${slot}</span><span>${hdrRight}</span></div>`;
+if(mt&&mt.p>0){
 const sp=items.reduce((a,i)=>({p:a.p+(i.p||0),c:a.c+(i.c||0),f:a.f+(i.f||0)}),{p:0,c:0,f:0});
-const dot=(v,t)=>v>=t*0.9?'var(--acc)':'var(--tx3)';
-mhtml+=`<div style="display:flex;gap:12px;font-size:11px;padding:6px 0 3px;color:var(--tx2)">
-<span style="color:${dot(sp.p,mt.p)}">Protein ${Math.round(sp.p)}/${mt.p}g</span>
-<span style="color:${dot(sp.c,mt.c)}">Carbs ${Math.round(sp.c)}/${mt.c}g</span>
-<span style="color:${dot(sp.f,mt.f)}">Fat ${Math.round(sp.f)}/${mt.f}g</span></div>`;
+const col=(v,t)=>v>=t*0.9?'var(--acc)':'var(--tx3)';
+let line=`<span style="color:${col(sp.p,mt.p)}">Protein ${Math.round(sp.p)}/${mt.p}g</span>`;
+if(mt.c!==undefined)line+=`<span style="color:${col(sp.c,mt.c)}">Carbs ${Math.round(sp.c)}/${mt.c}g</span>`;
+if(mt.f!==undefined)line+=`<span style="color:${col(sp.f,mt.f)}">Fat ${Math.round(sp.f)}/${mt.f}g</span>`;
+mhtml+=`<div style="display:flex;gap:12px;font-size:11px;padding:6px 0 3px;color:var(--tx2)">${line}</div>`;
 }
-if(isSnack)mhtml+=`<div style="font-size:10px;color:var(--coral);padding:3px 0 2px">Outside your four anchors — move these into a meal if you can.</div>`;
 items.forEach((item,idx)=>{
 const itemJson=JSON.stringify({slot,idx,name:item.name,cal:item.cal,p:item.p,c:item.c,f:item.f,serving:item.serving}).replace(/'/g,"\\'");
 mhtml+=`<div class="meal-item" style="cursor:pointer" onclick='editMealItem(${itemJson})'>
@@ -1578,12 +1572,11 @@ Copy meals to another day
 </button></div>`;
 // ===== Night Before + Fuel Plan cards =====
 let cardHtml='';
-const nb=selDayData?buildNightBefore(selDayData):null;
 let nbFuel=null;
 if(nb){
 for(const wk of plan){const x=wk.days.find(y=>y.dateStr===nb.tomorrow);if(x){
 const tp=buildFuelPlan(x);
-if(tp)nbFuel={flasks:tp.flasks,perFlaskC:tp.perFlaskC,honeyG:tp.honeyG,mapleG:tp.mapleG,
+if(tp)nbFuel={flasks:tp.flasks,perFlaskC:tp.perFlaskC,sugarG:tp.sugarG,
 gels:tp.rows.filter(r=>r.what.includes('gel')).length,
 snacks:tp.rows.filter(r=>r.what.includes('fruit snacks')).length+2};
 break}}
@@ -1602,11 +1595,10 @@ cardHtml+=`<div class="cd" style="background:var(--purpL);border-color:var(--pur
 <div style="background:var(--cd);border-radius:8px;padding:9px 10px;margin-top:8px">
 <div style="font-size:11px;font-weight:700;color:#4A42B8;margin-bottom:5px">MIX FOR TOMORROW — ${nbFuel.flasks} × 500ml flask, ${nbFuel.perFlaskC}g carbs each</div>
 <div style="display:flex;gap:6px;margin-bottom:6px">
-<div style="flex:1;background:var(--bg);border-radius:6px;padding:6px 4px;text-align:center"><div style="font-size:14px;font-weight:700">${nbFuel.honeyG*nbFuel.flasks}g</div><div style="font-size:9px;color:var(--tx2)">HONEY</div></div>
-<div style="flex:1;background:var(--bg);border-radius:6px;padding:6px 4px;text-align:center"><div style="font-size:14px;font-weight:700">${nbFuel.mapleG*nbFuel.flasks}g</div><div style="font-size:9px;color:var(--tx2)">MAPLE</div></div>
+<div style="flex:1;background:var(--bg);border-radius:6px;padding:6px 4px;text-align:center"><div style="font-size:14px;font-weight:700">${nbFuel.sugarG*nbFuel.flasks}g</div><div style="font-size:9px;color:var(--tx2)">TABLE SUGAR</div></div>
 <div style="flex:1;background:var(--bg);border-radius:6px;padding:6px 4px;text-align:center"><div style="font-size:14px;font-weight:700">${Math.round(0.7*nbFuel.flasks*10)/10}g</div><div style="font-size:9px;color:var(--tx2)">SALT</div></div>
 </div>
-<div style="font-size:10px;color:var(--tx2);line-height:1.45">Total batch for ${nbFuel.flasks*500}ml. Dissolve honey in warm water first.<br>Also set out: ${nbFuel.snacks} packs fruit snacks, ${nbFuel.gels} gel${nbFuel.gels===1?'':'s'}, bladder filled with plain water.</div>
+<div style="font-size:10px;color:var(--tx2);line-height:1.45">Total batch for ${nbFuel.flasks*500}ml. Shake well to dissolve.<br>Also set out: ${nbFuel.snacks} packs fruit snacks, ${nbFuel.gels} gel${nbFuel.gels===1?'':'s'}, bladder filled with plain water.</div>
 </div>`:''}
 </div>`;
 }
@@ -1730,7 +1722,7 @@ const CF=[
 {n:'Honey',cal:64,p:0.1,c:17,f:0,s:'1 tbsp (21g)',k:['honey']},
 {n:'Maple syrup',cal:52,p:0,c:13,f:0,s:'1 tbsp (20g)',k:['maple','syrup']},
 {n:'Huma Chia Energy Gel',cal:100,p:0.5,c:24,f:0,s:'1 pouch (42g)',k:['huma','gel','chia']},
-{n:'Fruit snacks (1 pack)',cal:80,p:0,c:20,f:0,s:'1 pouch',k:['fruit snack','gummies','gummy','welch']},
+{n:'Fruit snacks (1 pack)',cal:70,p:0,c:17,f:0,s:'1 pouch',k:['fruit snack','gummies','gummy','welch']},
 // Fruits
 {n:'Apple (medium)',cal:95,p:0.5,c:25,f:0.3,s:'1 medium (182g)',k:['apple']},
 {n:'Banana (medium)',cal:105,p:1.3,c:27,f:0.4,s:'1 medium (118g)',k:['banana']},
