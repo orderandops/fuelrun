@@ -441,10 +441,12 @@ Insights
 <h3>Scan nutrition label</h3>
 <button class="modal-x" onclick="closeLabelModal()">✕</button>
 </div>
-<video id="labelVideo" playsinline muted style="width:100%;border-radius:8px;background:#000"></video>
+<video id="labelVideo" playsinline muted autoplay style="display:block;width:100%;height:44vh;object-fit:cover;border-radius:8px;background:#000"></video>
 <canvas id="labelCanvas" style="display:none"></canvas>
-<p id="labelMsg" style="text-align:center;font-size:11px;color:var(--tx2);margin-top:8px">Fill the frame with the Nutrition Facts panel</p>
-<button class="btn" id="labelShot" style="width:100%;margin-top:8px" onclick="captureLabel()">Capture</button>
+<p id="labelMsg" style="text-align:center;font-size:11px;color:var(--tx2);margin:8px 0">Fill the frame with the Nutrition Facts panel</p>
+<div style="position:sticky;bottom:0;background:var(--cd);padding-top:4px">
+<button class="btn" id="labelShot" style="width:100%" onclick="captureLabel()">Capture</button>
+</div>
 </div>
 </div>
 
@@ -2121,7 +2123,7 @@ async function openLabelScan(){
 openModal('labelModal');
 const msg=document.getElementById('labelMsg');
 try{
-labelStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}}});
+labelStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1920}}});
 const v=document.getElementById('labelVideo');
 v.srcObject=labelStream; await v.play();
 }catch(e){ msg.textContent='Camera unavailable: '+e.message; }
