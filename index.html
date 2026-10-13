@@ -691,11 +691,12 @@ const weeks=[
 {w:16,mi:[0,3.5,3.5,0,3.5,3,11],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'CUTBACK',protein:105},
 {w:17,mi:[0,4.5,5,0,4.5,3.5,17],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'PEAK',protein:110},
 {w:18,mi:[0,4,4,0,4,3,12],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'STEP-DOWN',protein:110},
-{w:19,mi:[0,4.5,5,0,4.5,3.5,18],hiit:[0,20,0,0,20,15,0],speed:'intervals',phase:'PEAK',protein:115},
-{w:20,mi:[0,4,4,0,4,3,13],hiit:[0,15,0,0,15,10,0],speed:'tempo',phase:'TAPER',protein:120},
-{w:21,mi:[0,3,3,0,3,2,9],hiit:[0,15,0,0,15,10,0],speed:'intervals',phase:'TAPER',protein:120},
-{w:22,mi:[0,2,2,0,2,0,5],hiit:[0,10,0,0,10,0,0],speed:'tempo',phase:'TAPER',protein:120},
-{w:23,mi:[0,2,0,0,0,26.2,0],hiit:[0,0,0,0,0,0,0],speed:null,phase:'RACE',protein:120},
+// Revised 2026-10-13: casual finish, long run capped at 13, 5 run+lift days/week
+{w:19,mi:[0,3,4,0,3,4,10],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'REBUILD',protein:140},
+{w:20,mi:[0,4,5,0,4,4,13],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'BUILD',protein:140},
+{w:21,mi:[0,4,4,0,3,4,11],hiit:[0,20,0,0,20,15,0],speed:'tempo',phase:'BUILD',protein:140},
+{w:22,mi:[0,3,4,0,3,3,8],hiit:[0,15,0,0,15,10,0],speed:'tempo',phase:'TAPER',protein:140},
+{w:23,mi:[0,3,2,0,2,26.2,0],hiit:[0,0,0,0,10,0,0],speed:null,phase:'RACE',protein:140},
 ];
 
 const speedTypes={tempo:'Tempo',intervals:'Intervals'};
@@ -713,8 +714,12 @@ let activities=[];
 if(wk.phase==='REST'){
 // Full rest week
 }else if(wk.phase==='RACE'){
-if(d===1&&wk.mi[d]>0){activities.push({type:'Easy run',detail:wk.mi[d]+' mi (shakeout)',miles:wk.mi[d],time:0})}
-else if(d===5&&wk.mi[d]>0){activities.push({type:'Long run',detail:'Marathon! '+wk.mi[d]+' mi',miles:wk.mi[d],time:0})}
+if(d===5&&wk.mi[d]>0){activities.push({type:'Long run',detail:'Marathon! '+wk.mi[d]+' mi',miles:wk.mi[d],time:0})}
+else if(wk.mi[d]>0){
+const isShake=(d===4);
+activities.push({type:'Easy run',detail:wk.mi[d]+' mi'+(isShake?' (shakeout)':''),miles:wk.mi[d],time:0});
+if(wk.hiit[d]>0)activities.push({type:'Strength',detail:wk.hiit[d]+' min (light)',miles:0,time:wk.hiit[d]});
+}
 }else{
 const mi=wk.mi[d];
 const hiit=wk.hiit[d];
@@ -1059,6 +1064,7 @@ const paces={
 'Tempo':{
 BASE:{pace:'9:00–9:15/mi',mph:'6.5–6.7'},
 BUILD:{pace:'8:55–9:10/mi',mph:'6.5–6.7'},
+REBUILD:{pace:'8:55–9:10/mi',mph:'6.5–6.7'},
 PEAK:{pace:'8:45–9:00/mi',mph:'6.7–6.9'},
 DELOAD:{pace:'9:00–9:15/mi',mph:'6.5–6.7'},
 TAPER:{pace:'9:00–9:15/mi',mph:'6.5–6.7'},
@@ -1068,6 +1074,7 @@ RACE:{pace:'9:00–9:15/mi',mph:'6.5–6.7'}
 'Intervals':{
 BASE:{pace:'8:20–8:30/mi work · 11:00 recovery',mph:'7.1–7.2 / 5.5',struct:'4-6 × 400m, 400m recovery'},
 BUILD:{pace:'8:10–8:25/mi work · 11:00 recovery',mph:'7.2–7.3 / 5.5',struct:'4-5 × 800m, 400m recovery'},
+REBUILD:{pace:'8:10–8:25/mi work · 11:00 recovery',mph:'7.2–7.3 / 5.5',struct:'4-5 × 800m, 400m recovery'},
 PEAK:{pace:'8:00–8:15/mi work · 11:00 recovery',mph:'7.3–7.5 / 5.5',struct:'3-4 × 1 mi, 800m recovery'},
 DELOAD:{pace:'8:15–8:30/mi work · 11:00 recovery',mph:'7.1–7.3 / 5.5',struct:'4 × 400m, 400m recovery'},
 TAPER:{pace:'8:15–8:30/mi work · 11:00 recovery',mph:'7.1–7.3 / 5.5',struct:'3 × 400m, 400m recovery'},
