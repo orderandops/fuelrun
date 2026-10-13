@@ -82,6 +82,10 @@ html,body{font-family:var(--f);color:var(--tx);background:var(--bg);-webkit-tap-
 /* Training card */
 .t-card{background:var(--cd);border:.5px solid var(--bdr);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;cursor:grab;touch-action:pan-y}
 .t-card.dragging{opacity:.5}
+.t-card.t-lift{opacity:.92;transform-origin:center;box-shadow:0 10px 26px rgba(0,0,0,.22);
+z-index:50;position:relative;transition:box-shadow .12s;pointer-events:none}
+.t-card.t-target{outline:2px dashed var(--acc);outline-offset:2px;background:var(--accL)}
+.t-card{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .t-card.t-rest{background:#FFFDE7}
 .t-top{display:flex;align-items:center;justify-content:space-between;gap:6px}
 .t-day{font-size:15px;font-weight:600;min-width:80px}
@@ -274,7 +278,10 @@ Race goals
 <div class="cd" id="foodCard">
 <div class="cd-t" style="display:flex;justify-content:space-between;align-items:center">
 Log food
-<button class="btn btn-o" style="font-size:11px;padding:5px 10px" onclick="openBarcode()">📷 Scan</button>
+<span style="display:flex;gap:5px">
+<button class="btn btn-o" style="font-size:11px;padding:5px 10px" onclick="openBarcode()">📷 Barcode</button>
+<button class="btn btn-o" style="font-size:11px;padding:5px 10px" onclick="openLabelScan()">🏷️ Label</button>
+</span>
 </div>
 <div class="search-wrap">
 <input class="inp" type="text" id="foodSearch" placeholder="Search foods..." inputmode="search">
@@ -428,6 +435,19 @@ Insights
 </div>
 </div>
 
+<div class="modal-bg" id="labelModal">
+<div class="modal">
+<div class="modal-top">
+<h3>Scan nutrition label</h3>
+<button class="modal-x" onclick="closeLabelModal()">✕</button>
+</div>
+<video id="labelVideo" playsinline muted style="width:100%;border-radius:8px;background:#000"></video>
+<canvas id="labelCanvas" style="display:none"></canvas>
+<p id="labelMsg" style="text-align:center;font-size:11px;color:var(--tx2);margin-top:8px">Fill the frame with the Nutrition Facts panel</p>
+<button class="btn" id="labelShot" style="width:100%;margin-top:8px" onclick="captureLabel()">Capture</button>
+</div>
+</div>
+
 <div class="modal-bg" id="goalWeightModal">
 <div class="modal" style="padding:20px">
 <div class="modal-top">
@@ -454,7 +474,8 @@ Insights
 
 <script>
 // ===== CONFIG =====
-const USER={wt:129.4,goalWt:128,ht:170.18,age:40,sex:'F',marathonDate:'2026-11-14',marathonGoal:'4:00:00',bodyFat:0.25,proteinG:130,eaRampStart:'2026-09-07'};
+const USER={wt:132,goalWt:125,ht:170.18,age:40,sex:'F',marathonDate:'2026-11-14',marathonGoal:'4:00:00',
+bodyFat:0.25,proteinG:140,neatMult:1.30,dailyDeficit:390,restFloor:1650};
 const MEAL_SLOTS=['Breakfast','Lunch','Dinner','Snacks','Bedtime','Run Fuel'];
 const ANCHOR_SLOTS=['Breakfast','Lunch','Dinner'];
 // Calorie share per slot. Protein is a flat 35g at each anchor.
@@ -784,34 +805,41 @@ else kcal+=(mins||30)*3.5;
 return Math.round(kcal);
 }
 
-// Energy availability target, ramped up from the current under-fuelled baseline
-function getEATarget(dateStr){
-// Held at 38 — above the LEA line of 30, below optimal 45. A deliberate, modest deficit.
-return 38;
+// Non-exercise TDEE: BMR plus everyday movement, before any training is counted
+function nonExerciseTDEE(){
+const wtKg=USER.wt*0.453592;
+const bmr=10*wtKg+6.25*USER.ht-5*USER.age-161;
+return bmr*USER.neatMult;
 }
+// At a fixed deficit the exercise term cancels, so EA depends only on the deficit.
+// 345/day holds EA at 30.0 — the floor — and yields ~0.69 lb/week.
+function predictedEA(){return (nonExerciseTDEE()-USER.dailyDeficit)/fatFreeMassKg()}
+// Note: rest days sit above this because of restFloor; training days sit at it.
 
 function fatFreeMassKg(){return USER.wt*0.453592*(1-USER.bodyFat)}
 
 function calcDayTargets(activities,dateStr){
 const ffm=fatFreeMassKg();
+const wtKg=USER.wt*0.453592;
 const exKcal=calcExerciseKcal(activities);
-const isLong=activities&&activities.some(a=>a.type==='Long run');
-// Long runs always get fully fuelled — no ramp, no shortfall on the key sessions
-const ea=isLong?45:getEATarget(dateStr);
-const cals=Math.round(ea*ffm+exKcal);
-const proteinG=USER.proteinG;
+// Eat to the day: maintenance for what you actually did, minus the deficit.
+// Rest days get a hard floor — the arithmetic says lower, but a target that
+// can't be followed is worth nothing, and the dog walk isn't logged.
+const cals=Math.max(USER.restFloor,Math.round(nonExerciseTDEE()+exKcal-USER.dailyDeficit));
+const proteinG=USER.proteinG;                 // raised in a deficit to protect muscle
 const proteinCal=proteinG*4;
-const fatG=Math.max(60,Math.min(85,Math.round(cals*0.22/9)));
+// Fat floor by the day — 0.75 g/kg on rest, 0.85 g/kg when training
+const fatG=Math.max(Math.round((exKcal>0?0.85:0.75)*wtKg),Math.min(80,Math.round(cals*0.25/9)));
 const fatCal=fatG*9;
 let carbG=Math.round((cals-proteinCal-fatCal)/4);
-const wtKg=USER.wt*0.453592;
-// Carbohydrate adequacy floor — glycogen resynthesis still happens on rest days
-const carbFloor=Math.round((exKcal>0?4.0:3.0)*wtKg);
+// Carbs flex with the work: rest days run low, training days keep a real floor
+const carbFloor=Math.round((exKcal>500?3.5:exKcal>0?2.5:1.5)*wtKg);
 const carbCap=Math.round(7*wtKg);
 if(carbG<carbFloor)carbG=carbFloor;
 if(carbG>carbCap)carbG=carbCap;
 const adjCals=proteinCal+carbG*4+fatCal;
-return{cals:adjCals,protein:proteinG,carbs:carbG,fat:fatG,exKcal,ea};
+return{cals:adjCals,protein:proteinG,carbs:carbG,fat:fatG,exKcal,
+ea:Math.round((adjCals-exKcal)/ffm*10)/10};
 }
 
 // Prefer what she actually did over what was planned
@@ -1116,7 +1144,7 @@ const isRest=d.activities.length===0;
 const hasDone=!!d.actuals;
 const isToday=d.dateStr===todayStr();
 
-html+=`<div class="t-card${isRest?' t-rest':''}" draggable="true" data-di="${i}" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dropCard(event)" ondragend="dragEnd(event)">`;
+html+=`<div class="t-card${isRest?' t-rest':''}" draggable="true" data-di="${i}" style="touch-action:pan-y" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dropCard(event)" ondragend="dragEnd(event)" ontouchstart="touchCardStart(event)" ontouchmove="touchCardMove(event)" ontouchend="touchCardEnd(event)" ontouchcancel="touchCardEnd(event)">`;
 // Top row: day+date, edit+save
 html+=`<div class="t-top">
 <div class="t-day">${d.dow} <small>${d.date.getMonth()+1}/${d.date.getDate()}</small>${isToday?' <span style="color:var(--acc);font-size:11px">today</span>':''}</div>
@@ -1252,22 +1280,67 @@ renderNutrition();
 let dragIdx=null;
 function dragStart(e){dragIdx=parseInt(e.currentTarget.dataset.di);e.currentTarget.classList.add('dragging');e.dataTransfer.effectAllowed='move'}
 function dragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move'}
-function dropCard(e){
-e.preventDefault();
-const targetIdx=parseInt(e.currentTarget.dataset.di);
-if(dragIdx===null||dragIdx===targetIdx)return;
+function swapDays(a,b){
+if(a===null||b===null||a===b||isNaN(a)||isNaN(b))return false;
 const wk=plan[curWeek];
-// Swap activities (dates stay)
-const tmpAct=wk.days[dragIdx].activities;
-const tmpActuals=wk.days[dragIdx].actuals;
-wk.days[dragIdx].activities=wk.days[targetIdx].activities;
-wk.days[dragIdx].actuals=wk.days[targetIdx].actuals;
-wk.days[targetIdx].activities=tmpAct;
-wk.days[targetIdx].actuals=tmpActuals;
-wk.days[dragIdx].edited=true;
-wk.days[targetIdx].edited=true;
+if(!wk||!wk.days[a]||!wk.days[b])return false;
+// Swap activities; the dates stay put
+const tmpAct=wk.days[a].activities, tmpActuals=wk.days[a].actuals;
+wk.days[a].activities=wk.days[b].activities;
+wk.days[a].actuals=wk.days[b].actuals;
+wk.days[b].activities=tmpAct;
+wk.days[b].actuals=tmpActuals;
+wk.days[a].edited=true; wk.days[b].edited=true;
 savePlanEdits();
 render();
+return true;
+}
+function dropCard(e){
+e.preventDefault();
+swapDays(dragIdx,parseInt(e.currentTarget.dataset.di));
+}
+
+// ===== TOUCH DRAG (HTML5 drag events never fire on touch) =====
+// Long-press to pick a card up, so ordinary scrolling still works.
+let tDrag={idx:null,el:null,active:false,timer:null,x:0,y:0,over:null};
+const TOUCH_HOLD_MS=350, TOUCH_SLOP=12;
+function touchCardStart(e){
+const card=e.currentTarget, t=e.touches[0];
+tDrag.x=t.clientX; tDrag.y=t.clientY;
+tDrag.idx=parseInt(card.dataset.di); tDrag.el=card; tDrag.active=false;
+clearTimeout(tDrag.timer);
+tDrag.timer=setTimeout(()=>{
+tDrag.active=true;
+card.classList.add('t-lift');
+if(navigator.vibrate)navigator.vibrate(30);
+},TOUCH_HOLD_MS);
+}
+function touchCardMove(e){
+const t=e.touches[0];
+if(!tDrag.active){
+// Moved before the hold completed — treat it as a scroll, not a drag
+if(Math.abs(t.clientX-tDrag.x)>TOUCH_SLOP||Math.abs(t.clientY-tDrag.y)>TOUCH_SLOP){
+clearTimeout(tDrag.timer); tDrag.idx=null;
+}
+return;
+}
+e.preventDefault();                       // now we own the gesture
+tDrag.el.style.transform=`translate(${t.clientX-tDrag.x}px, ${t.clientY-tDrag.y}px)`;
+const under=document.elementFromPoint(t.clientX,t.clientY);
+const card=under&&under.closest?under.closest('.t-card'):null;
+if(tDrag.over&&tDrag.over!==card)tDrag.over.classList.remove('t-target');
+if(card&&card!==tDrag.el){card.classList.add('t-target');tDrag.over=card}
+else tDrag.over=null;
+}
+function touchCardEnd(){
+clearTimeout(tDrag.timer);
+if(tDrag.el){tDrag.el.classList.remove('t-lift');tDrag.el.style.transform=''}
+if(tDrag.over)tDrag.over.classList.remove('t-target');
+if(tDrag.active&&tDrag.over){
+const to=parseInt(tDrag.over.dataset.di);
+if(swapDays(tDrag.idx,to)&&navigator.vibrate)navigator.vibrate([20,40,20]);
+}
+tDrag={idx:null,el:null,active:false,timer:null,x:0,y:0,over:null};
 }
 function dragEnd(e){e.currentTarget.classList.remove('dragging');dragIdx=null}
 
@@ -2031,6 +2104,94 @@ render();
 
 // ===== MANUAL ENTRY =====
 function openManualEntry(){openModal('manualModal')}
+
+// ===== NUTRITION LABEL OCR =====
+// Tesseract runs on-device: no API key, no cost, works offline once cached.
+// OCR on labels is imperfect by nature, which is why every field lands in the
+// manual form for confirmation rather than being saved directly.
+let labelStream=null;
+async function openLabelScan(){
+openModal('labelModal');
+const msg=document.getElementById('labelMsg');
+try{
+labelStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}}});
+const v=document.getElementById('labelVideo');
+v.srcObject=labelStream; await v.play();
+}catch(e){ msg.textContent='Camera unavailable: '+e.message; }
+}
+function closeLabelModal(){
+if(labelStream){labelStream.getTracks().forEach(t=>t.stop());labelStream=null}
+const v=document.getElementById('labelVideo'); if(v)v.srcObject=null;
+closeModal('labelModal');
+}
+function loadTesseract(){
+if(window.Tesseract)return Promise.resolve();
+return new Promise((res,rej)=>{
+const sc=document.createElement('script');
+sc.src='https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js';
+sc.onload=res; sc.onerror=()=>rej(new Error('Could not load OCR library'));
+document.head.appendChild(sc);
+});
+}
+// Nutrition panels are dark text on light ground; grayscale + contrast lifts OCR a lot
+function prepCanvas(video){
+const c=document.getElementById('labelCanvas');
+c.width=video.videoWidth; c.height=video.videoHeight;
+const ctx=c.getContext('2d');
+ctx.drawImage(video,0,0);
+const img=ctx.getImageData(0,0,c.width,c.height), d=img.data;
+for(let i=0;i<d.length;i+=4){
+let g=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
+g=g<128?g*0.6:Math.min(255,g*1.25);
+d[i]=d[i+1]=d[i+2]=g;
+}
+ctx.putImageData(img,0,0);
+return c;
+}
+function parseLabel(txt){
+const t=txt.replace(/[|]/g,' ').replace(/\u00a0/g,' ');
+const num=re=>{const m=t.match(re);return m?parseFloat(m[1]):null};
+return{
+cal: num(/calories\s*[:\-]?\s*(\d{1,4})/i),
+p:   num(/protein\s*[:\-]?\s*(\d*\.?\d+)\s*g/i),
+c:   num(/total\s*carb(?:ohydrate)?s?\s*[:\-]?\s*(\d*\.?\d+)\s*g/i),
+f:   num(/total\s*fat\s*[:\-]?\s*(\d*\.?\d+)\s*g/i),
+serving:(t.match(/serving\s*size\s*[:\-]?\s*([^\n]{1,40})/i)||[])[1]||''
+};
+}
+async function captureLabel(){
+const msg=document.getElementById('labelMsg'), btn=document.getElementById('labelShot');
+const v=document.getElementById('labelVideo');
+if(!v||!v.videoWidth){msg.textContent='Camera not ready yet.';return}
+btn.disabled=true; msg.textContent='Reading label…';
+try{
+await loadTesseract();
+const canvas=prepCanvas(v);
+const {data}=await Tesseract.recognize(canvas,'eng',{
+logger:m=>{if(m.status==='recognizing text')msg.textContent='Reading label… '+Math.round(m.progress*100)+'%'}
+});
+const got=parseLabel(data.text||'');
+const found=['cal','p','c','f'].filter(k=>got[k]!==null&&!isNaN(got[k]));
+closeLabelModal();
+openModal('manualModal');
+if(got.cal!=null)document.getElementById('manCal').value=got.cal;
+if(got.p!=null)document.getElementById('manP').value=got.p;
+if(got.c!=null)document.getElementById('manC').value=got.c;
+if(got.f!=null)document.getElementById('manF').value=got.f;
+const nameEl=document.getElementById('manName');
+if(!nameEl.value)nameEl.value=got.serving?('Label — '+got.serving.trim()):'';
+nameEl.focus();
+const body=document.getElementById('manualModalBody');
+let note=document.getElementById('ocrNote');
+if(!note){note=document.createElement('div');note.id='ocrNote';body.insertBefore(note,body.firstChild)}
+note.style.cssText='font-size:11px;padding:8px 10px;border-radius:6px;margin-bottom:8px;'+
+(found.length>=3?'background:var(--accL);color:var(--accD)':'background:var(--coralL);color:var(--coral)');
+note.textContent=found.length?`Read ${found.length} of 4 fields — check each one before saving.`
+:'Could not read the label. Enter the values manually.';
+}catch(e){
+msg.textContent='Could not read it: '+e.message;
+}finally{ btn.disabled=false }
+}
 async function logManual(){
 const name=document.getElementById('manName').value;
 if(!name)return;
